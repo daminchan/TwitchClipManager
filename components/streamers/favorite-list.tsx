@@ -52,11 +52,13 @@ export function FavoriteList({ onSelectStreamer, refreshTrigger }: FavoriteListP
       // Fetch live status for all favorites
       if (favoritesData.length > 0) {
         const broadcasterIds = favoritesData.map((f) => f.streamerId);
-        const liveStatusResponse = await fetch(`/api/twitch/live-status?ids=${broadcasterIds.join(',')}`);
 
-        if (liveStatusResponse.ok) {
-          const { data: liveStreams } = await liveStatusResponse.json();
-          const liveStreamerIds = new Set(liveStreams.map((stream: any) => stream.user_id));
+        // サーバーアクションでライブステータスを取得
+        const { getLiveStatus } = await import('@/actions/twitch');
+        const liveStatusResult = await getLiveStatus(broadcasterIds);
+
+        if (liveStatusResult.success && liveStatusResult.data) {
+          const liveStreamerIds = new Set(liveStatusResult.data.map((stream) => stream.user_id));
 
           const favoritesWithLive = favoritesData.map((favorite) => ({
             ...favorite,

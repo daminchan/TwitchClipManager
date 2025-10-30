@@ -38,16 +38,17 @@ export function StreamerSearch({ onSelectStreamer }: StreamerSearchProps) {
     setResults([]);
 
     try {
-      const response = await fetch(`/api/twitch/streamers?query=${encodeURIComponent(query)}`);
+      // サーバーアクションで配信者を検索
+      const { searchTwitchStreamers } = await import('@/actions/twitch');
+      const result = await searchTwitchStreamers(query);
 
-      if (!response.ok) {
-        throw new Error('検索に失敗しました');
+      if (!result.success || !result.data) {
+        throw new Error(result.error || '検索に失敗しました');
       }
 
-      const { data } = await response.json();
-      setResults(data || []);
+      setResults(result.data);
 
-      if (data.length === 0) {
+      if (result.data.length === 0) {
         setError('配信者が見つかりませんでした');
       }
     } catch (error) {

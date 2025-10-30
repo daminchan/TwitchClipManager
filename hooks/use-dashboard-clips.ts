@@ -6,8 +6,9 @@
 import { useState, useEffect } from 'react';
 import type { TwitchClip } from '@/types/twitch';
 import type { SortType } from '@/components/dashboard/clip-sort-tabs';
-import { API_ENDPOINTS, ClipFilterType } from '@/lib/constants';
+import { ClipFilterType } from '@/lib/constants';
 import { getLikedClips, addLikedClip, removeLikedClip } from '@/actions/liked-clips';
+import { getFavoriteClips } from '@/actions/clips';
 
 export function useDashboardClips() {
   const [allClips, setAllClips] = useState<TwitchClip[]>([]);
@@ -27,17 +28,16 @@ export function useDashboardClips() {
     const filterParam = filter || clipFilter;
 
     try {
-      const url = `${API_ENDPOINTS.CLIPS.FAVORITES}?filter=${filterParam}`;
-      const response = await fetch(url);
+      // サーバーアクションでクリップを取得
+      const result = await getFavoriteClips(filterParam);
 
-      if (!response.ok) {
-        throw new Error('クリップの取得に失敗しました');
+      if (!result.success || !result.data) {
+        throw new Error(result.error || 'クリップの取得に失敗しました');
       }
 
-      const { data } = await response.json();
-      setAllClips(data || []);
+      setAllClips(result.data);
 
-      if (data.length === 0) {
+      if (result.data.length === 0) {
         setClipError('お気に入り配信者のクリップがありません');
       }
     } catch (error) {
