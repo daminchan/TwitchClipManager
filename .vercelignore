@@ -1,5 +1,0 @@
-# Vercel ignore patterns
-node_modules
-.git
-.env.local
-.next
