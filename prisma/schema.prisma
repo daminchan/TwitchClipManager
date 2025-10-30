@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// NextAuth.jsのユーザーモデル
+model User {
+  id                String              @id @default(cuid())
+  email             String              @unique
+  emailVerified     DateTime?
+  password          String?             // パスワード（ハッシュ化）
+  name              String?
+  image             String?
+  accounts          Account[]
+  sessions          Session[]
+  favoriteStreamers FavoriteStreamer[]
+  likedClips        LikedClip[]         // いいねしたクリップ
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// アプリケーション固有のモデル
+model FavoriteStreamer {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  streamerId    String   // Twitch配信者ID
+  streamerName  String   // Twitch配信者名
+  streamerLogin String   // Twitchログイン名
+  streamerImage String?  // プロフィール画像URL
+  createdAt     DateTime @default(now())
+
+  @@unique([userId, streamerId])
+  @@index([userId])
+}
+
+// いいねしたクリップ
+model LikedClip {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clipId          String   // Twitchクリップ ID
+  clipUrl         String   // クリップURL
+  clipEmbedUrl    String   // 埋め込みURL
+  clipTitle       String   // クリップタイトル
+  broadcasterId   String   // 配信者ID
+  broadcasterName String   // 配信者名
+  creatorName     String   // クリップ作成者名
+  thumbnailUrl    String   // サムネイル URL
+  viewCount       Int      // いいね時点の再生回数
+  duration        Float    // クリップの長さ（秒）
+  clipCreatedAt   String   // クリップ作成日時
+  likedAt         DateTime @default(now()) // いいねした日時
+
+  @@unique([userId, clipId])
+  @@index([userId])
+  @@index([likedAt])
+}

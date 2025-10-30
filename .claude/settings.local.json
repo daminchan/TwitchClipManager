@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npx prisma init)",
+      "Bash(npx shadcn@latest init -d)",
+      "Bash(npx shadcn@latest add button input card badge avatar)",
+      "Bash(npm run build:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(npx prisma db push:*)",
+      "Bash(move:*)",
+      "Bash(move appdashboardpage-new.tsx appdashboardpage.tsx)",
+      "Read(//c/Users/rebim/Pictures/Screenshots/**)",
+      "Bash(npm run dev:*)",
+      "Bash(netstat:*)",
+      "Bash(ps:*)",
+      "Bash(lsof:*)",
+      "Bash(findstr:*)",
+      "Bash(tasklist:*)",
+      "Bash(taskkill:*)",
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
