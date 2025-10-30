@@ -8,6 +8,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getClipsByBroadcaster } from '@/lib/twitch-api';
 import { CLIP_FILTERS, ClipFilterType } from '@/lib/constants';
+import type { FavoriteStreamer } from '@/types';
 
 /**
  * GET /api/clips/favorites?filter=WEEK|THREE_DAYS|MONTH
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
     startedAt.setDate(startedAt.getDate() - filterConfig.days);
 
     // 各配信者のクリップを並列で取得
-    const clipPromises = favorites.map(async (favorite) => {
+    const clipPromises = favorites.map(async (favorite: FavoriteStreamer) => {
       try {
         const clips = await getClipsByBroadcaster(favorite.streamerId, {
           first: filter === 'WEEK' ? filterConfig.limit : 100, // WEEK以外は全件取得して後でトップを抽出
