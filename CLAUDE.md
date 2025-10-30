@@ -642,6 +642,56 @@ if (username.length > 25) {
 ```
 **理由**: 不正な入力からアプリケーションを保護
 
+### Claude Code設定ファイルの管理
+
+**⚠️ 重要**: `.claude/settings.local.json` には**絶対に機密情報を含めない**
+
+**問題のある例:**
+```json
+{
+  "permissions": {
+    "allow": [
+      "Bash(DATABASE_URL=\"postgresql://user:PASSWORD@host:5432/db\" command:*)"
+    ]
+  }
+}
+```
+
+**ルール:**
+1. **環境変数を直接コマンドに含めない**
+   - ❌ `DATABASE_URL="postgresql://..."` をコマンドに埋め込む
+   - ✅ `.env.local` に環境変数を定義し、そこから読み込む
+
+2. **承認が必要なコマンドパターン:**
+   - ✅ `Bash(npm install:*)` - 安全
+   - ✅ `Bash(git add:*)` - 安全
+   - ❌ `Bash(DATABASE_URL="..." command:*)` - 機密情報含む、承認禁止
+
+3. **.gitignoreに必ず追加:**
+   ```gitignore
+   # Claude Code settings (contains sensitive data)
+   .claude/settings.local.json
+   ```
+
+4. **万が一コミットしてしまった場合:**
+   ```bash
+   # 1. Gitトラッキングから削除
+   git rm --cached .claude/settings.local.json
+
+   # 2. コミット
+   git commit -m "Security: Remove sensitive file"
+
+   # 3. プッシュ
+   git push
+
+   # 4. データベースパスワードを変更（必須）
+   ```
+
+**理由**:
+- Claude Code設定ファイルに機密情報を記録すると、誤ってGitにコミットされるリスクがある
+- GitHubに公開されると、データベースが不正アクセスされる可能性がある
+- 個人開発でも、リポジトリが公開設定の場合は危険
+
 ---
 
 ## Claude Skills使用ガイドライン
