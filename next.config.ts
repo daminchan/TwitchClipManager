@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
-    '/api/**/*': ['./node_modules/.prisma/client/**/*'],
+    '/**': ['./node_modules/.prisma/client/**/*'],
   },
   // Prisma バイナリを standalone output に含める
   outputFileTracingRoot: process.cwd(),
