@@ -1,6 +1,11 @@
 {
+  "installCommand": "npm install",
+  "buildCommand": "prisma generate && next build",
   "functions": {
     "app/**/*": {
+      "includeFiles": "node_modules/.prisma/client/**"
+    },
+    "api/**/*": {
       "includeFiles": "node_modules/.prisma/client/**"
     }
   }
