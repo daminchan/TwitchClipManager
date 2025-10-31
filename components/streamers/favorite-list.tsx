@@ -3,7 +3,8 @@
 // - セクション4.6: コンポーネント構造
 // - セクション8.2: Props型定義
 // - セクション9: エラーハンドリング
-// - サーバーアクションの使用
+// - サーバーアクション: お気に入り追加/削除のみ使用
+// - API Routes: ライブステータス取得（短時間キャッシュ）
 
 'use client';
 
@@ -12,6 +13,7 @@ import { useState, useEffect, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { API_ENDPOINTS } from '@/lib/constants';
 
 import type { FavoriteStreamer } from '@/types';
 import { getFavoriteStreamers, removeFavoriteStreamer } from '@/actions/favorites';
@@ -53,20 +55,35 @@ export function FavoriteList({ onSelectStreamer, refreshTrigger }: FavoriteListP
       if (favoritesData.length > 0) {
         const broadcasterIds = favoritesData.map((f) => f.streamerId);
 
-        // サーバーアクションでライブステータスを取得
-        const { getLiveStatus } = await import('@/actions/twitch');
-        const liveStatusResult = await getLiveStatus(broadcasterIds);
+        // API Route でライブステータスを取得（短時間キャッシュ）
+        try {
+          const response = await fetch(
+            `${API_ENDPOINTS.TWITCH.LIVE_STATUS}?ids=${broadcasterIds.join(',')}`,
+            {
+              method: 'GET',
+            }
+          );
 
-        if (liveStatusResult.success && liveStatusResult.data) {
-          const liveStreamerIds = new Set(liveStatusResult.data.map((stream) => stream.user_id));
+          if (response.ok) {
+            const liveStatusResult = await response.json();
 
-          const favoritesWithLive = favoritesData.map((favorite) => ({
-            ...favorite,
-            isLive: liveStreamerIds.has(favorite.streamerId),
-          }));
+            if (liveStatusResult.data) {
+              const liveStreamerIds = new Set(liveStatusResult.data.map((stream: any) => stream.user_id));
 
-          setFavorites(favoritesWithLive);
-        } else {
+              const favoritesWithLive = favoritesData.map((favorite) => ({
+                ...favorite,
+                isLive: liveStreamerIds.has(favorite.streamerId),
+              }));
+
+              setFavorites(favoritesWithLive);
+            } else {
+              setFavorites(favoritesData);
+            }
+          } else {
+            setFavorites(favoritesData);
+          }
+        } catch (error) {
+          console.error('Fetch live status error:', error);
           setFavorites(favoritesData);
         }
       } else {

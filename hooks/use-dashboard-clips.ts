@@ -1,14 +1,17 @@
 /**
  * Dashboard クリップ管理用カスタムフック
  * クリップの取得、フィルター、ソート、いいね機能のロジックを集約
+ *
+ * 適用ルール:
+ * - API Routes を使用してクリップ取得（キャッシュ最適化）
+ * - Server Actions はいいね機能のみ使用（データベース書き込み）
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { TwitchClip } from '@/types/twitch';
 import type { SortType } from '@/components/dashboard/clip-sort-tabs';
-import { ClipFilterType } from '@/lib/constants';
+import { ClipFilterType, API_ENDPOINTS } from '@/lib/constants';
 import { getLikedClips, addLikedClip, removeLikedClip } from '@/actions/liked-clips';
-import { getFavoriteClips } from '@/actions/clips';
 
 export function useDashboardClips() {
   const [allClips, setAllClips] = useState<TwitchClip[]>([]);
@@ -21,18 +24,33 @@ export function useDashboardClips() {
   const [likedClipIds, setLikedClipIds] = useState<Set<string>>(new Set());
 
   // お気に入り配信者のクリップを取得（フィルター付き）
-  const fetchAllFavoriteClips = async (filter?: ClipFilterType) => {
+  const fetchAllFavoriteClips = useCallback(async (filter?: ClipFilterType) => {
     setIsLoadingClips(true);
     setClipError(null);
 
     const filterParam = filter || clipFilter;
 
     try {
-      // サーバーアクションでクリップを取得
-      const result = await getFavoriteClips(filterParam);
+      // API Route でクリップを取得（キャッシュ最適化）
+      const response = await fetch(
+        `${API_ENDPOINTS.CLIPS.FAVORITES}?filter=${filterParam}`,
+        {
+          method: 'GET',
+          credentials: 'include', // Cookie を含める（認証）
+        }
+      );
 
-      if (!result.success || !result.data) {
-        throw new Error(result.error || 'クリップの取得に失敗しました');
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('認証が必要です');
+        }
+        throw new Error('クリップの取得に失敗しました');
+      }
+
+      const result = await response.json();
+
+      if (!result.data) {
+        throw new Error('データが取得できませんでした');
       }
 
       setAllClips(result.data);
@@ -47,7 +65,7 @@ export function useDashboardClips() {
     } finally {
       setIsLoadingClips(false);
     }
-  };
+  }, [clipFilter]);
 
   // いいねしたクリップIDを取得
   const fetchLikedClips = async () => {
@@ -142,6 +160,7 @@ export function useDashboardClips() {
   // 検索とソートが変更されたら再フィルター
   useEffect(() => {
     applyFiltersAndSort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allClips, searchQuery, sortType]);
 
   return {

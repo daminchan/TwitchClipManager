@@ -1,44 +1,37 @@
 /**
- * クリップ関連のサーバーアクション
- * セキュアなサーバー側処理
+ * お気に入り配信者のクリップ取得 API Route
  *
+ * 適用スキル: api-creator
  * 適用ルール:
- * - CLAUDE.md セクション801-903: サーバーアクション
- * - CLAUDE.md セクション541-564: エラーハンドリング
+ * - CLAUDE.md セクション6: API設計原則
+ * - API Routes: 読み取り操作でキャッシュが重要
+ *
+ * 理由:
+ * - クリップデータは配信者ごとにキャッシュ可能
+ * - 複数ユーザーが同じ配信者をお気に入りにしている場合、キャッシュを共有
+ * - Rate Limit 対策（Twitch API 呼び出しを削減）
  */
 
-'use server';
-
+import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getClipsByBroadcaster } from '@/lib/twitch-api';
 import { CLIP_FILTERS, ClipFilterType } from '@/lib/constants';
 import type { TwitchClip } from '@/types/twitch';
-import type { FavoriteStreamer } from '@/types';
 
-export interface GetFavoriteClipsResult {
-  success: boolean;
-  data?: TwitchClip[];
-  error?: string;
-}
-
-/**
- * お気に入り配信者全員の人気クリップを取得
- *
- * @param filter - WEEK（過去7日間、各配信者5件）| THREE_DAYS（直近3日間、合計10件）| MONTH（過去30日間、合計3件）
- */
-export async function getFavoriteClips(
-  filter: ClipFilterType = 'WEEK'
-): Promise<GetFavoriteClipsResult> {
+export async function GET(request: Request) {
   try {
     // 認証チェック
     const session = await auth();
     if (!session?.user?.id) {
-      return {
-        success: false,
-        error: 'Unauthorized'
-      };
+      return NextResponse.json(
+        { error: '認証が必要です', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
     }
+
+    const { searchParams } = new URL(request.url);
+    const filter = (searchParams.get('filter') || 'WEEK') as ClipFilterType;
 
     // フィルター設定を取得
     const filterConfig = CLIP_FILTERS[filter] || CLIP_FILTERS.WEEK;
@@ -50,10 +43,14 @@ export async function getFavoriteClips(
     });
 
     if (favorites.length === 0) {
-      return {
-        success: true,
-        data: []
-      };
+      return NextResponse.json(
+        { data: [] },
+        {
+          headers: {
+            'Cache-Control': 'private, max-age=60', // 1分間キャッシュ
+          },
+        }
+      );
     }
 
     // 期間を設定
@@ -62,16 +59,16 @@ export async function getFavoriteClips(
     startedAt.setDate(startedAt.getDate() - filterConfig.days);
 
     // 各配信者のクリップを並列で取得
-    const clipPromises = favorites.map(async (favorite: FavoriteStreamer) => {
+    const clipPromises = favorites.map(async (favorite) => {
       try {
         const clips = await getClipsByBroadcaster(favorite.streamerId, {
-          first: filter === 'WEEK' ? filterConfig.limit : 100, // WEEK以外は全件取得して後でトップを抽出
+          first: filter === 'WEEK' ? filterConfig.limit : 100,
           startedAt: startedAt.toISOString(),
           endedAt: endedAt.toISOString(),
         });
 
         // 配信者情報を各クリップに追加
-        return clips.map((clip: any) => ({
+        return clips.map((clip: TwitchClip) => ({
           ...clip,
           favoriteStreamerId: favorite.streamerId,
           favoriteStreamerName: favorite.streamerName,
@@ -94,15 +91,29 @@ export async function getFavoriteClips(
       allClips = allClips.slice(0, filterConfig.limit);
     }
 
-    return {
-      success: true,
-      data: allClips
-    };
+    return NextResponse.json(
+      { data: allClips },
+      {
+        headers: {
+          // プライベートキャッシュ（ユーザーごとに異なるデータ）
+          // 5分間ブラウザキャッシュ
+          'Cache-Control': 'private, max-age=300',
+        },
+      }
+    );
   } catch (error) {
     console.error('Get favorite clips error:', error);
-    return {
-      success: false,
-      error: 'Failed to fetch clips'
-    };
+
+    if (error instanceof Error) {
+      console.error('Error details:', error.message);
+    }
+
+    return NextResponse.json(
+      {
+        error: 'クリップの取得に失敗しました',
+        code: 'FETCH_FAILED'
+      },
+      { status: 500 }
+    );
   }
 }

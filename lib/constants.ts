@@ -86,7 +86,7 @@ export const API_ENDPOINTS = {
     DELETE: '/api/user/delete',
   },
   TWITCH: {
-    STREAMERS: '/api/twitch/streamers',
+    STREAMERS: '/api/twitch/search',
     CLIPS: '/api/twitch/clips',
     LIVE_STATUS: '/api/twitch/live-status',
   },

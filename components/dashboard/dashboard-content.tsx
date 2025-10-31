@@ -75,6 +75,8 @@ export function DashboardContent({ userId, userEmail }: DashboardContentProps) {
       if (result.success) {
         setToast({ message: result.message, type: 'success' });
         setRefreshFavorites((prev) => prev + 1);
+        // 即座にクリップを再取得（ブラウザ更新不要）
+        await fetchAllFavoriteClips();
       } else {
         setToast({
           message: result.message,
@@ -105,6 +107,7 @@ export function DashboardContent({ userId, userEmail }: DashboardContentProps) {
   useEffect(() => {
     fetchAllFavoriteClips();
     fetchLikedClips();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshFavorites]);
 
   // モバイル検索・お気に入りイベントリスナー

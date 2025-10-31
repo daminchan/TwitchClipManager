@@ -2,12 +2,11 @@
 // 適用ルール:
 // - セクション3: ディレクトリ構造（hooks/配下に配置）
 // - セクション4.3: 関数命名規則（camelCase）
-// - CLAUDE.md セクション801-903: サーバーアクション使用
+// - API Routes を使用してクリップ取得（キャッシュ最適化）
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { TwitchClip } from '@/types/twitch';
-import { getFavoriteClips } from '@/actions/clips';
-import type { ClipFilterType } from '@/lib/constants';
+import { ClipFilterType, API_ENDPOINTS } from '@/lib/constants';
 
 export function useFavoriteClips(
   refreshTrigger: number,
@@ -19,18 +18,31 @@ export function useFavoriteClips(
 
   useEffect(() => {
     fetchClips();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshTrigger, filter]);
 
-  const fetchClips = async () => {
+  const fetchClips = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // サーバーアクションでクリップを取得
-      const result = await getFavoriteClips(filter);
+      // API Route でクリップを取得（キャッシュ最適化）
+      const response = await fetch(
+        `${API_ENDPOINTS.CLIPS.FAVORITES}?filter=${filter}`,
+        {
+          method: 'GET',
+          credentials: 'include',
+        }
+      );
 
-      if (!result.success || !result.data) {
-        throw new Error(result.error || 'クリップの取得に失敗しました');
+      if (!response.ok) {
+        throw new Error('クリップの取得に失敗しました');
+      }
+
+      const result = await response.json();
+
+      if (!result.data) {
+        throw new Error('データが取得できませんでした');
       }
 
       setClips(result.data);
@@ -45,7 +57,7 @@ export function useFavoriteClips(
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [filter]);
 
   return { clips, isLoading, error, refetch: fetchClips };
 }
