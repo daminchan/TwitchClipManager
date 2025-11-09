@@ -16,29 +16,18 @@ export const DEFAULT_TIME_RANGE_DAYS = 7;
 
 /**
  * クリップフィルターの設定
- * 各フィルターの期間と取得件数を定義
+ * 直近2日間の各配信者上位5件を取得
+ *
+ * 理由: 7日間だと最初に伸びた動画が居座り、新しいクリップが埋もれてしまう
+ * 2日間にすることで常に新鮮なクリップが表示される
  */
 export const CLIP_FILTERS = {
-  WEEK: {
-    days: 7,
+  RECENT: {
+    days: 2,
     limit: 5, // 各配信者5件
-    label: '過去7日間',
-    icon: '📊',
-    description: '各配信者の過去7日間のクリップ（各5件）',
-  },
-  THREE_DAYS: {
-    days: 3,
-    limit: 10, // 合計10件
-    label: '直近3日・トップ10',
+    label: '直近48時間',
     icon: '🔥',
-    description: '直近3日間の再生数トップ10',
-  },
-  MONTH: {
-    days: 30,
-    limit: 3, // 合計3件
-    label: '30日間・トップ3',
-    icon: '👑',
-    description: '過去30日間の再生数トップ3',
+    description: '各配信者の直近48時間のクリップ（各5件）',
   },
 } as const;
 
@@ -86,7 +75,7 @@ export const API_ENDPOINTS = {
     DELETE: '/api/user/delete',
   },
   TWITCH: {
-    STREAMERS: '/api/twitch/streamers',
+    STREAMERS: '/api/twitch/search',
     CLIPS: '/api/twitch/clips',
     LIVE_STATUS: '/api/twitch/live-status',
   },

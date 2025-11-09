@@ -15,55 +15,6 @@ export interface ActionResult {
   error?: string;
 }
 
-export interface FavoriteStreamer {
-  id: string;
-  userId: string;
-  streamerId: string;
-  streamerName: string;
-  streamerLogin: string;
-  streamerImage: string | null;
-  createdAt: Date;
-}
-
-export interface GetFavoritesResult {
-  success: boolean;
-  data?: FavoriteStreamer[];
-  error?: string;
-}
-
-/**
- * お気に入り配信者一覧を取得
- */
-export async function getFavoriteStreamers(): Promise<GetFavoritesResult> {
-  try {
-    // 認証チェック
-    const session = await auth();
-    if (!session?.user?.id) {
-      return {
-        success: false,
-        error: 'Unauthorized'
-      };
-    }
-
-    // お気に入り配信者を取得
-    const favorites = await prisma.favoriteStreamer.findMany({
-      where: { userId: session.user.id },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    return {
-      success: true,
-      data: favorites
-    };
-  } catch (error) {
-    console.error('Get favorite streamers error:', error);
-    return {
-      success: false,
-      error: 'Failed to fetch favorites'
-    };
-  }
-}
-
 /**
  * お気に入り配信者を追加
  */
