@@ -16,10 +16,10 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getClipsByBroadcaster } from '@/lib/twitch-api';
-import { CLIP_FILTERS, ClipFilterType } from '@/lib/constants';
+import { CLIP_FILTERS } from '@/lib/constants';
 import type { TwitchClip } from '@/types/twitch';
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     // 認証チェック
     const session = await auth();
@@ -30,11 +30,8 @@ export async function GET(request: Request) {
       );
     }
 
-    const { searchParams } = new URL(request.url);
-    const filter = (searchParams.get('filter') || 'WEEK') as ClipFilterType;
-
-    // フィルター設定を取得
-    const filterConfig = CLIP_FILTERS[filter] || CLIP_FILTERS.WEEK;
+    // 直近2日間の設定を使用（フィルターは1種類のみ）
+    const filterConfig = CLIP_FILTERS.RECENT;
 
     // お気に入り配信者を取得
     const favorites = await prisma.favoriteStreamer.findMany({
@@ -58,11 +55,11 @@ export async function GET(request: Request) {
     const startedAt = new Date();
     startedAt.setDate(startedAt.getDate() - filterConfig.days);
 
-    // 各配信者のクリップを並列で取得
+    // 各配信者のクリップを並列で取得（各配信者5件）
     const clipPromises = favorites.map(async (favorite) => {
       try {
         const clips = await getClipsByBroadcaster(favorite.streamerId, {
-          first: filter === 'WEEK' ? filterConfig.limit : 100,
+          first: filterConfig.limit, // 各配信者5件
           startedAt: startedAt.toISOString(),
           endedAt: endedAt.toISOString(),
         });
@@ -81,15 +78,10 @@ export async function GET(request: Request) {
     });
 
     const allClipsArrays = await Promise.all(clipPromises);
-    let allClips = allClipsArrays.flat();
+    const allClips = allClipsArrays.flat();
 
     // 再生数順にソート
     allClips.sort((a, b) => b.view_count - a.view_count);
-
-    // THREE_DAYSとMONTHの場合は上位N件のみ抽出
-    if (filter === 'THREE_DAYS' || filter === 'MONTH') {
-      allClips = allClips.slice(0, filterConfig.limit);
-    }
 
     return NextResponse.json(
       { data: allClips },

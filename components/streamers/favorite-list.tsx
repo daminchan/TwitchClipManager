@@ -1,6 +1,8 @@
 // 適用スキル: component-creator
 // 適用ルール:
+// - セクション2: 技術スタック（React Query）
 // - セクション4.6: コンポーネント構造
+// - セクション7: 状態管理（useQuery でサーバー状態管理）
 // - セクション8.2: Props型定義
 // - セクション9: エラーハンドリング
 // - サーバーアクション: お気に入り追加/削除のみ使用
@@ -8,7 +10,8 @@
 
 'use client';
 
-import { useState, useEffect, useTransition } from 'react';
+import { useTransition } from 'react';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -16,7 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { API_ENDPOINTS } from '@/lib/constants';
 
 import type { FavoriteStreamer } from '@/types';
-import { getFavoriteStreamers, removeFavoriteStreamer } from '@/actions/favorites';
+import { removeFavoriteStreamer } from '@/actions/favorites';
 
 interface FavoriteWithLive extends FavoriteStreamer {
   isLive?: boolean;
@@ -24,32 +27,38 @@ interface FavoriteWithLive extends FavoriteStreamer {
 
 interface FavoriteListProps {
   onSelectStreamer: (favorite: FavoriteStreamer) => void;
-  refreshTrigger?: number;
+  onRemoveFavorite?: () => void;
 }
 
-export function FavoriteList({ onSelectStreamer, refreshTrigger }: FavoriteListProps) {
-  const [favorites, setFavorites] = useState<FavoriteWithLive[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export function FavoriteList({ onSelectStreamer, onRemoveFavorite }: FavoriteListProps) {
+  const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    fetchFavorites();
-  }, [refreshTrigger]);
+  // お気に入り配信者を取得（React Query）
+  const { data: favorites = [], isLoading, error } = useQuery({
+    queryKey: ['favorites'],
+    queryFn: async () => {
+      // API Route でお気に入りを取得
+      const response = await fetch(API_ENDPOINTS.FAVORITES, {
+        method: 'GET',
+        credentials: 'include',
+        cache: 'no-store', // ブラウザキャッシュを使わない（React Queryのキャッシュのみ使用）
+      });
 
-  const fetchFavorites = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // サーバーアクションでお気に入りを取得
-      const result = await getFavoriteStreamers();
-
-      if (!result.success || !result.data) {
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('認証が必要です');
+        }
         throw new Error('お気に入りの取得に失敗しました');
       }
 
-      const favoritesData = result.data;
+      const result = await response.json();
+
+      if (!result.data) {
+        throw new Error('データが取得できませんでした');
+      }
+
+      const favoritesData = result.data as FavoriteStreamer[];
 
       // Fetch live status for all favorites
       if (favoritesData.length > 0) {
@@ -70,43 +79,49 @@ export function FavoriteList({ onSelectStreamer, refreshTrigger }: FavoriteListP
             if (liveStatusResult.data) {
               const liveStreamerIds = new Set(liveStatusResult.data.map((stream: any) => stream.user_id));
 
-              const favoritesWithLive = favoritesData.map((favorite) => ({
+              const favoritesWithLive: FavoriteWithLive[] = favoritesData.map((favorite) => ({
                 ...favorite,
                 isLive: liveStreamerIds.has(favorite.streamerId),
               }));
 
-              setFavorites(favoritesWithLive);
-            } else {
-              setFavorites(favoritesData);
+              return favoritesWithLive;
             }
-          } else {
-            setFavorites(favoritesData);
           }
         } catch (error) {
           console.error('Fetch live status error:', error);
-          setFavorites(favoritesData);
         }
-      } else {
-        setFavorites(favoritesData);
       }
-    } catch (error) {
-      console.error('Fetch favorites error:', error);
-      setError('お気に入りの読み込みに失敗しました');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
+      return favoritesData as FavoriteWithLive[];
+    },
+    staleTime: 2 * 60 * 1000, // 2分間キャッシュ（ライブステータスは頻繁に更新）
+  });
+
+  // お気に入り削除のミューテーション
+  const removeMutation = useMutation({
+    mutationFn: async (streamerId: string) => {
+      return await removeFavoriteStreamer(streamerId);
+    },
+    onSuccess: async () => {
+      // お気に入りリストを再取得
+      await queryClient.invalidateQueries({ queryKey: ['favorites'] });
+      // クリップキャッシュも無効化（全フィルター対象）
+      await queryClient.invalidateQueries({
+        queryKey: ['clips', 'favorites'],
+        refetchType: 'active'
+      });
+      // 親コンポーネントに通知
+      onRemoveFavorite?.();
+    },
+  });
 
   const handleRemove = async (streamerId: string, e: React.MouseEvent) => {
     e.stopPropagation();
 
     startTransition(async () => {
-      // サーバーアクションでお気に入りを削除
-      const result = await removeFavoriteStreamer(streamerId);
+      const result = await removeMutation.mutateAsync(streamerId);
 
-      if (result.success) {
-        setFavorites(favorites.filter((f) => f.streamerId !== streamerId));
-      } else {
+      if (!result.success) {
         alert(result.message);
       }
     });
@@ -119,7 +134,7 @@ export function FavoriteList({ onSelectStreamer, refreshTrigger }: FavoriteListP
   if (error) {
     return (
       <div className="bg-red-900/30 border border-red-700/50 text-red-400 text-sm p-3 rounded-md">
-        {error}
+        お気に入りの読み込みに失敗しました
       </div>
     );
   }

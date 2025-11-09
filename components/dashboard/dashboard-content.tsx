@@ -1,5 +1,6 @@
 // 適用スキル: component-creator
 // 適用ルール:
+// - セクション2: 技術スタック（React Query）
 // - セクション4.6: コンポーネント構造
 // - セクション10.2: サーバー/クライアントコンポーネント分離
 // - サーバーアクションの使用
@@ -8,13 +9,13 @@
 
 import { useState, useEffect, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { Search, X } from 'lucide-react';
 
 import { Header } from '@/components/layout/header';
 import { MobileNav } from '@/components/layout/mobile-nav';
 import { DashboardSidebar } from '@/components/dashboard/dashboard-sidebar';
 import { ClipSortTabs } from '@/components/dashboard/clip-sort-tabs';
-import { ClipFilterTabs } from '@/components/dashboard/clip-filter-tabs';
 import { StreamerSearch } from '@/components/streamers/streamer-search';
 import { FavoriteList } from '@/components/streamers/favorite-list';
 import { ClipGrid } from '@/components/clips/clip-grid';
@@ -23,7 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Toast } from '@/components/ui/toast';
 
 import { useDashboardClips } from '@/hooks/use-dashboard-clips';
-import { LABELS, ROUTES, ClipFilterType } from '@/lib/constants';
+import { LABELS, ROUTES } from '@/lib/constants';
 import { addFavoriteStreamer } from '@/actions/favorites';
 
 import type { TwitchChannel } from '@/types/twitch';
@@ -35,6 +36,7 @@ interface DashboardContentProps {
 
 export function DashboardContent({ userId, userEmail }: DashboardContentProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   // カスタムフックでクリップロジックを管理
   const {
@@ -43,18 +45,13 @@ export function DashboardContent({ userId, userEmail }: DashboardContentProps) {
     clipError,
     searchQuery,
     sortType,
-    clipFilter,
     likedClipIds,
     setSearchQuery,
     setSortType,
-    setClipFilter,
-    fetchAllFavoriteClips,
-    fetchLikedClips,
     handleLikeToggle: handleLikeToggleHook,
   } = useDashboardClips();
 
   // UI State
-  const [refreshFavorites, setRefreshFavorites] = useState(0);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
@@ -74,9 +71,12 @@ export function DashboardContent({ userId, userEmail }: DashboardContentProps) {
 
       if (result.success) {
         setToast({ message: result.message, type: 'success' });
-        setRefreshFavorites((prev) => prev + 1);
-        // 即座にクリップを再取得（ブラウザ更新不要）
-        await fetchAllFavoriteClips();
+        // React Query のキャッシュを無効化して自動再取得
+        await queryClient.invalidateQueries({
+          queryKey: ['clips', 'favorites'],
+          refetchType: 'active'
+        });
+        await queryClient.invalidateQueries({ queryKey: ['favorites'] });
       } else {
         setToast({
           message: result.message,
@@ -84,6 +84,16 @@ export function DashboardContent({ userId, userEmail }: DashboardContentProps) {
         });
       }
     });
+  };
+
+  // お気に入り配信者を削除したときのハンドラー
+  const handleRemoveFavorite = async () => {
+    // React Query のキャッシュを無効化して自動再取得
+    await queryClient.invalidateQueries({
+      queryKey: ['clips', 'favorites'],
+      refetchType: 'active'
+    });
+    await queryClient.invalidateQueries({ queryKey: ['favorites'] });
   };
 
   // いいね/解除のラッパー（トースト表示付き）
@@ -96,19 +106,6 @@ export function DashboardContent({ userId, userEmail }: DashboardContentProps) {
       });
     }
   };
-
-  // フィルター変更時にクリップを再取得
-  const handleFilterChange = (filter: ClipFilterType) => {
-    setClipFilter(filter);
-    fetchAllFavoriteClips(filter);
-  };
-
-  // お気に入り全員のクリップを取得（初回 + お気に入り更新時 + フィルター変更時）
-  useEffect(() => {
-    fetchAllFavoriteClips();
-    fetchLikedClips();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [refreshFavorites]);
 
   // モバイル検索・お気に入りイベントリスナー
   useEffect(() => {
@@ -133,13 +130,13 @@ export function DashboardContent({ userId, userEmail }: DashboardContentProps) {
         <DashboardSidebar
           isSidebarOpen={isSidebarOpen}
           onAddFavorite={handleAddFavorite}
-          refreshTrigger={refreshFavorites}
+          onRemoveFavorite={handleRemoveFavorite}
         />
 
         {/* メインコンテンツ */}
         <main className="flex-1 overflow-y-auto">
           <div className="p-6 pb-24 lg:pb-6">
-            {/* 検索バーとフィルター */}
+            {/* 検索バーとソート */}
             <div className="mb-6 space-y-4">
               <div className="flex items-center gap-3">
                 <div className="relative flex-1">
@@ -153,13 +150,6 @@ export function DashboardContent({ userId, userEmail }: DashboardContentProps) {
                   />
                 </div>
               </div>
-
-              {/* クリップフィルタータブ */}
-              <ClipFilterTabs
-                currentFilter={clipFilter}
-                onFilterChange={handleFilterChange}
-                clipCount={filteredClips.length}
-              />
 
               {/* ソートタブ */}
               <ClipSortTabs
@@ -230,7 +220,7 @@ export function DashboardContent({ userId, userEmail }: DashboardContentProps) {
           <div className="flex-1 overflow-y-auto p-4">
             <FavoriteList
               onSelectStreamer={() => setShowMobileFavorites(false)}
-              refreshTrigger={refreshFavorites}
+              onRemoveFavorite={handleRemoveFavorite}
             />
           </div>
         </div>

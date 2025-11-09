@@ -15,13 +15,13 @@ import type { TwitchChannel } from '@/types/twitch';
 interface DashboardSidebarProps {
   isSidebarOpen: boolean;
   onAddFavorite: (streamer: TwitchChannel) => void;
-  refreshTrigger: number;
+  onRemoveFavorite?: () => void;
 }
 
 export function DashboardSidebar({
   isSidebarOpen,
   onAddFavorite,
-  refreshTrigger,
+  onRemoveFavorite,
 }: DashboardSidebarProps) {
   return (
     <aside
@@ -64,7 +64,7 @@ export function DashboardSidebar({
           {isSidebarOpen && (
             <FavoriteList
               onSelectStreamer={() => {}}
-              refreshTrigger={refreshTrigger}
+              onRemoveFavorite={onRemoveFavorite}
             />
           )}
         </div>
