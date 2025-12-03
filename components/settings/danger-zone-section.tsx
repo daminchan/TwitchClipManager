@@ -32,7 +32,7 @@ export function DangerZoneSection({ onSuccess, onError }: DangerZoneSectionProps
 
         // 少し待ってからログアウト
         setTimeout(async () => {
-          await signOut({ callbackUrl: ROUTES.LOGIN });
+          await signOut({ callbackUrl: ROUTES.HOME });
         }, TIMING.REDIRECT_DELAY);
       } else {
         onError(result.message);
@@ -82,7 +82,7 @@ export function DangerZoneSection({ onSuccess, onError }: DangerZoneSectionProps
                 className="flex-1 bg-red-600 hover:bg-red-700"
                 disabled={isPending}
               >
-                {isPending ? '削除中...' : '完全に削除'}
+                {isPending ? LABELS.BUTTONS.DELETING : LABELS.BUTTONS.DELETE_PERMANENTLY}
               </Button>
             </div>
           </div>

@@ -164,3 +164,44 @@ export async function getClipsByBroadcaster(
 
   return sortedClips;
 }
+
+/**
+ * 人気ゲーム一覧を取得（視聴者数順）
+ */
+export async function getTopGames(limit: number = 50) {
+  const data = await twitchApiRequest('/games/top', {
+    first: limit.toString(),
+  });
+
+  return data.data;
+}
+
+/**
+ * ゲームIDでクリップを取得（期間指定可能、再生数順）
+ */
+export async function getClipsByGame(
+  gameId: string,
+  options: {
+    first?: number;
+    startedAt?: string;
+    endedAt?: string;
+  } = {}
+) {
+  const params: Record<string, string> = {
+    game_id: gameId,
+    first: (options.first || 100).toString(),
+  };
+
+  if (options.startedAt) {
+    params.started_at = options.startedAt;
+  }
+
+  if (options.endedAt) {
+    params.ended_at = options.endedAt;
+  }
+
+  const data = await twitchApiRequest('/clips', params);
+
+  // APIは自動的に再生数順にソート済み
+  return data.data;
+}

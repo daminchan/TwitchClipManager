@@ -10,6 +10,7 @@ import { useState, useEffect, useTransition } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ClipGrid } from './clip-grid';
 import { Toast } from '@/components/ui/toast';
+import { useToast } from '@/hooks/use-toast';
 import type { LikedClip } from '@/types/database';
 import type { TwitchClip } from '@/types/twitch';
 import { getLikedClips, removeLikedClip } from '@/actions/liked-clips';
@@ -18,7 +19,7 @@ export function LikedClipsSection() {
   const [likedClips, setLikedClips] = useState<TwitchClip[]>([]);
   const [likedClipIds, setLikedClipIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const { toast, showToast, hideToast } = useToast();
   const [isPending, startTransition] = useTransition();
 
   const fetchLikedClips = async () => {
@@ -55,7 +56,7 @@ export function LikedClipsSection() {
       setLikedClipIds(new Set(result.data.map((clip: LikedClip) => clip.clipId)));
     } catch (error) {
       console.error('Fetch liked clips error:', error);
-      setToast({ message: 'いいねしたクリップの読み込みに失敗しました', type: 'error' });
+      showToast('いいねしたクリップの読み込みに失敗しました', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -76,9 +77,9 @@ export function LikedClipsSection() {
           newSet.delete(clipId);
           return newSet;
         });
-        setToast({ message: result.message, type: 'info' });
+        showToast(result.message, 'info');
       } else {
-        setToast({ message: result.message, type: 'error' });
+        showToast(result.message, 'error');
       }
     });
   };
@@ -118,7 +119,7 @@ export function LikedClipsSection() {
         <Toast
           message={toast.message}
           type={toast.type}
-          onClose={() => setToast(null)}
+          onClose={hideToast}
         />
       )}
     </>

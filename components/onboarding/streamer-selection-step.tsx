@@ -1,0 +1,171 @@
+// 適用スキル: component-creator
+// 適用ルール:
+// - セクション4.6: コンポーネント構造
+// - セクション10.2: サーバー/クライアントコンポーネント分離
+// - オンボーディングフロー設計.md: おすすめ配信者機能（クリップベース）
+
+'use client';
+
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import Image from 'next/image';
+import { Check, Loader2 } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import type { RecommendedStreamer } from '@/types/twitch';
+
+interface StreamerSelectionStepProps {
+  gameId: string;
+  gameName: string;
+  onNext: (selectedStreamers: RecommendedStreamer[]) => void;
+  onBack?: () => void;
+}
+
+export function StreamerSelectionStep({
+  gameId,
+  gameName,
+  onNext,
+  onBack,
+}: StreamerSelectionStepProps) {
+  const [selectedStreamerIds, setSelectedStreamerIds] = useState<Set<string>>(new Set());
+
+  // おすすめ配信者を取得
+  const { data: streamersData, isLoading } = useQuery({
+    queryKey: ['recommendations', 'streamers', gameId],
+    queryFn: async () => {
+      const res = await fetch(`/api/recommendations/streamers?gameId=${gameId}`);
+      if (!res.ok) throw new Error('Failed to fetch recommended streamers');
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000, // 5分間キャッシュ
+  });
+
+  const streamers: RecommendedStreamer[] = streamersData?.data || [];
+
+  const toggleStreamer = (streamerId: string) => {
+    setSelectedStreamerIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(streamerId)) {
+        newSet.delete(streamerId);
+      } else {
+        newSet.add(streamerId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleNext = () => {
+    const selected = streamers.filter((s) => selectedStreamerIds.has(s.userId));
+    onNext(selected);
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* ヘッダー */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-100 mb-2">
+          あなたへのおすすめ配信者
+        </h2>
+        <p className="text-sm text-gray-400">
+          {gameName} の人気配信者です。お気に入りに追加する配信者を選択してください
+        </p>
+      </div>
+
+      {/* 配信者一覧 */}
+      <div className="flex-1 overflow-y-auto mb-6">
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center h-full">
+            <Loader2 className="w-12 h-12 text-purple-600 animate-spin mb-4" />
+            <p className="text-gray-400">おすすめ配信者を取得中...</p>
+          </div>
+        ) : streamers.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full">
+            <p className="text-gray-400 mb-2">おすすめ配信者が見つかりませんでした</p>
+            <p className="text-sm text-gray-500">別のゲームを試してみてください</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {streamers.map((streamer) => {
+              const isSelected = selectedStreamerIds.has(streamer.userId);
+
+              return (
+                <button
+                  key={streamer.userId}
+                  onClick={() => toggleStreamer(streamer.userId)}
+                  className={`group relative flex flex-col items-center p-4 rounded-lg transition-all duration-300 ${
+                    isSelected
+                      ? 'bg-purple-600/20 ring-2 ring-purple-600 scale-105 shadow-lg shadow-purple-500/30'
+                      : 'bg-[#1a1a1a] hover:bg-[#2a2a2a] hover:ring-1 hover:ring-gray-600 hover:scale-105 hover:shadow-md'
+                  }`}
+                >
+                  {/* プロフィール画像 */}
+                  <div className="relative w-24 h-24 mb-3">
+                    {streamer.profileImageUrl ? (
+                      <Image
+                        src={streamer.profileImageUrl}
+                        alt={streamer.userName}
+                        fill
+                        className="rounded-full object-cover"
+                        sizes="96px"
+                      />
+                    ) : (
+                      <div className="w-full h-full rounded-full bg-gray-700 flex items-center justify-center">
+                        <span className="text-3xl text-gray-400">
+                          {streamer.userName.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    {/* チェックマーク */}
+                    {isSelected && (
+                      <div className="absolute -top-1 -right-1 w-7 h-7 bg-purple-600 rounded-full flex items-center justify-center ring-2 ring-[#0f0f0f] animate-in zoom-in-0 duration-200">
+                        <Check className="w-4 h-4 text-white" strokeWidth={3} />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 配信者名 */}
+                  <p className="text-sm font-semibold text-gray-100 mb-1 text-center line-clamp-1">
+                    {streamer.userName}
+                  </p>
+
+                  {/* 統計情報 */}
+                  <div className="flex flex-col items-center gap-1">
+                    <p className="text-xs text-gray-400">
+                      クリップ再生数:{' '}
+                      <span className="text-purple-400 font-semibold">
+                        {streamer.totalClipViews.toLocaleString()}
+                      </span>
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {streamer.clipCount} クリップ
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* フッターボタン */}
+      <div className="flex gap-3">
+        {onBack && (
+          <Button
+            variant="outline"
+            onClick={onBack}
+            className="flex-1 bg-[#1a1a1a] border-gray-700 text-gray-100 hover:bg-[#2a2a2a]"
+          >
+            戻る
+          </Button>
+        )}
+        <Button
+          onClick={handleNext}
+          disabled={selectedStreamerIds.size === 0 || isLoading}
+          className="flex-1 bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          次へ ({selectedStreamerIds.size}人選択)
+        </Button>
+      </div>
+    </div>
+  );
+}

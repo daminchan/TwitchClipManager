@@ -9,14 +9,16 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Heart, ThumbsUp, User } from 'lucide-react';
 
+import { ROUTES } from '@/lib/constants';
+
 export function MobileNav() {
   const pathname = usePathname();
 
   const navItems = [
-    { href: '/dashboard', icon: Home, label: 'ホーム' },
-    { href: '#favorites', icon: Heart, label: 'お気に入り', onClick: true },
-    { href: '/favorites-clips', icon: ThumbsUp, label: 'クリップ' },
-    { href: '/settings', icon: User, label: 'マイページ' },
+    { href: ROUTES.HOME, icon: Home, label: 'ホーム' },
+    { href: ROUTES.FAVORITES, icon: Heart, label: 'お気に入り' },
+    { href: ROUTES.FAVORITES_CLIPS, icon: ThumbsUp, label: 'クリップ' },
+    { href: ROUTES.SETTINGS, icon: User, label: 'マイページ' },
   ];
 
   return (
@@ -25,24 +27,6 @@ export function MobileNav() {
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
-
-          if (item.onClick) {
-            return (
-              <button
-                key={item.href}
-                onClick={() => {
-                  const event = new CustomEvent('toggleFavorites');
-                  window.dispatchEvent(event);
-                }}
-                className={`flex flex-col items-center justify-center flex-1 h-full space-y-1 transition-colors ${
-                  isActive ? 'text-purple-500' : 'text-gray-400 hover:text-gray-300'
-                }`}
-              >
-                <Icon className="w-6 h-6" />
-                <span className="text-xs">{item.label}</span>
-              </button>
-            );
-          }
 
           return (
             <Link
