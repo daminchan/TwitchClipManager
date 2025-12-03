@@ -7,8 +7,7 @@
 
 'use client';
 
-import { useState, useEffect, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Search, X } from 'lucide-react';
 
@@ -17,29 +16,32 @@ import { MobileNav } from '@/components/layout/mobile-nav';
 import { DashboardSidebar } from '@/components/dashboard/dashboard-sidebar';
 import { ClipSortTabs } from '@/components/dashboard/clip-sort-tabs';
 import { StreamerSearch } from '@/components/streamers/streamer-search';
-import { FavoriteList } from '@/components/streamers/favorite-list';
 import { ClipGrid } from '@/components/clips/clip-grid';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Toast } from '@/components/ui/toast';
+import { useToast } from '@/hooks/use-toast';
+import { useFavoriteActions } from '@/hooks/use-favorite-actions';
+import { OnboardingModal } from '@/components/onboarding/onboarding-modal';
 
 import { useDashboardClips } from '@/hooks/use-dashboard-clips';
-import { LABELS, ROUTES } from '@/lib/constants';
-import { addFavoriteStreamer } from '@/actions/favorites';
+import { LABELS } from '@/lib/constants';
 
 import type { TwitchChannel } from '@/types/twitch';
 
 interface DashboardContentProps {
-  userId: string;
-  userEmail: string;
+  userId: string | null;
+  userEmail: string | null;
+  isAuthenticated: boolean;
+  skipAuth: boolean;
 }
 
-export function DashboardContent({ userId, userEmail }: DashboardContentProps) {
-  const router = useRouter();
+export function DashboardContent({ userId, userEmail, isAuthenticated, skipAuth }: DashboardContentProps) {
   const queryClient = useQueryClient();
 
   // カスタムフックでクリップロジックを管理
   const {
+    allClips,
     filteredClips,
     isLoadingClips,
     clipError,
@@ -52,38 +54,28 @@ export function DashboardContent({ userId, userEmail }: DashboardContentProps) {
   } = useDashboardClips();
 
   // UI State
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const { toast, showToast, hideToast } = useToast();
+  const { handleAddFavorite: addFavorite } = useFavoriteActions();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
-  const [showMobileFavorites, setShowMobileFavorites] = useState(false);
-  const [isPending, startTransition] = useTransition();
+
+  // オンボーディングモーダル表示制御
+  const [showOnboarding, setShowOnboarding] = useState(!isAuthenticated || skipAuth);
+
+  // ログイン済み + お気に入り配信者が0人の場合、自動でモーダル表示
+  useEffect(() => {
+    if (isAuthenticated && allClips.length === 0 && !isLoadingClips) {
+      setShowOnboarding(true);
+    }
+  }, [isAuthenticated, allClips.length, isLoadingClips]);
 
   // お気に入り配信者を追加
   const handleAddFavorite = async (streamer: TwitchChannel) => {
-    startTransition(async () => {
-      // サーバーアクションでお気に入りを追加
-      const result = await addFavoriteStreamer(
-        streamer.id,
-        streamer.display_name,
-        streamer.broadcaster_login,
-        streamer.thumbnail_url.replace('{width}', '300').replace('{height}', '300')
-      );
-
-      if (result.success) {
-        setToast({ message: result.message, type: 'success' });
-        // React Query のキャッシュを無効化して自動再取得
-        await queryClient.invalidateQueries({
-          queryKey: ['clips', 'favorites'],
-          refetchType: 'active'
-        });
-        await queryClient.invalidateQueries({ queryKey: ['favorites'] });
-      } else {
-        setToast({
-          message: result.message,
-          type: result.error === 'Already exists' ? 'info' : 'error'
-        });
-      }
-    });
+    await addFavorite(
+      streamer,
+      (message) => showToast(message, 'success'),
+      (message, type) => showToast(message, type)
+    );
   };
 
   // お気に入り配信者を削除したときのハンドラー
@@ -100,26 +92,22 @@ export function DashboardContent({ userId, userEmail }: DashboardContentProps) {
   const handleLikeToggle = async (clipId: string, isCurrentlyLiked: boolean) => {
     const result = await handleLikeToggleHook(clipId, isCurrentlyLiked);
     if (result) {
-      setToast({
-        message: result.message,
-        type: result.success ? (isCurrentlyLiked ? 'info' : 'success') : 'error'
-      });
+      const toastType = result.success ? (isCurrentlyLiked ? 'info' : 'success') : 'error'
+      ;
+      showToast(result.message, toastType);
     }
   };
 
-  // モバイル検索・お気に入りイベントリスナー
+  // モバイル検索イベントリスナー
   useEffect(() => {
     const handleOpenMobileSearch = () => setShowMobileSearch(true);
-    const handleToggleFavorites = () => setShowMobileFavorites(!showMobileFavorites);
 
     window.addEventListener('openMobileSearch', handleOpenMobileSearch);
-    window.addEventListener('toggleFavorites', handleToggleFavorites);
 
     return () => {
       window.removeEventListener('openMobileSearch', handleOpenMobileSearch);
-      window.removeEventListener('toggleFavorites', handleToggleFavorites);
     };
-  }, [showMobileFavorites]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] flex flex-col">
@@ -161,12 +149,6 @@ export function DashboardContent({ userId, userEmail }: DashboardContentProps) {
 
             {/* クリップグリッド */}
             <div>
-              {clipError && (
-                <div className="bg-yellow-900/30 border border-yellow-700/50 text-yellow-400 text-sm p-4 rounded-lg mb-4">
-                  {clipError}
-                </div>
-              )}
-
               <ClipGrid
                 clips={filteredClips}
                 isLoading={isLoadingClips}
@@ -203,29 +185,6 @@ export function DashboardContent({ userId, userEmail }: DashboardContentProps) {
         </div>
       )}
 
-      {/* モバイルお気に入りモーダル */}
-      {showMobileFavorites && (
-        <div className="lg:hidden fixed inset-0 z-[60] bg-[#0f0f0f] flex flex-col">
-          <div className="flex items-center justify-between p-4 border-b border-[#2a2a2a]">
-            <h2 className="text-lg font-semibold text-gray-100">{LABELS.SECTIONS.FAVORITE_STREAMERS}</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowMobileFavorites(false)}
-              className="text-gray-400"
-            >
-              <X className="w-6 h-6" />
-            </Button>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4">
-            <FavoriteList
-              onSelectStreamer={() => setShowMobileFavorites(false)}
-              onRemoveFavorite={handleRemoveFavorite}
-            />
-          </div>
-        </div>
-      )}
-
       {/* モバイルフッターナビゲーション */}
       <MobileNav />
 
@@ -234,9 +193,16 @@ export function DashboardContent({ userId, userEmail }: DashboardContentProps) {
         <Toast
           message={toast.message}
           type={toast.type}
-          onClose={() => setToast(null)}
+          onClose={hideToast}
         />
       )}
+
+      {/* オンボーディングモーダル */}
+      <OnboardingModal
+        isOpen={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
+        skipAuth={isAuthenticated}
+      />
     </div>
   );
 }

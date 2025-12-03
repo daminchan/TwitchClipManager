@@ -84,7 +84,7 @@ export function DisplayNameSection({ currentName, onSuccess, onError }: DisplayN
             disabled={isPending}
             className="w-full bg-purple-600 hover:bg-purple-700"
           >
-            {isPending ? '更新中...' : LABELS.BUTTONS.UPDATE_DISPLAY_NAME}
+            {isPending ? LABELS.BUTTONS.UPDATING : LABELS.BUTTONS.UPDATE_DISPLAY_NAME}
           </Button>
         </form>
       </CardContent>

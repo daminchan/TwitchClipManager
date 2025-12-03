@@ -7,22 +7,40 @@
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { Header } from '@/components/layout/header';
 import { MobileNav } from '@/components/layout/mobile-nav';
-import { ClipGrid } from '@/components/clips/clip-grid';
+import { DashboardSidebar } from '@/components/dashboard/dashboard-sidebar';
+import { PlaylistCard } from '@/components/clips/playlist-card';
+import { ClipList } from '@/components/clips/clip-list';
+import { ClipPlayerModal } from '@/components/clips/clip-player-modal';
 import { Toast } from '@/components/ui/toast';
+import { useToast } from '@/hooks/use-toast';
+import { useFavoriteActions } from '@/hooks/use-favorite-actions';
 
 import type { LikedClip } from '@/types/database';
-import type { TwitchClip } from '@/types/twitch';
+import type { TwitchClip, TwitchChannel } from '@/types/twitch';
 import { getLikedClips, removeLikedClip } from '@/actions/liked-clips';
 
 export function FavoritesClipsContent() {
+  const queryClient = useQueryClient();
   const [likedClips, setLikedClips] = useState<TwitchClip[]>([]);
   const [likedClipIds, setLikedClipIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [deletingClipId, setDeletingClipId] = useState<string | undefined>(undefined);
+  const { toast, showToast, hideToast } = useToast();
+  const { handleAddFavorite: addFavorite } = useFavoriteActions();
   const [isPending, startTransition] = useTransition();
+
+  // サイドバー制御
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  // クリップナビゲーション用の state
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+
+  // モバイル用モーダル制御
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchLikedClips = async () => {
     setIsLoading(true);
@@ -58,14 +76,14 @@ export function FavoritesClipsContent() {
       setLikedClipIds(new Set(result.data.map((clip: LikedClip) => clip.clipId)));
     } catch (error) {
       console.error('Fetch liked clips error:', error);
-      setToast({ message: 'いいねしたクリップの読み込みに失敗しました', type: 'error' });
+      showToast('いいねしたクリップの読み込みに失敗しました', 'error');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleLikeToggle = async (clipId: string, isCurrentlyLiked: boolean) => {
-    if (!isCurrentlyLiked) return; // いいね追加はダッシュボードのみ
+  const handleDelete = async (clipId: string) => {
+    setDeletingClipId(clipId);
 
     startTransition(async () => {
       // サーバーアクションでいいねを解除
@@ -79,11 +97,63 @@ export function FavoritesClipsContent() {
           newSet.delete(clipId);
           return newSet;
         });
-        setToast({ message: result.message, type: 'info' });
+        showToast(result.message, 'info');
       } else {
-        setToast({ message: result.message, type: 'error' });
+        showToast(result.message, 'error');
       }
+
+      setDeletingClipId(undefined);
     });
+  };
+
+  // 現在のクリップを取得
+  const currentClip = likedClips.length > 0 && currentIndex >= 0 && currentIndex < likedClips.length
+    ? likedClips[currentIndex]
+    : null;
+
+  // 次のクリップへ
+  const handleNext = () => {
+    if (currentIndex < likedClips.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  // 前のクリップへ
+  const handlePrevious = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+    }
+  };
+
+  // クリップを選択（PC版）
+  const handleSelectClip = (clipId: string) => {
+    const index = likedClips.findIndex(clip => clip.id === clipId);
+    if (index !== -1) {
+      setCurrentIndex(index);
+    }
+  };
+
+  // クリップを選択してモーダルを開く（モバイル版）
+  const handleSelectClipMobile = (clipId: string) => {
+    const index = likedClips.findIndex(clip => clip.id === clipId);
+    if (index !== -1) {
+      setCurrentIndex(index);
+      setIsModalOpen(true);
+    }
+  };
+
+  // お気に入り配信者を追加
+  const handleAddFavorite = async (streamer: TwitchChannel) => {
+    await addFavorite(
+      streamer,
+      (message) => showToast(message, 'success'),
+      (message, type) => showToast(message, type)
+    );
+  };
+
+  // お気に入り配信者を削除したときのハンドラー
+  const handleRemoveFavorite = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['favorites'] });
   };
 
   useEffect(() => {
@@ -92,41 +162,87 @@ export function FavoritesClipsContent() {
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] flex flex-col">
-      <Header />
+      <Header onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
-      <main className="flex-1 overflow-y-auto">
-        <div className="container mx-auto px-6 py-8 pb-24 lg:pb-8">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-100 mb-2">お気に入りクリップ</h1>
-            <p className="text-gray-400">
-              あとで見返したいクリップを保存できます（{likedClips.length}件）
-            </p>
-          </div>
+      <div className="flex flex-1 overflow-hidden">
+        {/* 左サイドバー */}
+        <DashboardSidebar
+          isSidebarOpen={isSidebarOpen}
+          onAddFavorite={handleAddFavorite}
+          onRemoveFavorite={handleRemoveFavorite}
+        />
 
-          {likedClips.length === 0 && !isLoading ? (
-            <div className="text-center py-20 text-gray-400">
-              <div className="text-6xl mb-4">💜</div>
-              <p className="text-lg mb-2">まだお気に入りクリップがありません</p>
-              <p className="text-sm">ダッシュボードでクリップにいいねしてみましょう</p>
+        {/* メインコンテンツ */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-6 pb-24 lg:pb-6">
+            {/* 2カラムレイアウト（PC版） */}
+            <div className="hidden lg:flex gap-6">
+              {/* 左側：プレイリストカード */}
+              <div className="w-[400px] flex-shrink-0">
+                <PlaylistCard
+                  title="お気に入りクリップ"
+                  clipCount={likedClips.length}
+                  currentClip={currentClip}
+                  currentIndex={currentIndex}
+                  onNext={handleNext}
+                  onPrevious={handlePrevious}
+                  isLoading={isLoading}
+                />
+              </div>
+
+              {/* 右側：クリップリスト */}
+              <div className="flex-1">
+                <ClipList
+                  clips={likedClips}
+                  onDelete={handleDelete}
+                  onSelectClip={handleSelectClip}
+                  deletingClipId={deletingClipId}
+                  currentClipId={currentClip?.id}
+                  isLoading={isLoading}
+                />
+              </div>
             </div>
-          ) : (
-            <ClipGrid
-              clips={likedClips}
-              isLoading={isLoading}
-              likedClipIds={likedClipIds}
-              onLikeToggle={handleLikeToggle}
-            />
-          )}
-        </div>
-      </main>
+
+            {/* モバイル版 */}
+            <div className="lg:hidden">
+              <div className="mb-6">
+                <h1 className="text-3xl font-bold text-gray-100 mb-2">お気に入りクリップ</h1>
+                <p className="text-gray-400">
+                  あとで見返したいクリップを保存できます（{likedClips.length}件）
+                </p>
+              </div>
+
+              <ClipList
+                clips={likedClips}
+                onDelete={handleDelete}
+                onSelectClip={handleSelectClipMobile}
+                deletingClipId={deletingClipId}
+                currentClipId={currentClip?.id}
+                isLoading={isLoading}
+              />
+            </div>
+          </div>
+        </main>
+      </div>
 
       <MobileNav />
+
+      {/* モバイル用モーダルプレーヤー */}
+      <ClipPlayerModal
+        clip={currentClip}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onNext={handleNext}
+        onPrevious={handlePrevious}
+        currentIndex={currentIndex}
+        totalClips={likedClips.length}
+      />
 
       {toast && (
         <Toast
           message={toast.message}
           type={toast.type}
-          onClose={() => setToast(null)}
+          onClose={hideToast}
         />
       )}
     </div>

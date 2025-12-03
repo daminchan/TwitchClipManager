@@ -10,13 +10,13 @@
 
 'use client';
 
-import { useTransition } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { API_ENDPOINTS } from '@/lib/constants';
+import { API_ENDPOINTS, LABELS, ANIMATION } from '@/lib/constants';
 
 import type { FavoriteStreamer } from '@/types';
 import { removeFavoriteStreamer } from '@/actions/favorites';
@@ -26,13 +26,20 @@ interface FavoriteWithLive extends FavoriteStreamer {
 }
 
 interface FavoriteListProps {
-  onSelectStreamer: (favorite: FavoriteStreamer) => void;
   onRemoveFavorite?: () => void;
 }
 
-export function FavoriteList({ onSelectStreamer, onRemoveFavorite }: FavoriteListProps) {
+export function FavoriteList({ onRemoveFavorite }: FavoriteListProps) {
   const queryClient = useQueryClient();
-  const [isPending, startTransition] = useTransition();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showCards, setShowCards] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  // マウント後、サイドバーが開ききってからカード表示開始
+  useEffect(() => {
+    const timer = setTimeout(() => setShowCards(true), ANIMATION.SIDEBAR_CONTENT_DELAY);
+    return () => clearTimeout(timer);
+  }, []);
 
   // お気に入り配信者を取得（React Query）
   const { data: favorites = [], isLoading, error } = useQuery({
@@ -118,17 +125,21 @@ export function FavoriteList({ onSelectStreamer, onRemoveFavorite }: FavoriteLis
   const handleRemove = async (streamerId: string, e: React.MouseEvent) => {
     e.stopPropagation();
 
-    startTransition(async () => {
+    setDeletingId(streamerId);
+
+    try {
       const result = await removeMutation.mutateAsync(streamerId);
 
       if (!result.success) {
         alert(result.message);
       }
-    });
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   if (isLoading) {
-    return <div className="text-center py-8 text-gray-400">読み込み中...</div>;
+    return <div className="text-center py-8 text-gray-400">{LABELS.BUTTONS.LOADING}</div>;
   }
 
   if (error) {
@@ -147,13 +158,31 @@ export function FavoriteList({ onSelectStreamer, onRemoveFavorite }: FavoriteLis
     );
   }
 
+  // LIVE中の人を優先してソート
+  const sortedFavorites = [...favorites].sort((a, b) => {
+    if (a.isLive && !b.isLive) return -1;
+    if (!a.isLive && b.isLive) return 1;
+    return 0;
+  });
+
+  // 表示する配信者を決定
+  const displayLimit = 5;
+  const visibleFavorites = isExpanded ? sortedFavorites : sortedFavorites.slice(0, displayLimit);
+  const hiddenCount = sortedFavorites.length - displayLimit;
+
+  // Twitchページを開く
+  const handleClickStreamer = (streamerLogin: string) => {
+    window.open(`https://twitch.tv/${streamerLogin}`, '_blank');
+  };
+
   return (
     <div className="space-y-2">
-      {favorites.map((favorite) => (
+      {visibleFavorites.map((favorite, index) => (
         <Card
           key={favorite.id}
-          className="p-3 bg-gray-900 border-gray-700 hover:bg-gray-800 cursor-pointer transition"
-          onClick={() => onSelectStreamer(favorite)}
+          className={`p-3 bg-gray-900 border-gray-700 hover:bg-gray-800 cursor-pointer transition ${showCards ? 'animate-card' : 'opacity-0'}`}
+          style={showCards ? { animationDelay: `${index * ANIMATION.CARD_DELAY_STEP}ms` } : undefined}
+          onClick={() => handleClickStreamer(favorite.streamerLogin)}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -184,13 +213,23 @@ export function FavoriteList({ onSelectStreamer, onRemoveFavorite }: FavoriteLis
               size="sm"
               onClick={(e) => handleRemove(favorite.streamerId, e)}
               className="text-red-400 hover:text-red-300 hover:bg-red-900/30"
-              disabled={isPending}
+              disabled={deletingId === favorite.streamerId}
             >
-              {isPending ? '削除中...' : '削除'}
+              {deletingId === favorite.streamerId ? LABELS.BUTTONS.DELETING : LABELS.BUTTONS.DELETE}
             </Button>
           </div>
         </Card>
       ))}
+
+      {/* もっと見る / 閉じる ボタン */}
+      {sortedFavorites.length > displayLimit && (
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="w-full py-2 text-sm text-gray-400 hover:text-gray-200 transition-colors"
+        >
+          {isExpanded ? '▲ 閉じる' : `▼ もっと見る (${hiddenCount}人)`}
+        </button>
+      )}
     </div>
   );
 }

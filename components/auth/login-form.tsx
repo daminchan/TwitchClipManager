@@ -132,7 +132,7 @@ export function LoginForm() {
               disabled={isLoading}
             >
               {isLoading
-                ? (isSignUp ? '登録中...' : 'ログイン中...')
+                ? (isSignUp ? LABELS.BUTTONS.SIGNING_UP : LABELS.BUTTONS.LOGGING_IN)
                 : (isSignUp ? LABELS.BUTTONS.SIGNUP : LABELS.BUTTONS.LOGIN)
               }
             </Button>

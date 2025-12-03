@@ -13,7 +13,7 @@ import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { TwitchClip } from '@/types/twitch';
 import type { SortType } from '@/components/dashboard/clip-sort-tabs';
-import { API_ENDPOINTS } from '@/lib/constants';
+import { API_ENDPOINTS, LABELS } from '@/lib/constants';
 import { getLikedClips, addLikedClip, removeLikedClip } from '@/actions/liked-clips';
 
 export function useDashboardClips() {
@@ -158,7 +158,7 @@ export function useDashboardClips() {
     allClips,
     filteredClips,
     isLoadingClips,
-    clipError: clipError ? String(clipError) : allClips.length === 0 ? 'お気に入り配信者のクリップがありません' : null,
+    clipError: clipError ? String(clipError) : allClips.length === 0 ? LABELS.MESSAGES.NO_FAVORITE_STREAMERS : null,
     searchQuery,
     sortType,
     likedClipIds,

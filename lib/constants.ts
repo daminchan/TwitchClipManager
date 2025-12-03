@@ -9,10 +9,6 @@ export const TWITCH_AUTH_URL = 'https://id.twitch.tv/oauth2/token';
 
 // クリップ設定
 export const DEFAULT_CLIPS_LIMIT = 20;
-export const MAX_CLIPS_LIMIT = 100;
-
-// 日付範囲（デフォルトは過去7日間）
-export const DEFAULT_TIME_RANGE_DAYS = 7;
 
 /**
  * クリップフィルターの設定
@@ -31,14 +27,12 @@ export const CLIP_FILTERS = {
   },
 } as const;
 
-export type ClipFilterType = keyof typeof CLIP_FILTERS;
-
 /**
  * アプリケーション基本設定
  */
 export const APP_CONFIG = {
-  name: 'Twitch Clip Viewer',
-  shortName: 'Clip Viewer',
+  name: 'ついっぷ',
+  fullName: 'Twitch Clip Viewer',
   description: 'お気に入りの配信者のクリップを見つけよう',
   version: '1.0.0',
 } as const;
@@ -51,6 +45,7 @@ export const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
   DASHBOARD: '/dashboard',
+  FAVORITES: '/favorites',
   FAVORITES_CLIPS: '/favorites-clips',
   SETTINGS: '/settings',
 } as const;
@@ -59,20 +54,9 @@ export const ROUTES = {
  * API エンドポイント定義
  */
 export const API_ENDPOINTS = {
-  AUTH: {
-    SESSION: '/api/auth/session',
-  },
   FAVORITES: '/api/favorites',
   CLIPS: {
     FAVORITES: '/api/clips/favorites',
-  },
-  LIKED_CLIPS: {
-    BASE: '/api/liked-clips',
-    BY_ID: (clipId: string) => `/api/liked-clips/${clipId}`,
-  },
-  USER: {
-    UPDATE: '/api/user/update',
-    DELETE: '/api/user/delete',
   },
   TWITCH: {
     STREAMERS: '/api/twitch/search',
@@ -85,15 +69,6 @@ export const API_ENDPOINTS = {
  * UI ラベル・テキスト定義
  */
 export const LABELS = {
-  // ナビゲーション
-  NAV: {
-    HOME: 'ホーム',
-    FAVORITES: 'お気に入り',
-    CLIPS: 'クリップ',
-    MY_PAGE: 'マイページ',
-    SETTINGS: '設定',
-  },
-
   // セクションタイトル
   SECTIONS: {
     SEARCH_STREAMERS: '配信者を検索して追加',
@@ -115,9 +90,18 @@ export const LABELS = {
     UPDATE: '更新',
     UPDATE_DISPLAY_NAME: '表示名を更新',
     DELETE_ACCOUNT: 'アカウントを削除',
+    DELETE_PERMANENTLY: '完全に削除',
     LIKE: 'いいね',
     LIKED: 'いいね済み',
     CLOSE: '閉じる',
+    // ローディング状態
+    SAVING: '保存中...',
+    DELETING: '削除中...',
+    UPDATING: '更新中...',
+    LOADING: '読み込み中...',
+    SUBMITTING: '送信中...',
+    LOGGING_IN: 'ログイン中...',
+    SIGNING_UP: '登録中...',
   },
 
   // フォーム
@@ -135,7 +119,9 @@ export const LABELS = {
     NO_CLIPS: 'クリップが見つかりませんでした',
     NO_FAVORITE_CLIPS: 'まだお気に入りクリップがありません',
     NO_FAVORITE_CLIPS_DESC: 'ダッシュボードでクリップにいいねしてみましょう',
-    NO_FAVORITE_STREAMERS: 'お気に入り配信者のクリップがありません',
+    NO_FAVORITE_STREAMERS: 'お気に入り配信者を追加しよう',
+    NO_FAVORITE_STREAMERS_DESC: '好きなゲームから配信者を見つけて、お気に入りのクリップを楽しもう',
+    ADD_FAVORITE_STREAMERS: '配信者を追加',
   },
 
   // ソートオプション
@@ -149,9 +135,89 @@ export const LABELS = {
   // プレースホルダー
   PLACEHOLDERS: {
     SEARCH_CLIPS: 'クリップを検索...',
+    SEARCH_GAMES: 'ゲームを検索...',
     EMAIL: 'your@email.com',
     PASSWORD: '6文字以上',
     NAME: 'あなたの名前',
+  },
+
+  // オンボーディング
+  ONBOARDING: {
+    // 認証ステップ
+    AUTH: {
+      TITLE_SIGNUP: 'アカウント作成',
+      TITLE_LOGIN: 'ログイン',
+      SUBTITLE_SIGNUP: 'お気に入りの配信者を見つけよう',
+      SUBTITLE_LOGIN: 'あなたのお気に入りクリップが待っています',
+      GOOGLE_SIGNIN: 'Google でログイン',
+      OR: 'または',
+      TAB_SIGNUP: '新規登録',
+      TAB_LOGIN: 'ログイン',
+      ALREADY_HAVE_ACCOUNT: 'すでにアカウントをお持ちですか？',
+      DONT_HAVE_ACCOUNT: 'アカウントをお持ちでないですか？',
+    },
+
+    // ゲーム選択ステップ
+    GAME: {
+      TITLE: '好きなゲームを選択',
+      SUBTITLE: 'あなたが興味のあるゲームを1つ選んでください',
+      LOADING: '人気ゲームを読み込み中...',
+      BUTTON_NEXT: '次へ',
+      BUTTON_BACK: '戻る',
+      SELECT_GAME: 'ゲームを選択してください',
+    },
+
+    // 配信者選択ステップ
+    STREAMER: {
+      TITLE: 'おすすめ配信者',
+      SUBTITLE_PREFIX: '「',
+      SUBTITLE_SUFFIX: '」のおすすめ配信者（直近3日間のクリップ再生数順）',
+      LOADING: 'おすすめ配信者を取得中...',
+      BUTTON_NEXT: 'お気に入りに追加',
+      BUTTON_BACK: '戻る',
+      SELECT_STREAMER: '少なくとも1人の配信者を選択してください',
+      CLIP_VIEWS: 'クリップ再生数',
+      CLIPS_COUNT: 'クリップ',
+    },
+
+    // 完了ステップ
+    COMPLETION: {
+      TITLE: 'セットアップ完了！',
+      SUBTITLE_PREFIX: '',
+      SUBTITLE_SUFFIX: '人の配信者をお気に入りに追加しました',
+      DESCRIPTION: 'さっそくお気に入り配信者のクリップを楽しみましょう',
+      BUTTON_START: 'クリップを見る',
+    },
+
+    // ローディング
+    LOADING: {
+      ADDING_FAVORITES: 'お気に入りに追加中...',
+    },
+
+    // ステップインジケーター
+    STEPS: {
+      GAME_SELECTION: 'ゲーム選択',
+      STREAMER_SELECTION: '配信者選択',
+    },
+  },
+
+  // エラーメッセージ
+  ERRORS: {
+    AUTH: {
+      REQUIRED_EMAIL_PASSWORD: 'メールアドレスとパスワードを入力してください',
+      PASSWORD_TOO_SHORT: 'パスワードは{{min}}文字以上で入力してください',
+      NAME_TOO_LONG: '名前は{{max}}文字以内で入力してください',
+      SIGNUP_FAILED: '登録に失敗しました',
+      LOGIN_FAILED: 'ログインに失敗しました',
+      GOOGLE_LOGIN_FAILED: 'Googleログインに失敗しました',
+      GENERAL_ERROR: 'エラーが発生しました',
+    },
+    GAME: {
+      FETCH_FAILED: 'ゲーム一覧の取得に失敗しました',
+    },
+    STREAMER: {
+      FETCH_FAILED: 'おすすめ配信者の取得に失敗しました',
+    },
   },
 } as const;
 
@@ -170,4 +236,14 @@ export const VALIDATION = {
 export const TIMING = {
   TOAST_DURATION: 3000, // 3秒
   REDIRECT_DELAY: 1500, // 1.5秒
+} as const;
+
+/**
+ * アニメーション設定
+ */
+export const ANIMATION = {
+  CARD_DURATION: 300,         // カードアニメーション時間（ms）
+  CARD_DELAY_STEP: 50,        // カード間の遅延（ms）
+  SIDEBAR_DURATION: 300,      // サイドバー開閉時間（ms）
+  SIDEBAR_CONTENT_DELAY: 300, // サイドバー開閉後の待機時間（ms）
 } as const;

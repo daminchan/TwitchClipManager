@@ -1,58 +1,60 @@
 // 適用スキル: page-creator
 // 適用ルール:
-// - セクション5.1: UI/UXデザイン原則（ユーザーフレンドリーなランディングページ）
+// - セクション3: ディレクトリ構造
+// - セクション10.2: サーバー/クライアントコンポーネント分離
+// - Next.js App Router ベストプラクティス
+// - オンボーディングフロー設計.md: ルーティング変更
 
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { redirect } from 'next/navigation';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { DashboardContent } from '@/components/dashboard/dashboard-content';
+import { ROUTES } from '@/lib/constants';
 
-export default function Home() {
+/**
+ * ルートページ（旧ダッシュボード）
+ *
+ * サーバー側で:
+ * - 認証チェック（未ログインならオンボーディングモーダル表示）
+ * - 新規ユーザー判定（お気に入り配信者の有無）
+ * - ユーザー情報の取得
+ *
+ * クライアント側(DashboardContent)で:
+ * - オンボーディングモーダル表示制御
+ * - インタラクティブなUI
+ * - データフェッチ
+ * - 状態管理
+ */
+export default async function HomePage() {
+  // サーバー側で認証チェック
+  const session = await auth();
+
+  // 未ログインの場合はDashboardContentに渡す（モーダル表示）
+  if (!session?.user) {
+    return (
+      <DashboardContent
+        userId={null}
+        userEmail={null}
+        isAuthenticated={false}
+        skipAuth={false}
+      />
+    );
+  }
+
+  // お気に入り配信者の数を取得（認証スキップ判定用）
+  const favoriteCount = await prisma.favoriteStreamer.count({
+    where: { userId: session.user.id },
+  });
+
+  const skipAuth = favoriteCount === 0;
+
+  // 認証済みユーザーの情報をクライアントコンポーネントに渡す
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-purple-50 to-white dark:from-gray-900 dark:to-gray-800">
-      <main className="container mx-auto px-4 text-center">
-        <div className="max-w-3xl mx-auto space-y-8">
-          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Twitch Clip Viewer
-          </h1>
-
-          <p className="text-xl text-gray-600 dark:text-gray-300">
-            お気に入りの配信者のクリップを人気順で表示
-          </p>
-
-          <div className="space-y-4">
-            <p className="text-gray-600 dark:text-gray-400">
-              Twitchの配信者を検索して、人気のクリップを簡単に見つけることができます。
-            </p>
-            <ul className="text-left max-w-md mx-auto space-y-2 text-gray-600 dark:text-gray-400">
-              <li className="flex items-center">
-                <svg className="w-5 h-5 mr-2 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                配信者を検索して保存
-              </li>
-              <li className="flex items-center">
-                <svg className="w-5 h-5 mr-2 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                人気クリップを自動表示
-              </li>
-              <li className="flex items-center">
-                <svg className="w-5 h-5 mr-2 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                視聴回数順にソート
-              </li>
-            </ul>
-          </div>
-
-          <div className="pt-4">
-            <Link href="/login">
-              <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-lg px-8 py-6">
-                今すぐ始める
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </main>
-    </div>
+    <DashboardContent
+      userId={session.user.id!}
+      userEmail={session.user.email!}
+      isAuthenticated={true}
+      skipAuth={skipAuth}
+    />
   );
 }

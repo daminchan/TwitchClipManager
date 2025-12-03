@@ -9,12 +9,8 @@ import { revalidatePath } from 'next/cache';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { validateDisplayName } from '@/lib/validations/user';
-
-export interface ActionResult {
-  success: boolean;
-  message: string;
-  error?: string;
-}
+import { ROUTES } from '@/lib/constants';
+import type { ActionResult } from '@/types';
 
 /**
  * 表示名を更新
@@ -48,8 +44,8 @@ export async function updateDisplayName(name: string): Promise<ActionResult> {
     });
 
     // キャッシュを再検証
-    revalidatePath('/settings');
-    revalidatePath('/dashboard');
+    revalidatePath(ROUTES.SETTINGS);
+    revalidatePath(ROUTES.DASHBOARD);
 
     return {
       success: true,
@@ -86,7 +82,7 @@ export async function deleteAccount(): Promise<ActionResult> {
     });
 
     // キャッシュを再検証
-    revalidatePath('/');
+    revalidatePath(ROUTES.HOME);
 
     return {
       success: true,

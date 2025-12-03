@@ -33,8 +33,8 @@ export function DashboardSidebar({
     >
       <div className="p-4 space-y-4">
         {/* 検索セクション */}
-        <div className="bg-[#1a1a1a] border-0 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-4">
+        <div className={`${isSidebarOpen ? 'bg-[#1a1a1a] rounded-lg p-4' : ''}`}>
+          <div className="flex items-center gap-2">
             <Search className={`${isSidebarOpen ? 'w-5 h-5' : 'w-6 h-6'} text-gray-400 flex-shrink-0`} />
             {isSidebarOpen && (
               <h2 className="text-sm font-semibold text-gray-100 whitespace-nowrap">
@@ -43,17 +43,19 @@ export function DashboardSidebar({
             )}
           </div>
           {isSidebarOpen && (
-            <StreamerSearch
-              onSelectStreamer={(streamer) => {
-                onAddFavorite(streamer);
-              }}
-            />
+            <div className="mt-4">
+              <StreamerSearch
+                onSelectStreamer={(streamer) => {
+                  onAddFavorite(streamer);
+                }}
+              />
+            </div>
           )}
         </div>
 
         {/* お気に入り配信者セクション */}
-        <div className="bg-[#1a1a1a] border-0 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-4">
+        <div className={`${isSidebarOpen ? 'bg-[#1a1a1a] rounded-lg p-4' : ''}`}>
+          <div className="flex items-center gap-2">
             <Heart className={`${isSidebarOpen ? 'w-5 h-5' : 'w-6 h-6'} text-purple-500 flex-shrink-0`} />
             {isSidebarOpen && (
               <h2 className="text-sm font-semibold text-gray-100 whitespace-nowrap">
@@ -62,16 +64,17 @@ export function DashboardSidebar({
             )}
           </div>
           {isSidebarOpen && (
-            <FavoriteList
-              onSelectStreamer={() => {}}
-              onRemoveFavorite={onRemoveFavorite}
-            />
+            <div className="mt-4">
+              <FavoriteList
+                onRemoveFavorite={onRemoveFavorite}
+              />
+            </div>
           )}
         </div>
 
         {/* お気に入りクリップセクション */}
         <Link href={ROUTES.FAVORITES_CLIPS}>
-          <div className="bg-[#1a1a1a] hover:bg-[#222222] border-0 rounded-lg p-4 cursor-pointer transition-colors">
+          <div className={`${isSidebarOpen ? 'bg-[#1a1a1a] hover:bg-[#222222] rounded-lg p-4' : ''} cursor-pointer transition-colors`}>
             <div className="flex items-center gap-2">
               <ThumbsUp className={`${isSidebarOpen ? 'w-5 h-5' : 'w-6 h-6'} text-pink-500 flex-shrink-0`} />
               {isSidebarOpen && (

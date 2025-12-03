@@ -8,13 +8,7 @@
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import type { LikedClip, CreateLikedClipInput } from '@/types';
-
-export interface ActionResult {
-  success: boolean;
-  message: string;
-  error?: string;
-}
+import type { LikedClip, CreateLikedClipInput, ActionResult } from '@/types';
 
 export interface GetLikedClipsResult {
   success: boolean;

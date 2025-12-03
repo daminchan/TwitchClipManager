@@ -25,9 +25,9 @@ export default async function LoginPage() {
   // サーバー側で認証チェック
   const session = await auth();
 
-  // すでにログイン済みの場合はダッシュボードへ
+  // すでにログイン済みの場合はホームへ
   if (session?.user) {
-    redirect(ROUTES.DASHBOARD);
+    redirect(ROUTES.HOME);
   }
 
   // 未認証ユーザーにはログインフォームを表示

@@ -18,24 +18,14 @@ export interface ApiResponse<T = any> {
 }
 
 /**
- * ページネーション情報
+ * サーバーアクションの実行結果
+ * actions/*.ts で使用される共通の戻り値型
  */
-export interface Pagination {
-  /** 現在のページ */
-  page: number;
-  /** 1ページあたりのアイテム数 */
-  limit: number;
-  /** 総アイテム数 */
-  total: number;
-  /** 総ページ数 */
-  totalPages: number;
-}
-
-/**
- * ページネーション付き API レスポンス
- * @template T レスポンスデータの型
- */
-export interface PaginatedResponse<T> extends ApiResponse<T[]> {
-  /** ページネーション情報 */
-  pagination?: Pagination;
+export interface ActionResult {
+  /** 処理が成功したかどうか */
+  success: boolean;
+  /** ユーザーに表示するメッセージ */
+  message: string;
+  /** エラー詳細（エラー時のみ） */
+  error?: string;
 }

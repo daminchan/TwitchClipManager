@@ -10,10 +10,11 @@
 import { useState } from 'react';
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { Settings, Search, Heart, Menu } from 'lucide-react';
+import { Settings, Search, Menu } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { APP_CONFIG, ROUTES } from '@/lib/constants';
 
 interface HeaderProps {
   onToggleSidebar?: () => void;
@@ -24,7 +25,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
   const [showMobileSearch, setShowMobileSearch] = useState(false);
 
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: '/login' });
+    await signOut({ callbackUrl: '/' });
   };
 
   const handleMobileSearch = () => {
@@ -33,11 +34,6 @@ export function Header({ onToggleSidebar }: HeaderProps) {
       const event = new CustomEvent('openMobileSearch');
       window.dispatchEvent(event);
     }
-  };
-
-  const handleMobileFavorites = () => {
-    const event = new CustomEvent('toggleFavorites');
-    window.dispatchEvent(event);
   };
 
   return (
@@ -57,9 +53,9 @@ export function Header({ onToggleSidebar }: HeaderProps) {
             </Button>
           )}
 
-          <Link href="/dashboard" className="flex items-center">
+          <Link href="/" className="flex items-center">
             <div className="text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
-              Twitch Clip Viewer
+              {APP_CONFIG.name}
             </div>
           </Link>
         </div>
@@ -76,15 +72,6 @@ export function Header({ onToggleSidebar }: HeaderProps) {
             >
               <Search className="w-5 h-5" />
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleMobileFavorites}
-              className="lg:hidden bg-[#1a1a1a] border-0 text-gray-100 hover:bg-[#222222] p-2"
-              aria-label="お気に入り"
-            >
-              <Heart className="w-5 h-5" />
-            </Button>
 
             {/* デスクトップ表示 */}
             <div className="hidden md:flex items-center gap-2">
@@ -97,7 +84,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                 {session.user.name || session.user.email}
               </span>
             </div>
-            <Link href="/settings" className="hidden md:block">
+            <Link href={ROUTES.SETTINGS} className="hidden md:block">
               <Button
                 variant="outline"
                 size="sm"
