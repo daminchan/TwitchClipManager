@@ -7,6 +7,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +25,7 @@ interface DisplayNameSectionProps {
 
 export function DisplayNameSection({ currentName, onSuccess, onError }: DisplayNameSectionProps) {
   const router = useRouter();
+  const { update } = useSession();
   const [name, setName] = useState(currentName);
   const [isPending, startTransition] = useTransition();
 
@@ -48,7 +50,10 @@ export function DisplayNameSection({ currentName, onSuccess, onError }: DisplayN
 
       if (result.success) {
         onSuccess(result.message);
-        router.refresh(); // セッション更新のためリフレッシュ
+        // クライアント側のセッションキャッシュを更新
+        await update();
+        // サーバーコンポーネントを更新
+        router.refresh();
       } else {
         onError(result.message);
       }
