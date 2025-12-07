@@ -75,7 +75,38 @@ export function FavoritesContent() {
     if (over && over.data.current?.type === 'folder') {
       const streamer = active.data.current?.streamer as FavoriteStreamer;
       const folderId = over.id as string;
+      const folder = over.data.current?.folder;
 
+      // 楽観的UI: 即座にキャッシュを更新
+      queryClient.setQueryData(['folders'], (oldData: any) => {
+        if (!oldData?.data) return oldData;
+
+        return {
+          ...oldData,
+          data: oldData.data.map((f: any) => {
+            if (f.id === folderId) {
+              // このフォルダに配信者を追加
+              const newStreamer = {
+                id: `temp-${Date.now()}`, // 一時的なID
+                folderId: folderId,
+                streamerId: streamer.streamerId,
+                streamerName: streamer.streamerName,
+                streamerLogin: streamer.streamerLogin,
+                streamerImage: streamer.streamerImage,
+                addedAt: new Date().toISOString(),
+              };
+
+              return {
+                ...f,
+                folderStreamers: [...(f.folderStreamers || []), newStreamer],
+              };
+            }
+            return f;
+          }),
+        };
+      });
+
+      // バックグラウンドでサーバーアクション実行
       try {
         const result = await addStreamerToFolder(folderId, {
           streamerId: streamer.streamerId,
@@ -86,13 +117,17 @@ export function FavoritesContent() {
 
         if (result.success) {
           showToast('フォルダに配信者を追加しました', 'success');
-          // フォルダ一覧を再取得
+          // 実データで上書き
           await queryClient.invalidateQueries({ queryKey: ['folders'] });
         } else {
+          // エラー時はロールバック
+          await queryClient.invalidateQueries({ queryKey: ['folders'] });
           showToast(result.message, 'error');
         }
       } catch (error) {
         console.error('Add to folder error:', error);
+        // エラー時はロールバック
+        await queryClient.invalidateQueries({ queryKey: ['folders'] });
         showToast('フォルダへの追加に失敗しました', 'error');
       }
     }
