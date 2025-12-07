@@ -90,8 +90,8 @@ export function DashboardSidebar({
     setFolderToDelete(folder);
   };
 
-  const handleFolderDeleteSuccess = async (deletedFolderId: string) => {
-    // 楽観的UI: 即座にキャッシュを更新
+  const handleFolderDeleteSuccess = (deletedFolderId: string) => {
+    // 楽観的UI: キャッシュから削除（再取得しない）
     queryClient.setQueryData(['folders'], (oldData: any) => {
       if (!oldData?.data) return oldData;
       return {
@@ -101,9 +101,6 @@ export function DashboardSidebar({
     });
 
     setFolderToDelete(null);
-
-    // バックグラウンドで再取得
-    await queryClient.invalidateQueries({ queryKey: ['folders'] });
   };
 
   const handleViewStreamers = (folder: Folder) => {

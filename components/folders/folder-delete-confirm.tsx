@@ -29,18 +29,15 @@ export function FolderDeleteConfirm({ isOpen, folder, onClose, onSuccess }: Fold
 
     const folderId = folder.id;
 
-    // 即座にモーダルを閉じる
-    onClose();
-
-    // 楽観的UI更新を親に通知
-    onSuccess(folderId);
-
-    // バックグラウンドでサーバーアクション実行
     startTransition(async () => {
       const result = await deleteFolder(folderId);
 
-      if (!result.success) {
-        // エラー時は再度モーダルを開いてエラーを表示
+      if (result.success) {
+        // 成功時のみモーダルを閉じて親に通知
+        onClose();
+        onSuccess(folderId);
+      } else {
+        // エラー時はエラーを表示
         setError(result.message);
       }
     });
