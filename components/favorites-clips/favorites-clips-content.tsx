@@ -137,7 +137,7 @@ export function FavoritesClipsContent() {
   };
 
   return (
-    <div className="p-6 pb-24 lg:pb-6">
+    <div className="px-3 py-4 pb-24 lg:pb-4">
       {/* 2カラムレイアウト（PC版） */}
       <div className="hidden lg:flex gap-6">
         {/* 左側：プレイリストカード */}
