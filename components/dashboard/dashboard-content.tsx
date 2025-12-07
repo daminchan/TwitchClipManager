@@ -94,7 +94,7 @@ export function DashboardContent({ userId, userEmail, isAuthenticated, skipAuth 
   };
 
   return (
-    <div className="container mx-auto px-4 py-6 pb-24 lg:pb-6">
+    <div className="w-full px-3 py-4 pb-24 lg:pb-4">
       {/* 検索バー（モバイル） */}
       <div className="lg:hidden mb-6">
         <div className="relative">

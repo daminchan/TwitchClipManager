@@ -30,7 +30,7 @@ export function SettingsContent({ userEmail, userName }: SettingsContentProps) {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8 max-w-3xl">
+    <div className="w-full px-3 py-4 pb-24 lg:pb-4 max-w-4xl mx-auto">
       {/* ヘッダーセクション */}
       <div className="mb-10">
         <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">

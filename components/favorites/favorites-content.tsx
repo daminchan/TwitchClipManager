@@ -33,7 +33,7 @@ export function FavoritesContent() {
   });
 
   return (
-    <div className="container mx-auto px-6 py-8 pb-24 lg:pb-8">
+    <div className="w-full px-3 py-4 pb-24 lg:pb-4">
       {/* 戻るボタン */}
       <div className="mb-6">
         <Link href={ROUTES.DASHBOARD}>
