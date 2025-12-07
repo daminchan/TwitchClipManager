@@ -43,26 +43,31 @@ export function useFavoriteActions() {
     onSuccess?: (message: string) => void,
     onError?: (message: string, type: 'info' | 'error') => void
   ) => {
-    startTransition(async () => {
-      const result = await addFavoriteStreamer(
-        streamer.id,
-        streamer.display_name,
-        streamer.broadcaster_login,
-        streamer.thumbnail_url.replace('{width}', '300').replace('{height}', '300')
-      );
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        const result = await addFavoriteStreamer(
+          streamer.id,
+          streamer.display_name,
+          streamer.broadcaster_login,
+          streamer.thumbnail_url.replace('{width}', '300').replace('{height}', '300')
+        );
 
-      if (result.success) {
-        onSuccess?.(result.message);
-        // キャッシュを無効化してお気に入りリストを更新
-        await queryClient.invalidateQueries({ queryKey: ['favorites'] });
-        await queryClient.invalidateQueries({
-          queryKey: ['clips', 'favorites'],
-          refetchType: 'active'
-        });
-      } else {
-        const errorType = result.error === 'Already exists' ? 'info' : 'error';
-        onError?.(result.message, errorType);
-      }
+        if (result.success) {
+          onSuccess?.(result.message);
+          // キャッシュを無効化してお気に入りリストを更新
+          await queryClient.invalidateQueries({ queryKey: ['favorites'] });
+          await queryClient.invalidateQueries({
+            queryKey: ['clips', 'favorites'],
+            refetchType: 'active'
+          });
+        } else {
+          const errorType = result.error === 'Already exists' ? 'info' : 'error';
+          onError?.(result.message, errorType);
+        }
+
+        // 処理完了をresolve
+        resolve();
+      });
     });
   };
 
