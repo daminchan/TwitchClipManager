@@ -108,7 +108,7 @@ function DraggableStreamerCard({ favorite }: DraggableStreamerCardProps) {
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className={isDragging ? 'opacity-50' : ''}
+      className={isDragging ? 'opacity-10' : ''}
     >
       <div className="group bg-[#1a1a1a] hover:bg-[#222222] rounded-lg p-4 cursor-move transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/20">
         {/* プロフィール画像 */}
