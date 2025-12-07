@@ -39,7 +39,7 @@ export function FavoritesContent() {
         <Link href={ROUTES.DASHBOARD}>
           <Button
             variant="ghost"
-            className="text-gray-400 hover:text-gray-100 hover:bg-[#1a1a1a] button-press-feedback"
+            className="text-gray-400 hover:text-gray-100 hover:bg-[#1a1a1a] active:bg-[#2a2a2a] active:text-gray-300 button-press-feedback"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             クリップ一覧に戻る

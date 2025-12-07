@@ -25,13 +25,20 @@ export function StreamerSearch({ onSelectStreamer }: StreamerSearchProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<TwitchChannel[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [addingStreamerId, setAddingStreamerId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSelectStreamer = (streamer: TwitchChannel) => {
-    // 配信者を追加
-    onSelectStreamer(streamer);
+  const handleSelectStreamer = async (streamer: TwitchChannel) => {
+    setIsAdding(true);
+    setAddingStreamerId(streamer.id);
 
-    // 検索結果をクリア
+    // 配信者を追加（親コンポーネントの処理を待つ）
+    await onSelectStreamer(streamer);
+
+    // 追加完了後に検索結果をクリア
+    setIsAdding(false);
+    setAddingStreamerId(null);
     setQuery('');
     setResults([]);
     setError(null);
@@ -109,32 +116,44 @@ export function StreamerSearch({ onSelectStreamer }: StreamerSearchProps) {
 
       {results.length > 0 && (
         <div className="space-y-2">
-          {results.map((streamer) => (
-            <Card
-              key={streamer.id}
-              className="p-3 bg-gray-900 border-gray-700 hover:bg-gray-800 cursor-pointer transition"
-              onClick={() => handleSelectStreamer(streamer)}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <img
-                    src={streamer.thumbnail_url.replace('{width}', '50').replace('{height}', '50')}
-                    alt={streamer.display_name}
-                    className="w-10 h-10 rounded-full"
-                  />
-                  <div>
-                    <div className="font-medium text-sm text-gray-100">{streamer.display_name}</div>
-                    <div className="text-xs text-gray-500">
-                      {streamer.game_name || '配信中ではありません'}
+          {results.map((streamer) => {
+            const isAddingThis = addingStreamerId === streamer.id;
+            return (
+              <Card
+                key={streamer.id}
+                className={`p-3 bg-gray-900 border-gray-700 transition ${
+                  isAddingThis
+                    ? 'opacity-50 cursor-wait'
+                    : 'hover:bg-gray-800 cursor-pointer'
+                }`}
+                onClick={() => !isAdding && handleSelectStreamer(streamer)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <img
+                      src={streamer.thumbnail_url.replace('{width}', '50').replace('{height}', '50')}
+                      alt={streamer.display_name}
+                      className="w-10 h-10 rounded-full"
+                    />
+                    <div>
+                      <div className="font-medium text-sm text-gray-100">{streamer.display_name}</div>
+                      <div className="text-xs text-gray-500">
+                        {streamer.game_name || '配信中ではありません'}
+                      </div>
                     </div>
                   </div>
+                  {isAddingThis ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-xs text-purple-400">追加中...</span>
+                    </div>
+                  ) : streamer.is_live ? (
+                    <Badge className="bg-red-600 text-white text-xs">LIVE</Badge>
+                  ) : null}
                 </div>
-                {streamer.is_live && (
-                  <Badge className="bg-red-600 text-white text-xs">LIVE</Badge>
-                )}
-              </div>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

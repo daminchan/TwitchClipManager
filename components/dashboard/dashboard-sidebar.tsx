@@ -183,12 +183,13 @@ export function DashboardSidebar({
             <div className={`
               ${isSidebarOpen ? 'w-full' : 'w-auto'}
               ${isSidebarOpen
-                ? 'bg-gradient-to-r from-pink-600/20 to-rose-600/20 hover:from-pink-600/30 hover:to-rose-600/30 border border-pink-500/30 hover:border-pink-500/50'
-                : 'bg-pink-600/20 hover:bg-pink-600/30'
+                ? 'bg-gradient-to-r from-pink-600/20 to-rose-600/20 hover:from-pink-600/30 hover:to-rose-600/30 active:from-pink-600/40 active:to-rose-600/40 border border-pink-500/30 hover:border-pink-500/50'
+                : 'bg-pink-600/20 hover:bg-pink-600/30 active:bg-pink-600/40'
               }
               rounded-lg p-4 transition-all duration-200 button-press-feedback
               focus:outline-none focus:ring-2 focus:ring-pink-500/50
               cursor-pointer
+              active:scale-95 active:opacity-70
             `}>
               <div className="flex items-center gap-2">
                 <ThumbsUp className={`${isSidebarOpen ? 'w-5 h-5' : 'w-6 h-6'} text-pink-400 flex-shrink-0`} />
@@ -213,12 +214,13 @@ export function DashboardSidebar({
             <div className={`
               ${isSidebarOpen ? 'w-full' : 'w-auto'}
               ${isSidebarOpen
-                ? 'bg-gradient-to-r from-purple-600/20 to-pink-600/20 hover:from-purple-600/30 hover:to-pink-600/30 border border-purple-500/30 hover:border-purple-500/50'
-                : 'bg-purple-600/20 hover:bg-purple-600/30'
+                ? 'bg-gradient-to-r from-purple-600/20 to-pink-600/20 hover:from-purple-600/30 hover:to-pink-600/30 active:from-purple-600/40 active:to-pink-600/40 border border-purple-500/30 hover:border-purple-500/50'
+                : 'bg-purple-600/20 hover:bg-purple-600/30 active:bg-purple-600/40'
               }
               rounded-lg p-4 transition-all duration-200 button-press-feedback
               focus:outline-none focus:ring-2 focus:ring-purple-500/50
               group cursor-pointer
+              active:scale-95 active:opacity-70
             `}>
               <div className="flex items-center gap-2">
                 <Heart className={`${isSidebarOpen ? 'w-5 h-5' : 'w-6 h-6'} text-purple-400 flex-shrink-0`} />
