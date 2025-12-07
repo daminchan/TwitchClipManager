@@ -5,14 +5,22 @@
 // - Next.js App Router ベストプラクティス
 // - YouTube風レイアウト: コンテンツのみを返す
 
+import { redirect } from 'next/navigation';
+import { auth } from '@/lib/auth';
 import { FavoritesContent } from '@/components/favorites/favorites-content';
+import { ROUTES } from '@/lib/constants';
 
 /**
  * お気に入り配信者ページ（認証済みユーザー専用）
  *
- * レイアウトで認証チェック済み
- * このページはコンテンツのみを返す
+ * 未認証の場合はホームにリダイレクト
  */
-export default function FavoritesPage() {
+export default async function FavoritesPage() {
+  const session = await auth();
+
+  if (!session?.user) {
+    redirect(ROUTES.HOME);
+  }
+
   return <FavoritesContent />;
 }
