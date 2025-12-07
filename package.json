@@ -22,7 +22,7 @@
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
     "lucide-react": "^0.548.0",
-    "next": "16.0.0",
+    "next": "^16.0.7",
     "next-auth": "^5.0.0-beta.30",
     "next-nprogress-bar": "^2.4.7",
     "prisma": "^5.22.0",
