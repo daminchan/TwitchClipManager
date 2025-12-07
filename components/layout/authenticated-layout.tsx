@@ -216,20 +216,20 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
             {/* ドラッグオーバーレイ */}
             <DragOverlay>
               {activeStreamer && (
-                <div className="group bg-[#1a1a1a] hover:bg-[#222222] rounded-lg p-4 cursor-move transition-all duration-200 shadow-2xl scale-105 rotate-3">
+                <div className="group bg-[#1a1a1a] hover:bg-[#222222] rounded-lg p-2 cursor-move transition-all duration-200 shadow-2xl scale-50 rotate-3">
                   {/* プロフィール画像 */}
-                  <div className="relative w-24 h-24 mx-auto mb-3">
+                  <div className="relative w-12 h-12 mx-auto mb-1">
                     {activeStreamer.streamerImage ? (
                       <Image
                         src={activeStreamer.streamerImage}
                         alt={activeStreamer.streamerName}
                         fill
                         className="rounded-full object-cover"
-                        sizes="96px"
+                        sizes="48px"
                       />
                     ) : (
                       <div className="w-full h-full rounded-full bg-purple-600 flex items-center justify-center">
-                        <span className="text-2xl text-white font-bold">
+                        <span className="text-sm text-white font-bold">
                           {activeStreamer.streamerName.charAt(0).toUpperCase()}
                         </span>
                       </div>
@@ -237,10 +237,10 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
                   </div>
 
                   {/* 配信者名 */}
-                  <p className="text-center text-sm font-semibold text-gray-100 line-clamp-1 mb-1">
+                  <p className="text-center text-xs font-semibold text-gray-100 line-clamp-1 mb-0.5">
                     {activeStreamer.streamerName}
                   </p>
-                  <p className="text-center text-xs text-gray-400 line-clamp-1">
+                  <p className="text-center text-[10px] text-gray-400 line-clamp-1">
                     @{activeStreamer.streamerLogin}
                   </p>
                 </div>

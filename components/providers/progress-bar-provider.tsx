@@ -20,16 +20,25 @@ export function ProgressBarProvider({ children }: { children: React.ReactNode })
     <>
       {/* YouTubeスタイルのローディングバー */}
       <ProgressBar
-        height="3px"
+        height="4px"
         color="#9146FF"
         options={{
           showSpinner: false,
           easing: 'ease',
-          speed: 200,
+          speed: 300,
           trickle: true,
-          trickleSpeed: 200,
+          trickleSpeed: 100,
+          minimum: 0.08,
         }}
-        shallowRouting
+        shallowRouting={false}
+        style="
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 9999;
+          box-shadow: 0 0 10px #9146FF, 0 0 5px #9146FF;
+        "
       />
       {children}
     </>
