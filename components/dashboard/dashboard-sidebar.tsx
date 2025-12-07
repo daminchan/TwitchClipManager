@@ -90,9 +90,20 @@ export function DashboardSidebar({
     setFolderToDelete(folder);
   };
 
-  const handleFolderDeleteSuccess = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['folders'] });
+  const handleFolderDeleteSuccess = async (deletedFolderId: string) => {
+    // 楽観的UI: 即座にキャッシュを更新
+    queryClient.setQueryData(['folders'], (oldData: any) => {
+      if (!oldData?.data) return oldData;
+      return {
+        ...oldData,
+        data: oldData.data.filter((f: Folder) => f.id !== deletedFolderId),
+      };
+    });
+
     setFolderToDelete(null);
+
+    // バックグラウンドで再取得
+    await queryClient.invalidateQueries({ queryKey: ['folders'] });
   };
 
   const handleViewStreamers = (folder: Folder) => {

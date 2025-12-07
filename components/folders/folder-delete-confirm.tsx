@@ -15,7 +15,7 @@ interface FolderDeleteConfirmProps {
   isOpen: boolean;
   folder: Folder | null;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (deletedFolderId: string) => void;
 }
 
 export function FolderDeleteConfirm({ isOpen, folder, onClose, onSuccess }: FolderDeleteConfirmProps) {
@@ -27,13 +27,20 @@ export function FolderDeleteConfirm({ isOpen, folder, onClose, onSuccess }: Fold
   const handleDelete = async () => {
     setError('');
 
-    startTransition(async () => {
-      const result = await deleteFolder(folder.id);
+    const folderId = folder.id;
 
-      if (result.success) {
-        onSuccess();
-        onClose();
-      } else {
+    // 即座にモーダルを閉じる
+    onClose();
+
+    // 楽観的UI更新を親に通知
+    onSuccess(folderId);
+
+    // バックグラウンドでサーバーアクション実行
+    startTransition(async () => {
+      const result = await deleteFolder(folderId);
+
+      if (!result.success) {
+        // エラー時は再度モーダルを開いてエラーを表示
         setError(result.message);
       }
     });
