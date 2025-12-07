@@ -50,7 +50,7 @@ export function DashboardContent({ userId, userEmail, isAuthenticated, skipAuth 
   const { toast, showToast, hideToast } = useToast();
 
   // レイアウトからフォルダ選択状態を取得
-  const { selectedFolderId } = useFolderContext();
+  const { selectedFolderId, setSelectedFolderId } = useFolderContext();
 
   // オンボーディングモーダル表示制御
   const [showOnboarding, setShowOnboarding] = useState(!isAuthenticated || skipAuth);
@@ -109,12 +109,15 @@ export function DashboardContent({ userId, userEmail, isAuthenticated, skipAuth 
         </div>
       </div>
 
-      {/* ソートタブ */}
+      {/* ソートタブ + フォルダタグ */}
       <div className="mb-6">
         <ClipSortTabs
           sortType={sortType}
           onSortChange={setSortType}
           clipCount={filteredClips.length}
+          folders={folders}
+          selectedFolderId={selectedFolderId}
+          onFolderClick={setSelectedFolderId}
         />
       </div>
 

@@ -169,4 +169,21 @@
   .button-press-feedback:active:not(:disabled) {
     transform: scale(0.95);
   }
+
+  /* グラデーションアニメーション */
+  @keyframes gradient {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  .animate-gradient {
+    animation: gradient 3s ease infinite;
+  }
 }
