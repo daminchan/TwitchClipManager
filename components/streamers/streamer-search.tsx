@@ -8,6 +8,7 @@
 'use client';
 
 import { useState } from 'react';
+import { X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,12 +37,17 @@ export function StreamerSearch({ onSelectStreamer }: StreamerSearchProps) {
     // 配信者を追加（親コンポーネントの処理を待つ）
     await onSelectStreamer(streamer);
 
-    // 追加完了後に検索結果をクリア
+    // 追加完了後も検索結果は保持（ユーザーが複数追加できるように）
     setIsAdding(false);
     setAddingStreamerId(null);
+  };
+
+  const handleClearResults = () => {
     setQuery('');
     setResults([]);
     setError(null);
+    setIsAdding(false);
+    setAddingStreamerId(null);
   };
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -116,6 +122,23 @@ export function StreamerSearch({ onSelectStreamer }: StreamerSearchProps) {
 
       {results.length > 0 && (
         <div className="space-y-2">
+          {/* 検索結果ヘッダー */}
+          <div className="flex items-center justify-between pb-2 border-b border-gray-800">
+            <p className="text-sm text-gray-400">
+              {results.length}件の配信者が見つかりました
+            </p>
+            <button
+              onClick={handleClearResults}
+              disabled={isAdding}
+              className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="検索結果を閉じる"
+            >
+              <X className="w-4 h-4" />
+              <span>閉じる</span>
+            </button>
+          </div>
+
+          {/* 検索結果一覧 */}
           {results.map((streamer) => {
             const isAddingThis = addingStreamerId === streamer.id;
             return (
