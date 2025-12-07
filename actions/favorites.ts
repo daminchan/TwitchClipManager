@@ -88,6 +88,7 @@ export async function addFavoriteStreamer(
 
 /**
  * お気に入り配信者を削除
+ * カスケード削除: すべてのフォルダからも自動的に削除される
  */
 export async function removeFavoriteStreamer(streamerId: string): Promise<ActionResult> {
   try {
@@ -110,18 +111,32 @@ export async function removeFavoriteStreamer(streamerId: string): Promise<Action
       };
     }
 
-    // お気に入りから削除
-    await prisma.favoriteStreamer.delete({
-      where: {
-        userId_streamerId: {
-          userId: session.user.id,
+    // トランザクションで一括処理
+    await prisma.$transaction(async (tx) => {
+      // 1. ユーザーのすべてのフォルダから配信者を削除
+      await tx.folderStreamer.deleteMany({
+        where: {
           streamerId,
+          folder: {
+            userId: session.user.id,
+          },
         },
-      },
+      });
+
+      // 2. お気に入りから削除
+      await tx.favoriteStreamer.delete({
+        where: {
+          userId_streamerId: {
+            userId: session.user.id,
+            streamerId,
+          },
+        },
+      });
     });
 
     // キャッシュを再検証
     revalidatePath('/dashboard');
+    revalidatePath('/favorites');
     revalidatePath('/favorites-clips');
 
     return {
