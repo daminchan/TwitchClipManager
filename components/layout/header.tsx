@@ -125,7 +125,7 @@ export function Header({
               <Button
                 variant="outline"
                 size="sm"
-                className="text-xs md:text-sm bg-[#1a1a1a] border-0 text-gray-100 hover:bg-[#222222]"
+                className="text-xs md:text-sm bg-[#1a1a1a] border-0 text-gray-100 hover:bg-[#222222] transition-all button-press-feedback active:scale-95"
               >
                 <Settings className="w-4 h-4 md:mr-1" />
                 <span className="hidden md:inline">設定</span>
@@ -135,7 +135,7 @@ export function Header({
               variant="outline"
               size="sm"
               onClick={handleSignOut}
-              className="hidden md:flex text-xs md:text-sm bg-[#1a1a1a] border-0 text-gray-100 hover:bg-[#222222] hover:border-purple-500"
+              className="hidden md:flex text-xs md:text-sm bg-[#1a1a1a] border-0 text-gray-100 hover:bg-[#222222] transition-all button-press-feedback active:scale-95"
             >
               ログアウト
             </Button>
@@ -145,7 +145,7 @@ export function Header({
 
         {/* ダッシュボード用のソートタブ */}
         {showDashboardControls && setSortType && (
-          <div className="px-4 md:px-6 py-3 border-t border-[#2a2a2a]">
+          <div className="px-4 md:px-6 py-3">
             <ClipSortTabs
               sortType={sortType}
               onSortChange={setSortType}

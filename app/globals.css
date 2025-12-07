@@ -160,4 +160,13 @@
     /* 注意: ANIMATION.LIKE_HEART_DURATION (1000ms) と同期 */
     animation: floatHeart 1s ease-out forwards;
   }
+
+  /* ボタン押下フィードバック（シンプル） */
+  .button-press-feedback {
+    transition: transform 0.1s ease-out;
+  }
+
+  .button-press-feedback:active:not(:disabled) {
+    transform: scale(0.95);
+  }
 }

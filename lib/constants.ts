@@ -295,3 +295,17 @@ export const CACHE_TIME = {
   DEFAULT_STALE_TIME: 5 * 60 * 1000,   // 5分間（デフォルトのstaleTime）
   DEFAULT_GC_TIME: 10 * 60 * 1000,     // 10分間（デフォルトのgcTime）
 } as const;
+
+/**
+ * フォルダカラーパレット
+ */
+export const FOLDER_COLORS = [
+  { name: '赤', value: '#ef4444' },
+  { name: 'ピンク', value: '#ec4899' },
+  { name: '紫', value: '#a855f7' },
+  { name: '青', value: '#3b82f6' },
+  { name: '緑', value: '#10b981' },
+  { name: '黄色', value: '#f59e0b' },
+  { name: 'オレンジ', value: '#f97316' },
+  { name: 'グレー', value: '#6b7280' },
+] as const;

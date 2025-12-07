@@ -26,6 +26,7 @@ model User {
   sessions          Session[]
   favoriteStreamers FavoriteStreamer[]
   likedClips        LikedClip[]         // いいねしたクリップ
+  folders           Folder[]            // フォルダ
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
 }
@@ -100,4 +101,35 @@ model LikedClip {
   @@unique([userId, clipId])
   @@index([userId])
   @@index([likedAt])
+}
+
+// フォルダ
+model Folder {
+  id              String           @id @default(cuid())
+  userId          String
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String           // フォルダ名
+  color           String           // フォルダの色（HEXカラーコード）
+  order           Int              @default(0) // 並び順
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  folderStreamers FolderStreamer[] // フォルダ内の配信者
+
+  @@index([userId])
+  @@index([userId, order])
+}
+
+// フォルダ内の配信者（中間テーブル）
+model FolderStreamer {
+  id            String   @id @default(cuid())
+  folderId      String
+  folder        Folder   @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  streamerId    String   // Twitch配信者ID
+  streamerName  String   // 配信者名
+  streamerLogin String   // 配信者ログイン名
+  streamerImage String?  // プロフィール画像URL
+  addedAt       DateTime @default(now())
+
+  @@unique([folderId, streamerId])
+  @@index([folderId])
 }
