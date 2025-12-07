@@ -6,6 +6,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +20,7 @@ interface FolderCreateModalProps {
 }
 
 export function FolderCreateModal({ isOpen, onClose, onSuccess }: FolderCreateModalProps) {
+  const queryClient = useQueryClient();
   const [name, setName] = useState('');
   const [selectedColor, setSelectedColor] = useState<string>(FOLDER_COLORS[0].value);
   const [error, setError] = useState('');
@@ -35,15 +37,41 @@ export function FolderCreateModal({ isOpen, onClose, onSuccess }: FolderCreateMo
       return;
     }
 
+    const tempFolder = {
+      id: `temp-${Date.now()}`,
+      userId: 'temp',
+      name: name.trim(),
+      color: selectedColor,
+      order: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      folderStreamers: [],
+    };
+
+    // 楽観的UI: 即座にキャッシュを更新
+    queryClient.setQueryData(['folders'], (oldData: any) => {
+      if (!oldData?.data) return { data: [tempFolder] };
+      return {
+        ...oldData,
+        data: [...oldData.data, tempFolder],
+      };
+    });
+
+    // モーダルを即座に閉じる
+    setName('');
+    setSelectedColor(FOLDER_COLORS[0].value);
+    onClose();
+
+    // バックグラウンドでサーバーアクション実行
     startTransition(async () => {
-      const result = await createFolder({ name: name.trim(), color: selectedColor });
+      const result = await createFolder({ name: tempFolder.name, color: selectedColor });
 
       if (result.success) {
-        setName('');
-        setSelectedColor(FOLDER_COLORS[0].value);
+        // 実データで上書き
         onSuccess();
-        onClose();
       } else {
+        // エラー時はロールバックして再度モーダルを開く
+        await queryClient.invalidateQueries({ queryKey: ['folders'] });
         setError(result.message);
       }
     });

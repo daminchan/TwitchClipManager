@@ -165,7 +165,7 @@ export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: Fol
 
         {/* フッター */}
         <div className="p-6 border-t border-[#2a2a2a] space-y-3">
-          <Link href={ROUTES.FAVORITES} className="block">
+          <Link href={ROUTES.FAVORITES} className="block" onClick={handleClose}>
             <Button
               className="w-full button-press-feedback bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
             >
