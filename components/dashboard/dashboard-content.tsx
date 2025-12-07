@@ -3,30 +3,26 @@
 // - セクション2: 技術スタック（React Query）
 // - セクション4.6: コンポーネント構造
 // - セクション10.2: サーバー/クライアントコンポーネント分離
-// - サーバーアクションの使用
+// - YouTube風レイアウト: コンテンツのみ（ヘッダー・サイドバーはレイアウトにあり）
 
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useQueryClient, useQuery } from '@tanstack/react-query';
-import { X } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Search } from 'lucide-react';
 
-import { Header } from '@/components/layout/header';
-import { MobileNav } from '@/components/layout/mobile-nav';
-import { DashboardSidebar } from '@/components/dashboard/dashboard-sidebar';
-import { StreamerSearch } from '@/components/streamers/streamer-search';
 import { ClipGrid } from '@/components/clips/clip-grid';
-import { Button } from '@/components/ui/button';
+import { ClipSortTabs } from '@/components/dashboard/clip-sort-tabs';
+import { Input } from '@/components/ui/input';
 import { Toast } from '@/components/ui/toast';
 import { useToast } from '@/hooks/use-toast';
-import { useFavoriteActions } from '@/hooks/use-favorite-actions';
 import { OnboardingModal } from '@/components/onboarding/onboarding-modal';
+import { useFolderContext } from '@/components/layout/authenticated-layout';
 import { getFolders } from '@/actions/folders';
 
 import { useDashboardClips } from '@/hooks/use-dashboard-clips';
 import { LABELS } from '@/lib/constants';
 
-import type { TwitchChannel } from '@/types/twitch';
 import type { Folder } from '@/types/database';
 
 interface DashboardContentProps {
@@ -37,14 +33,11 @@ interface DashboardContentProps {
 }
 
 export function DashboardContent({ userId, userEmail, isAuthenticated, skipAuth }: DashboardContentProps) {
-  const queryClient = useQueryClient();
-
   // カスタムフックでクリップロジックを管理
   const {
     allClips,
     filteredClips,
     isLoadingClips,
-    clipError,
     searchQuery,
     sortType,
     likedClipIds,
@@ -55,10 +48,9 @@ export function DashboardContent({ userId, userEmail, isAuthenticated, skipAuth 
 
   // UI State
   const { toast, showToast, hideToast } = useToast();
-  const { handleAddFavorite: addFavorite } = useFavoriteActions();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [showMobileSearch, setShowMobileSearch] = useState(false);
-  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+
+  // レイアウトからフォルダ選択状態を取得
+  const { selectedFolderId, setSelectedFolderId } = useFolderContext();
 
   // オンボーディングモーダル表示制御
   const [showOnboarding, setShowOnboarding] = useState(!isAuthenticated || skipAuth);
@@ -70,25 +62,6 @@ export function DashboardContent({ userId, userEmail, isAuthenticated, skipAuth 
     }
   }, [isAuthenticated, allClips.length, isLoadingClips]);
 
-  // お気に入り配信者を追加
-  const handleAddFavorite = async (streamer: TwitchChannel) => {
-    await addFavorite(
-      streamer,
-      (message) => showToast(message, 'success'),
-      (message, type) => showToast(message, type)
-    );
-  };
-
-  // お気に入り配信者を削除したときのハンドラー
-  const handleRemoveFavorite = async () => {
-    // React Query のキャッシュを無効化して自動再取得
-    await queryClient.invalidateQueries({
-      queryKey: ['clips', 'favorites'],
-      refetchType: 'active'
-    });
-    await queryClient.invalidateQueries({ queryKey: ['favorites'] });
-  };
-
   // フォルダ一覧を取得
   const { data: foldersResult } = useQuery({
     queryKey: ['folders'],
@@ -98,16 +71,6 @@ export function DashboardContent({ userId, userEmail, isAuthenticated, skipAuth 
   });
 
   const folders: Folder[] = foldersResult?.data || [];
-
-  // フォルダクリック時のハンドラー
-  const handleFolderClick = (folderId: string) => {
-    if (selectedFolderId === folderId) {
-      // 同じフォルダをクリック → 解除（全クリップ表示に戻す）
-      setSelectedFolderId(null);
-    } else {
-      setSelectedFolderId(folderId);
-    }
-  };
 
   // 選択されたフォルダの配信者IDを取得
   const selectedFolderStreamerIds = useMemo(() => {
@@ -130,82 +93,41 @@ export function DashboardContent({ userId, userEmail, isAuthenticated, skipAuth 
     handleLikeToggleHook(clipId, isCurrentlyLiked);
   };
 
-  // モバイル検索イベントリスナー
-  useEffect(() => {
-    const handleOpenMobileSearch = () => setShowMobileSearch(true);
-
-    window.addEventListener('openMobileSearch', handleOpenMobileSearch);
-
-    return () => {
-      window.removeEventListener('openMobileSearch', handleOpenMobileSearch);
-    };
-  }, []);
-
   return (
-    <div className="min-h-screen bg-[#0f0f0f] flex flex-col">
-      <Header
-        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-        showDashboardControls={true}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        sortType={sortType}
-        setSortType={setSortType}
-        clipCount={filteredClips.length}
-      />
-
-      <div className="flex flex-1 overflow-hidden">
-        {/* 左サイドバー */}
-        <DashboardSidebar
-          isSidebarOpen={isSidebarOpen}
-          onAddFavorite={handleAddFavorite}
-          onRemoveFavorite={handleRemoveFavorite}
-          selectedFolderId={selectedFolderId}
-          onFolderClick={handleFolderClick}
-        />
-
-        {/* メインコンテンツ */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-6 pb-24 lg:pb-6">
-            {/* クリップグリッド */}
-            <div>
-              <ClipGrid
-                clips={displayClips}
-                isLoading={isLoadingClips}
-                likedClipIds={likedClipIds}
-                onLikeToggle={handleLikeToggle}
-              />
-            </div>
-          </div>
-        </main>
+    <div className="container mx-auto px-6 py-8 pb-24 lg:pb-8">
+      {/* 検索バー（モバイル） */}
+      <div className="lg:hidden mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Input
+            type="text"
+            placeholder={LABELS.PLACEHOLDERS.SEARCH_CLIPS}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 bg-[#1a1a1a] border-0 text-gray-100 placeholder-gray-400 w-full"
+          />
+        </div>
       </div>
 
-      {/* モバイル検索モーダル */}
-      {showMobileSearch && (
-        <div className="lg:hidden fixed inset-0 z-[60] bg-[#0f0f0f] flex flex-col">
-          <div className="flex items-center justify-between p-4 border-b border-[#2a2a2a]">
-            <h2 className="text-lg font-semibold text-gray-100">{LABELS.SECTIONS.SEARCH_STREAMERS}</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowMobileSearch(false)}
-              className="text-gray-400"
-            >
-              <X className="w-6 h-6" />
-            </Button>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4">
-            <StreamerSearch
-              onSelectStreamer={(streamer) => {
-                handleAddFavorite(streamer);
-                setShowMobileSearch(false);
-              }}
-            />
-          </div>
-        </div>
-      )}
+      {/* ソートタブ + フォルダタグ */}
+      <div className="mb-6">
+        <ClipSortTabs
+          sortType={sortType}
+          onSortChange={setSortType}
+          clipCount={filteredClips.length}
+          folders={folders}
+          selectedFolderId={selectedFolderId}
+          onFolderClick={setSelectedFolderId}
+        />
+      </div>
 
-      {/* モバイルフッターナビゲーション */}
-      <MobileNav />
+      {/* クリップグリッド */}
+      <ClipGrid
+        clips={displayClips}
+        isLoading={isLoadingClips}
+        likedClipIds={likedClipIds}
+        onLikeToggle={handleLikeToggle}
+      />
 
       {/* トースト通知 */}
       {toast && (

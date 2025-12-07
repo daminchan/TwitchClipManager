@@ -3,35 +3,28 @@
 // - セクション4.6: コンポーネント構造
 // - セクション10.2: サーバー/クライアントコンポーネント分離
 // - サーバーアクションの使用
+// - YouTube風レイアウト: コンテンツのみ
 
 'use client';
 
 import { useState, useMemo, useTransition } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 
-import { Header } from '@/components/layout/header';
-import { MobileNav } from '@/components/layout/mobile-nav';
-import { DashboardSidebar } from '@/components/dashboard/dashboard-sidebar';
 import { PlaylistCard } from '@/components/clips/playlist-card';
 import { ClipList } from '@/components/clips/clip-list';
 import { ClipPlayerModal } from '@/components/clips/clip-player-modal';
 import { Toast } from '@/components/ui/toast';
 import { useToast } from '@/hooks/use-toast';
-import { useFavoriteActions } from '@/hooks/use-favorite-actions';
 import { CACHE_TIME } from '@/lib/constants';
 
 import type { LikedClip } from '@/types/database';
-import type { TwitchClip, TwitchChannel } from '@/types/twitch';
+import type { TwitchClip } from '@/types/twitch';
 import { getLikedClips, removeLikedClip } from '@/actions/liked-clips';
 
 export function FavoritesClipsContent() {
   const queryClient = useQueryClient();
   const [deletingClipId, setDeletingClipId] = useState<string | undefined>(undefined);
   const { toast, showToast, hideToast } = useToast();
-  const { handleAddFavorite: addFavorite } = useFavoriteActions();
-
-  // サイドバー制御
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   // クリップナビゲーション用の state
   const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -143,86 +136,54 @@ export function FavoritesClipsContent() {
     }
   };
 
-  // お気に入り配信者を追加
-  const handleAddFavorite = async (streamer: TwitchChannel) => {
-    await addFavorite(
-      streamer,
-      (message) => showToast(message, 'success'),
-      (message, type) => showToast(message, type)
-    );
-  };
-
-  // お気に入り配信者を削除したときのハンドラー
-  const handleRemoveFavorite = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['favorites'] });
-  };
-
   return (
-    <div className="min-h-screen bg-[#0f0f0f] flex flex-col">
-      <Header onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+    <div className="p-6 pb-24 lg:pb-6">
+      {/* 2カラムレイアウト（PC版） */}
+      <div className="hidden lg:flex gap-6">
+        {/* 左側：プレイリストカード */}
+        <div className="w-[400px] flex-shrink-0">
+          <PlaylistCard
+            title="お気に入りクリップ"
+            clipCount={likedClips.length}
+            currentClip={currentClip}
+            currentIndex={currentIndex}
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+            isLoading={isLoading}
+          />
+        </div>
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* 左サイドバー */}
-        <DashboardSidebar
-          isSidebarOpen={isSidebarOpen}
-          onAddFavorite={handleAddFavorite}
-          onRemoveFavorite={handleRemoveFavorite}
-        />
-
-        {/* メインコンテンツ */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-6 pb-24 lg:pb-6">
-            {/* 2カラムレイアウト（PC版） */}
-            <div className="hidden lg:flex gap-6">
-              {/* 左側：プレイリストカード */}
-              <div className="w-[400px] flex-shrink-0">
-                <PlaylistCard
-                  title="お気に入りクリップ"
-                  clipCount={likedClips.length}
-                  currentClip={currentClip}
-                  currentIndex={currentIndex}
-                  onNext={handleNext}
-                  onPrevious={handlePrevious}
-                  isLoading={isLoading}
-                />
-              </div>
-
-              {/* 右側：クリップリスト */}
-              <div className="flex-1">
-                <ClipList
-                  clips={likedClips}
-                  onDelete={handleDelete}
-                  onSelectClip={handleSelectClip}
-                  deletingClipId={deletingClipId}
-                  currentClipId={currentClip?.id}
-                  isLoading={isLoading}
-                />
-              </div>
-            </div>
-
-            {/* モバイル版 */}
-            <div className="lg:hidden">
-              <div className="mb-6">
-                <h1 className="text-3xl font-bold text-gray-100 mb-2">お気に入りクリップ</h1>
-                <p className="text-gray-400">
-                  あとで見返したいクリップを保存できます（{likedClips.length}件）
-                </p>
-              </div>
-
-              <ClipList
-                clips={likedClips}
-                onDelete={handleDelete}
-                onSelectClip={handleSelectClipMobile}
-                deletingClipId={deletingClipId}
-                currentClipId={currentClip?.id}
-                isLoading={isLoading}
-              />
-            </div>
-          </div>
-        </main>
+        {/* 右側：クリップリスト */}
+        <div className="flex-1">
+          <ClipList
+            clips={likedClips}
+            onDelete={handleDelete}
+            onSelectClip={handleSelectClip}
+            deletingClipId={deletingClipId}
+            currentClipId={currentClip?.id}
+            isLoading={isLoading}
+          />
+        </div>
       </div>
 
-      <MobileNav />
+      {/* モバイル版 */}
+      <div className="lg:hidden">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-100 mb-2">お気に入りクリップ</h1>
+          <p className="text-gray-400">
+            あとで見返したいクリップを保存できます（{likedClips.length}件）
+          </p>
+        </div>
+
+        <ClipList
+          clips={likedClips}
+          onDelete={handleDelete}
+          onSelectClip={handleSelectClipMobile}
+          deletingClipId={deletingClipId}
+          currentClipId={currentClip?.id}
+          isLoading={isLoading}
+        />
+      </div>
 
       {/* モバイル用モーダルプレーヤー */}
       <ClipPlayerModal
@@ -235,6 +196,7 @@ export function FavoritesClipsContent() {
         totalClips={likedClips.length}
       />
 
+      {/* トースト通知 */}
       {toast && (
         <Toast
           message={toast.message}
