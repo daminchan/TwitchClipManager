@@ -7,8 +7,8 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useMemo } from 'react';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { X } from 'lucide-react';
 
 import { Header } from '@/components/layout/header';
@@ -21,11 +21,13 @@ import { Toast } from '@/components/ui/toast';
 import { useToast } from '@/hooks/use-toast';
 import { useFavoriteActions } from '@/hooks/use-favorite-actions';
 import { OnboardingModal } from '@/components/onboarding/onboarding-modal';
+import { getFolders } from '@/actions/folders';
 
 import { useDashboardClips } from '@/hooks/use-dashboard-clips';
 import { LABELS } from '@/lib/constants';
 
 import type { TwitchChannel } from '@/types/twitch';
+import type { Folder } from '@/types/database';
 
 interface DashboardContentProps {
   userId: string | null;
@@ -56,6 +58,7 @@ export function DashboardContent({ userId, userEmail, isAuthenticated, skipAuth 
   const { handleAddFavorite: addFavorite } = useFavoriteActions();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
 
   // オンボーディングモーダル表示制御
   const [showOnboarding, setShowOnboarding] = useState(!isAuthenticated || skipAuth);
@@ -85,6 +88,42 @@ export function DashboardContent({ userId, userEmail, isAuthenticated, skipAuth 
     });
     await queryClient.invalidateQueries({ queryKey: ['favorites'] });
   };
+
+  // フォルダ一覧を取得
+  const { data: foldersResult } = useQuery({
+    queryKey: ['folders'],
+    queryFn: async () => {
+      return await getFolders();
+    },
+  });
+
+  const folders: Folder[] = foldersResult?.data || [];
+
+  // フォルダクリック時のハンドラー
+  const handleFolderClick = (folderId: string) => {
+    if (selectedFolderId === folderId) {
+      // 同じフォルダをクリック → 解除（全クリップ表示に戻す）
+      setSelectedFolderId(null);
+    } else {
+      setSelectedFolderId(folderId);
+    }
+  };
+
+  // 選択されたフォルダの配信者IDを取得
+  const selectedFolderStreamerIds = useMemo(() => {
+    if (!selectedFolderId) return null;
+    const folder = folders.find(f => f.id === selectedFolderId);
+    if (!folder || !folder.folderStreamers) return [];
+    return folder.folderStreamers.map(fs => fs.streamerId);
+  }, [selectedFolderId, folders]);
+
+  // フォルダフィルタリング適用
+  const displayClips = useMemo(() => {
+    if (!selectedFolderStreamerIds) return filteredClips;
+    return filteredClips.filter(clip =>
+      selectedFolderStreamerIds.includes(clip.broadcaster_id)
+    );
+  }, [filteredClips, selectedFolderStreamerIds]);
 
   // いいね/解除（楽観的UI、即座に実行）
   const handleLikeToggle = (clipId: string, isCurrentlyLiked: boolean) => {
@@ -120,6 +159,8 @@ export function DashboardContent({ userId, userEmail, isAuthenticated, skipAuth 
           isSidebarOpen={isSidebarOpen}
           onAddFavorite={handleAddFavorite}
           onRemoveFavorite={handleRemoveFavorite}
+          selectedFolderId={selectedFolderId}
+          onFolderClick={handleFolderClick}
         />
 
         {/* メインコンテンツ */}
@@ -128,7 +169,7 @@ export function DashboardContent({ userId, userEmail, isAuthenticated, skipAuth 
             {/* クリップグリッド */}
             <div>
               <ClipGrid
-                clips={filteredClips}
+                clips={displayClips}
                 isLoading={isLoadingClips}
                 likedClipIds={likedClipIds}
                 onLikeToggle={handleLikeToggle}
