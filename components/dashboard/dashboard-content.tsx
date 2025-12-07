@@ -95,8 +95,8 @@ export function DashboardContent({ userId, userEmail, isAuthenticated, skipAuth 
 
   return (
     <div className="w-full px-3 py-4 pb-24 lg:pb-4">
-      {/* 検索バー（モバイル） */}
-      <div className="lg:hidden mb-6">
+      {/* 検索バー */}
+      <div className="mb-6">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
           <Input

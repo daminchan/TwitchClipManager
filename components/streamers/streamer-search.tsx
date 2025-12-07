@@ -121,7 +121,17 @@ export function StreamerSearch({ onSelectStreamer }: StreamerSearchProps) {
       )}
 
       {results.length > 0 && (
-        <div className="space-y-2">
+        <div className="relative space-y-2">
+          {/* 追加中オーバーレイ */}
+          {isAdding && (
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm z-10 flex items-center justify-center rounded-lg">
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-purple-400 text-sm font-medium">追加中...</p>
+              </div>
+            </div>
+          )}
+
           {/* 検索結果ヘッダー */}
           <div className="flex items-center justify-between pb-2 border-b border-gray-800">
             <p className="text-sm text-gray-400">
@@ -145,8 +155,8 @@ export function StreamerSearch({ onSelectStreamer }: StreamerSearchProps) {
               <Card
                 key={streamer.id}
                 className={`p-3 bg-gray-900 border-gray-700 transition ${
-                  isAddingThis
-                    ? 'opacity-50 cursor-wait'
+                  isAdding
+                    ? 'cursor-not-allowed'
                     : 'hover:bg-gray-800 cursor-pointer'
                 }`}
                 onClick={() => !isAdding && handleSelectStreamer(streamer)}
@@ -166,10 +176,7 @@ export function StreamerSearch({ onSelectStreamer }: StreamerSearchProps) {
                     </div>
                   </div>
                   {isAddingThis ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-                      <span className="text-xs text-purple-400">追加中...</span>
-                    </div>
+                    <Badge className="bg-purple-600 text-white text-xs">追加中</Badge>
                   ) : streamer.is_live ? (
                     <Badge className="bg-red-600 text-white text-xs">LIVE</Badge>
                   ) : null}
