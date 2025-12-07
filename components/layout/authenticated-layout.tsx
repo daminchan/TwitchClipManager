@@ -15,6 +15,7 @@ import { Header } from '@/components/layout/header';
 import { MobileNav } from '@/components/layout/mobile-nav';
 import { DashboardSidebar } from '@/components/dashboard/dashboard-sidebar';
 import { Toast } from '@/components/ui/toast';
+import { PageLoadingOverlay } from '@/components/ui/page-loading-overlay';
 import { useToast } from '@/hooks/use-toast';
 import { useFavoriteActions } from '@/hooks/use-favorite-actions';
 import { addStreamerToFolder } from '@/actions/folders';
@@ -246,6 +247,9 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
                 </div>
               )}
             </DragOverlay>
+
+            {/* ページ遷移ローディングオーバーレイ */}
+            <PageLoadingOverlay />
           </div>
         </DragContext.Provider>
       </FolderContext.Provider>
