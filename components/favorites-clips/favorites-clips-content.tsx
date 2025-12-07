@@ -6,8 +6,8 @@
 
 'use client';
 
-import { useState, useEffect, useTransition } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useState, useMemo, useTransition } from 'react';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 
 import { Header } from '@/components/layout/header';
 import { MobileNav } from '@/components/layout/mobile-nav';
@@ -18,6 +18,7 @@ import { ClipPlayerModal } from '@/components/clips/clip-player-modal';
 import { Toast } from '@/components/ui/toast';
 import { useToast } from '@/hooks/use-toast';
 import { useFavoriteActions } from '@/hooks/use-favorite-actions';
+import { CACHE_TIME } from '@/lib/constants';
 
 import type { LikedClip } from '@/types/database';
 import type { TwitchClip, TwitchChannel } from '@/types/twitch';
@@ -25,13 +26,9 @@ import { getLikedClips, removeLikedClip } from '@/actions/liked-clips';
 
 export function FavoritesClipsContent() {
   const queryClient = useQueryClient();
-  const [likedClips, setLikedClips] = useState<TwitchClip[]>([]);
-  const [likedClipIds, setLikedClipIds] = useState<Set<string>>(new Set());
-  const [isLoading, setIsLoading] = useState(true);
   const [deletingClipId, setDeletingClipId] = useState<string | undefined>(undefined);
   const { toast, showToast, hideToast } = useToast();
   const { handleAddFavorite: addFavorite } = useFavoriteActions();
-  const [isPending, startTransition] = useTransition();
 
   // サイドバー制御
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -42,68 +39,72 @@ export function FavoritesClipsContent() {
   // モバイル用モーダル制御
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const fetchLikedClips = async () => {
-    setIsLoading(true);
-    try {
-      // サーバーアクションでいいねクリップを取得
+  // React Queryでいいねクリップを取得（キャッシュ有効）
+  const { data: likedClipsData, isLoading } = useQuery({
+    queryKey: ['clips', 'liked'],
+    queryFn: async () => {
       const result = await getLikedClips();
-
       if (!result.success || !result.data) {
         throw new Error('いいねしたクリップの取得に失敗しました');
       }
+      return result.data;
+    },
+    staleTime: CACHE_TIME.STREAMERS, // 5分間キャッシュ
+  });
 
-      // LikedClip を TwitchClip 形式に変換
-      const convertedClips: TwitchClip[] = result.data.map((liked: LikedClip) => ({
-        id: liked.clipId,
-        url: liked.clipUrl,
-        embed_url: liked.clipEmbedUrl,
-        broadcaster_id: liked.broadcasterId,
-        broadcaster_name: liked.broadcasterName,
-        creator_id: '',
-        creator_name: liked.creatorName,
-        video_id: '',
-        game_id: '',
-        language: '',
-        title: liked.clipTitle,
-        view_count: liked.viewCount,
-        created_at: liked.clipCreatedAt,
-        thumbnail_url: liked.thumbnailUrl,
-        duration: liked.duration,
-        vod_offset: null,
-      }));
+  // LikedClip を TwitchClip 形式に変換（useMemoで最適化）
+  const likedClips = useMemo(() => {
+    if (!likedClipsData) return [];
 
-      setLikedClips(convertedClips);
-      setLikedClipIds(new Set(result.data.map((clip: LikedClip) => clip.clipId)));
-    } catch (error) {
-      console.error('Fetch liked clips error:', error);
-      showToast('いいねしたクリップの読み込みに失敗しました', 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    return likedClipsData.map((liked: LikedClip) => ({
+      id: liked.clipId,
+      url: liked.clipUrl,
+      embed_url: liked.clipEmbedUrl,
+      broadcaster_id: liked.broadcasterId,
+      broadcaster_name: liked.broadcasterName,
+      creator_id: '',
+      creator_name: liked.creatorName,
+      video_id: '',
+      game_id: '',
+      language: '',
+      title: liked.clipTitle,
+      view_count: liked.viewCount,
+      created_at: liked.clipCreatedAt,
+      thumbnail_url: liked.thumbnailUrl,
+      duration: liked.duration,
+      vod_offset: null,
+    }));
+  }, [likedClipsData]);
 
-  const handleDelete = async (clipId: string) => {
-    setDeletingClipId(clipId);
+  const likedClipIds = useMemo(() => {
+    if (!likedClipsData) return new Set<string>();
+    return new Set(likedClipsData.map((clip: LikedClip) => clip.clipId));
+  }, [likedClipsData]);
 
-    startTransition(async () => {
-      // サーバーアクションでいいねを解除
-      const result = await removeLikedClip(clipId);
-
+  // いいね削除のミューテーション
+  const deleteMutation = useMutation({
+    mutationFn: async (clipId: string) => {
+      return await removeLikedClip(clipId);
+    },
+    onSuccess: (result) => {
       if (result.success) {
-        // リストから削除
-        setLikedClips((prev) => prev.filter((clip) => clip.id !== clipId));
-        setLikedClipIds((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(clipId);
-          return newSet;
-        });
+        // キャッシュを無効化して最新データを取得
+        queryClient.invalidateQueries({ queryKey: ['clips', 'liked'] });
         showToast(result.message, 'info');
       } else {
         showToast(result.message, 'error');
       }
+    },
+    onError: (error) => {
+      console.error('Delete liked clip error:', error);
+      showToast('いいねの削除に失敗しました', 'error');
+    },
+  });
 
-      setDeletingClipId(undefined);
-    });
+  const handleDelete = async (clipId: string) => {
+    setDeletingClipId(clipId);
+    await deleteMutation.mutateAsync(clipId);
+    setDeletingClipId(undefined);
   };
 
   // 現在のクリップを取得
@@ -155,10 +156,6 @@ export function FavoritesClipsContent() {
   const handleRemoveFavorite = async () => {
     await queryClient.invalidateQueries({ queryKey: ['favorites'] });
   };
-
-  useEffect(() => {
-    fetchLikedClips();
-  }, []);
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] flex flex-col">

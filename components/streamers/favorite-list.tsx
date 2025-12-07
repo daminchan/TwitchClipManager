@@ -16,7 +16,7 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { API_ENDPOINTS, LABELS, ANIMATION } from '@/lib/constants';
+import { API_ENDPOINTS, LABELS, ANIMATION, CACHE_TIME } from '@/lib/constants';
 
 import type { FavoriteStreamer } from '@/types';
 import { removeFavoriteStreamer } from '@/actions/favorites';
@@ -101,7 +101,7 @@ export function FavoriteList({ onRemoveFavorite }: FavoriteListProps) {
 
       return favoritesData as FavoriteWithLive[];
     },
-    staleTime: 2 * 60 * 1000, // 2分間キャッシュ（ライブステータスは頻繁に更新）
+    staleTime: CACHE_TIME.LIVE_STATUS,
   });
 
   // お気に入り削除のミューテーション

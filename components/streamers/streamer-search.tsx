@@ -27,6 +27,16 @@ export function StreamerSearch({ onSelectStreamer }: StreamerSearchProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const handleSelectStreamer = (streamer: TwitchChannel) => {
+    // 配信者を追加
+    onSelectStreamer(streamer);
+
+    // 検索結果をクリア
+    setQuery('');
+    setResults([]);
+    setError(null);
+  };
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -103,7 +113,7 @@ export function StreamerSearch({ onSelectStreamer }: StreamerSearchProps) {
             <Card
               key={streamer.id}
               className="p-3 bg-gray-900 border-gray-700 hover:bg-gray-800 cursor-pointer transition"
-              onClick={() => onSelectStreamer(streamer)}
+              onClick={() => handleSelectStreamer(streamer)}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">

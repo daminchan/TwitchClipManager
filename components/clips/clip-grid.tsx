@@ -13,7 +13,7 @@ interface ClipGridProps {
   clips: TwitchClip[];
   isLoading?: boolean;
   likedClipIds?: Set<string>;
-  onLikeToggle?: (clipId: string, isCurrentlyLiked: boolean) => Promise<void>;
+  onLikeToggle?: (clipId: string, isCurrentlyLiked: boolean) => void;
 }
 
 export function ClipGrid({ clips, isLoading, likedClipIds, onLikeToggle }: ClipGridProps) {

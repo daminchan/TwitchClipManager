@@ -181,16 +181,41 @@ export async function addMultipleFavoriteStreamers(
       }
     }
 
-    // 一括追加（重複は無視）
+    // 既存のお気に入りを取得
+    const existingFavorites = await prisma.favoriteStreamer.findMany({
+      where: {
+        userId: session.user.id,
+        streamerId: {
+          in: streamers.map(s => s.streamerId)
+        }
+      },
+      select: {
+        streamerId: true
+      }
+    });
+
+    const existingStreamerIds = new Set(existingFavorites.map(f => f.streamerId));
+
+    // 新規追加する配信者のみフィルター
+    const newStreamers = streamers.filter(s => !existingStreamerIds.has(s.streamerId));
+
+    // 全員既に追加済みの場合
+    if (newStreamers.length === 0) {
+      return {
+        success: true,
+        message: '選択した配信者は全員既にお気に入りに追加済みです'
+      };
+    }
+
+    // 一括追加
     await prisma.favoriteStreamer.createMany({
-      data: streamers.map((streamer) => ({
+      data: newStreamers.map((streamer) => ({
         userId: session.user.id!,
         streamerId: streamer.streamerId,
         streamerName: streamer.streamerName,
         streamerLogin: streamer.streamerLogin,
         streamerImage: streamer.streamerImage || null,
       })),
-      skipDuplicates: true, // 重複を無視
     });
 
     // キャッシュを再検証
@@ -198,10 +223,19 @@ export async function addMultipleFavoriteStreamers(
     revalidatePath('/dashboard');
     revalidatePath('/favorites-clips');
 
-    return {
-      success: true,
-      message: `${streamers.length}人をお気に入りに追加しました`
-    };
+    // 正確なメッセージを返す
+    const duplicateCount = streamers.length - newStreamers.length;
+    if (duplicateCount > 0) {
+      return {
+        success: true,
+        message: `${newStreamers.length}人をお気に入りに追加しました（${duplicateCount}人は既に追加済みでした）`
+      };
+    } else {
+      return {
+        success: true,
+        message: `${newStreamers.length}人をお気に入りに追加しました`
+      };
+    }
   } catch (error) {
     console.error('Add multiple favorite streamers error:', error);
     return {

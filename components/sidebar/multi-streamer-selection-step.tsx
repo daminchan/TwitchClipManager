@@ -2,7 +2,7 @@
 // 適用ルール:
 // - セクション4.6: コンポーネント構造
 // - セクション10.2: サーバー/クライアントコンポーネント分離
-// - オンボーディングフロー設計.md: おすすめ配信者機能（クリップベース）
+// - RECOMMENDATION_LIMITS定数の使用
 
 'use client';
 
@@ -12,29 +12,32 @@ import Image from 'next/image';
 import { Check, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { CACHE_TIME } from '@/lib/constants';
-import type { RecommendedStreamer } from '@/types/twitch';
+import { RECOMMENDATION_LIMITS, CACHE_TIME } from '@/lib/constants';
+import type { RecommendedStreamer, TwitchGame } from '@/types/twitch';
 
-interface StreamerSelectionStepProps {
-  gameId: string;
-  gameName: string;
+interface MultiStreamerSelectionStepProps {
+  selectedGames: TwitchGame[];
   onNext: (selectedStreamers: RecommendedStreamer[]) => void;
-  onBack?: () => void;
+  onBack: () => void;
 }
 
-export function StreamerSelectionStep({
-  gameId,
-  gameName,
+export function MultiStreamerSelectionStep({
+  selectedGames,
   onNext,
   onBack,
-}: StreamerSelectionStepProps) {
+}: MultiStreamerSelectionStepProps) {
   const [selectedStreamerIds, setSelectedStreamerIds] = useState<Set<string>>(new Set());
 
-  // おすすめ配信者を取得
+  const STREAMER_COUNT = RECOMMENDATION_LIMITS.GAME_BASED_ADD.STREAMER_COUNT;
+
+  // おすすめ配信者を取得（複数ゲーム対応）
+  const gameIds = selectedGames.map(g => g.id).join(',');
   const { data: streamersData, isLoading } = useQuery({
-    queryKey: ['recommendations', 'streamers', gameId],
+    queryKey: ['recommendations', 'streamers', 'multi', gameIds],
     queryFn: async () => {
-      const res = await fetch(`/api/recommendations/streamers?gameId=${gameId}`);
+      const res = await fetch(
+        `/api/recommendations/streamers?gameIds=${gameIds}&limit=${STREAMER_COUNT}`
+      );
       if (!res.ok) throw new Error('Failed to fetch recommended streamers');
       return res.json();
     },
@@ -60,15 +63,18 @@ export function StreamerSelectionStep({
     onNext(selected);
   };
 
+  // ゲーム名をカンマ区切りで表示
+  const gameNames = selectedGames.map(g => g.name).join('、');
+
   return (
     <div className="flex flex-col h-full">
       {/* ヘッダー */}
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-100 mb-2">
-          あなたへのおすすめ配信者
+          おすすめ配信者
         </h2>
         <p className="text-sm text-gray-400">
-          {gameName} の人気配信者です。お気に入りに追加する配信者を選択してください
+          {gameNames} のおすすめ配信者です。お気に入りに追加する配信者を選択してください
         </p>
       </div>
 
@@ -85,7 +91,7 @@ export function StreamerSelectionStep({
             <p className="text-sm text-gray-500">別のゲームを試してみてください</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {streamers.map((streamer) => {
               const isSelected = selectedStreamerIds.has(streamer.userId);
 
@@ -100,39 +106,39 @@ export function StreamerSelectionStep({
                   }`}
                 >
                   {/* プロフィール画像 */}
-                  <div className="relative w-24 h-24 mb-3">
+                  <div className="relative w-20 h-20 mb-3">
                     {streamer.profileImageUrl ? (
                       <Image
                         src={streamer.profileImageUrl}
                         alt={streamer.userName}
                         fill
                         className="rounded-full object-cover"
-                        sizes="96px"
+                        sizes="80px"
                       />
                     ) : (
                       <div className="w-full h-full rounded-full bg-gray-700 flex items-center justify-center">
-                        <span className="text-3xl text-gray-400">
+                        <span className="text-2xl text-gray-400">
                           {streamer.userName.charAt(0).toUpperCase()}
                         </span>
                       </div>
                     )}
                     {/* チェックマーク */}
                     {isSelected && (
-                      <div className="absolute -top-1 -right-1 w-7 h-7 bg-purple-600 rounded-full flex items-center justify-center ring-2 ring-[#0f0f0f] animate-in zoom-in-0 duration-200">
+                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center ring-2 ring-[#0f0f0f] animate-in zoom-in-0 duration-200">
                         <Check className="w-4 h-4 text-white" strokeWidth={3} />
                       </div>
                     )}
                   </div>
 
                   {/* 配信者名 */}
-                  <p className="text-sm font-semibold text-gray-100 mb-1 text-center line-clamp-1">
+                  <p className="text-sm font-semibold text-gray-100 mb-1 text-center line-clamp-1 w-full">
                     {streamer.userName}
                   </p>
 
                   {/* 統計情報 */}
                   <div className="flex flex-col items-center gap-1">
-                    <p className="text-xs text-gray-400">
-                      クリップ再生数:{' '}
+                    <p className="text-xs text-gray-400 text-center">
+                      再生数:{' '}
                       <span className="text-purple-400 font-semibold">
                         {streamer.totalClipViews.toLocaleString()}
                       </span>
@@ -150,21 +156,19 @@ export function StreamerSelectionStep({
 
       {/* フッターボタン */}
       <div className="flex gap-3">
-        {onBack && (
-          <Button
-            variant="outline"
-            onClick={onBack}
-            className="flex-1 bg-[#1a1a1a] border-gray-700 text-gray-100 hover:bg-[#2a2a2a]"
-          >
-            戻る
-          </Button>
-        )}
+        <Button
+          variant="outline"
+          onClick={onBack}
+          className="flex-1 bg-[#1a1a1a] border-gray-700 text-gray-100 hover:bg-[#2a2a2a]"
+        >
+          戻る
+        </Button>
         <Button
           onClick={handleNext}
           disabled={selectedStreamerIds.size === 0 || isLoading}
           className="flex-1 bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          次へ ({selectedStreamerIds.size}人選択)
+          お気に入りに追加 ({selectedStreamerIds.size}人選択)
         </Button>
       </div>
     </div>

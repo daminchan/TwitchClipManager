@@ -72,6 +72,7 @@ export const LABELS = {
   // セクションタイトル
   SECTIONS: {
     SEARCH_STREAMERS: '配信者を検索して追加',
+    GAME_BASED_ADD: '好きなゲームから配信者を追加',
     FAVORITE_STREAMERS: 'お気に入り配信者',
     FAVORITE_CLIPS: 'お気に入りクリップ',
     ACCOUNT_INFO: 'アカウント情報',
@@ -246,4 +247,51 @@ export const ANIMATION = {
   CARD_DELAY_STEP: 50,        // カード間の遅延（ms）
   SIDEBAR_DURATION: 300,      // サイドバー開閉時間（ms）
   SIDEBAR_CONTENT_DELAY: 300, // サイドバー開閉後の待機時間（ms）
+  // いいねボタンアニメーション
+  LIKE_HEART_DURATION: 1000,  // 浮遊ハートアニメーション時間（ms）
+  LIKE_HEART_OFFSET: 40,      // 浮遊ハートのランダム横ずれ範囲（px）
+  LIKE_DEBOUNCE: 500,         // いいねリクエストのDebounce時間（ms）
+} as const;
+
+/**
+ * ゲーム選択・配信者推薦設定
+ */
+export const RECOMMENDATION_LIMITS = {
+  // オンボーディング用
+  ONBOARDING: {
+    MAX_GAMES: 1,           // ゲーム選択数
+    STREAMER_COUNT: 6,      // 表示配信者数
+  },
+  // サイドバー「ゲームから追加」機能用
+  GAME_BASED_ADD: {
+    MAX_GAMES: 3,           // 最大ゲーム選択数
+    STREAMER_COUNT: 15,     // 表示配信者数
+  },
+} as const;
+
+/**
+ * Twitch API クエリ設定
+ */
+export const TWITCH_API_CONFIG = {
+  // クリップ取得件数
+  CLIPS_PER_QUERY: 100,     // 1回のAPIリクエストで取得するクリップ数
+  // おすすめ配信者の取得期間
+  RECOMMENDATION_DAYS: 3,    // 直近N日間のクリップを取得
+  // 代表クリップ数
+  TOP_CLIPS_COUNT: 3,        // 配信者ごとに表示する代表クリップ数
+} as const;
+
+/**
+ * React Query キャッシュ設定（ミリ秒）
+ */
+export const CACHE_TIME = {
+  // ゲーム情報
+  GAMES: 10 * 60 * 1000,           // 10分間（頻繁に変わらない）
+  // 配信者情報
+  STREAMERS: 5 * 60 * 1000,        // 5分間（中程度の更新頻度）
+  // ライブステータス
+  LIVE_STATUS: 2 * 60 * 1000,      // 2分間（頻繁に更新）
+  // デフォルト設定（グローバル）
+  DEFAULT_STALE_TIME: 5 * 60 * 1000,   // 5分間（デフォルトのstaleTime）
+  DEFAULT_GC_TIME: 10 * 60 * 1000,     // 10分間（デフォルトのgcTime）
 } as const;
