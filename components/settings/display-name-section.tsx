@@ -8,6 +8,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { User, Edit3, Check } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -61,35 +62,64 @@ export function DisplayNameSection({ currentName, onSuccess, onError }: DisplayN
   };
 
   return (
-    <Card className="bg-[#1a1a1a] border-0">
-      <CardHeader>
-        <CardTitle className="text-gray-100">{LABELS.SECTIONS.DISPLAY_NAME_CHANGE}</CardTitle>
-        <CardDescription className="text-gray-400">
-          アカウントの表示名を変更できます
-        </CardDescription>
+    <Card className="bg-[#1a1a1a] border border-gray-800 hover:border-gray-700 transition-all duration-300 shadow-lg hover:shadow-purple-500/10">
+      <CardHeader className="pb-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-purple-600/10 rounded-lg">
+            <Edit3 className="w-5 h-5 text-purple-400" />
+          </div>
+          <div>
+            <CardTitle className="text-gray-100 flex items-center gap-2">
+              {LABELS.SECTIONS.DISPLAY_NAME_CHANGE}
+            </CardTitle>
+            <CardDescription className="text-gray-400 text-sm mt-1">
+              アカウントの表示名を変更できます
+            </CardDescription>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="name" className="text-sm font-medium text-gray-300">
+            <label htmlFor="name" className="text-sm font-medium text-gray-300 flex items-center gap-2">
+              <User className="w-4 h-4 text-gray-400" />
               {LABELS.FORM.DISPLAY_NAME}
             </label>
-            <Input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={isPending}
-              className="bg-[#0f0f0f] border-0 text-gray-100"
-              placeholder={LABELS.PLACEHOLDERS.NAME}
-            />
+            <div className="relative">
+              <Input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                disabled={isPending}
+                className="bg-[#0f0f0f] border border-gray-800 text-gray-100 focus:border-purple-500 transition-colors pr-10"
+                placeholder={LABELS.PLACEHOLDERS.NAME}
+              />
+              {name.trim() !== currentName && name.trim() !== '' && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <Check className="w-4 h-4 text-green-500" />
+                </div>
+              )}
+            </div>
+            {currentName && (
+              <p className="text-xs text-gray-500">
+                現在: <span className="text-gray-400">{currentName}</span>
+              </p>
+            )}
           </div>
           <Button
             type="submit"
-            disabled={isPending}
-            className="w-full bg-purple-600 hover:bg-purple-700"
+            disabled={isPending || name.trim() === currentName}
+            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium shadow-lg shadow-purple-500/20 disabled:opacity-50 disabled:shadow-none transition-all duration-300"
           >
-            {isPending ? LABELS.BUTTONS.UPDATING : LABELS.BUTTONS.UPDATE_DISPLAY_NAME}
+            {isPending ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                {LABELS.BUTTONS.UPDATING}
+              </div>
+            ) : (
+              LABELS.BUTTONS.UPDATE_DISPLAY_NAME
+            )}
           </Button>
         </form>
       </CardContent>

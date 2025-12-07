@@ -69,11 +69,20 @@ export function SettingsContent({ userEmail, userName }: SettingsContentProps) {
         />
 
         {/* メインコンテンツ */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8 max-w-2xl">
-            <h1 className="text-3xl font-bold text-gray-100 mb-8">設定</h1>
+        <main className="flex-1 overflow-y-auto bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a]">
+          <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8 max-w-3xl">
+            {/* ヘッダーセクション */}
+            <div className="mb-10">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
+                設定
+              </h1>
+              <p className="text-gray-400 text-sm">
+                アカウント情報の確認と設定の変更
+              </p>
+              <div className="mt-4 h-1 w-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
+            </div>
 
-            <div className="space-y-6">
+            <div className="space-y-8">
               {/* 表示名変更 */}
               <DisplayNameSection
                 currentName={userName}
@@ -86,6 +95,18 @@ export function SettingsContent({ userEmail, userName }: SettingsContentProps) {
                 email={userEmail}
                 name={userName}
               />
+
+              {/* 区切り線 */}
+              <div className="relative py-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-800"></div>
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="bg-[#1a1a1a] px-4 text-xs text-gray-500 uppercase tracking-wider">
+                    危険な操作
+                  </span>
+                </div>
+              </div>
 
               {/* アカウント削除 */}
               <DangerZoneSection

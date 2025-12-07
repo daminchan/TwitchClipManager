@@ -139,4 +139,25 @@
     animation: fadeInCard 0.3s ease-out forwards;
     opacity: 0;
   }
+
+  /* いいねボタン：浮遊するハートアニメーション */
+  @keyframes floatHeart {
+    0% {
+      opacity: 1;
+      transform: translateY(0) scale(0.5);
+    }
+    50% {
+      opacity: 1;
+      transform: translateY(-30px) scale(1.2);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-60px) scale(0.8);
+    }
+  }
+
+  .animate-float-heart {
+    /* 注意: ANIMATION.LIKE_HEART_DURATION (1000ms) と同期 */
+    animation: floatHeart 1s ease-out forwards;
+  }
 }

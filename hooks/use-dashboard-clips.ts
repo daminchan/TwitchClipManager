@@ -7,19 +7,24 @@
  * - セクション7: 状態管理（useQuery でサーバー状態管理）
  * - セクション10.2: サーバーアクション（いいね機能）
  * - セクション14.2: カスタムフック（複雑なロジック分離）
+ * - セクション17: 定数管理（ANIMATION定数使用）
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { TwitchClip } from '@/types/twitch';
 import type { SortType } from '@/components/dashboard/clip-sort-tabs';
-import { API_ENDPOINTS, LABELS } from '@/lib/constants';
+import { API_ENDPOINTS, LABELS, ANIMATION } from '@/lib/constants';
 import { getLikedClips, addLikedClip, removeLikedClip } from '@/actions/liked-clips';
 
 export function useDashboardClips() {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortType, setSortType] = useState<SortType>('views');
+  const [sortType, setSortType] = useState<SortType>('date-desc');
+
+  // Debounce用のタイマー管理
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingActionsRef = useRef<Map<string, boolean>>(new Map());
 
   // お気に入り配信者のクリップを取得（React Query）
   // フィルターは直近2日間固定
@@ -73,7 +78,7 @@ export function useDashboardClips() {
     return new Set(likedClipsData.map((clip) => clip.clipId));
   }, [likedClipsData]);
 
-  // いいね追加のミューテーション
+  // いいね追加のミューテーション（Debounce後に実行）
   const addLikeMutation = useMutation({
     mutationFn: async (clip: TwitchClip) => {
       return await addLikedClip({
@@ -90,41 +95,98 @@ export function useDashboardClips() {
         clipCreatedAt: clip.created_at,
       });
     },
-    onSuccess: () => {
-      // いいねクリップのキャッシュを無効化して再取得
+    // 完了時：サーバーと同期
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['clips', 'liked'] });
     },
   });
 
-  // いいね解除のミューテーション
+  // いいね解除のミューテーション（Debounce後に実行）
   const removeLikeMutation = useMutation({
     mutationFn: async (clipId: string) => {
       return await removeLikedClip(clipId);
     },
-    onSuccess: () => {
-      // いいねクリップのキャッシュを無効化して再取得
+    // 完了時：サーバーと同期
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['clips', 'liked'] });
     },
   });
 
-  // いいね/解除の処理
-  const handleLikeToggle = async (clipId: string, isCurrentlyLiked: boolean) => {
-    try {
-      if (isCurrentlyLiked) {
-        const result = await removeLikeMutation.mutateAsync(clipId);
-        return result;
-      } else {
-        const clip = allClips.find((c) => c.id === clipId);
-        if (!clip) return { success: false, message: 'クリップが見つかりません' };
+  // いいね/解除の処理（即座にUI更新 + Debounce）
+  const handleLikeToggle = useCallback(
+    (clipId: string, isCurrentlyLiked: boolean) => {
+      // 1. 即座にUIを更新（楽観的UI）
+      const newLikedState = !isCurrentlyLiked;
 
-        const result = await addLikeMutation.mutateAsync(clip);
-        return result;
+      queryClient.setQueryData(['clips', 'liked'], (old: any) => {
+        if (!old) return [];
+
+        if (newLikedState) {
+          // いいね追加
+          const clip = allClips.find((c) => c.id === clipId);
+          if (!clip) return old;
+
+          const newClip = {
+            clipId: clip.id,
+            clipUrl: clip.url,
+            clipEmbedUrl: clip.embed_url,
+            clipTitle: clip.title,
+            broadcasterId: clip.broadcaster_id,
+            broadcasterName: clip.broadcaster_name,
+            creatorName: clip.creator_name,
+            thumbnailUrl: clip.thumbnail_url,
+            viewCount: clip.view_count,
+            duration: clip.duration,
+            clipCreatedAt: clip.created_at,
+            likedAt: new Date().toISOString(),
+          };
+          return [...old, newClip];
+        } else {
+          // いいね削除
+          return old.filter((clip: any) => clip.clipId !== clipId);
+        }
+      });
+
+      // 2. 最終状態を記録（連打対応）
+      pendingActionsRef.current.set(clipId, newLikedState);
+
+      // 3. Debounce: 既存のタイマーをクリア
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
       }
-    } catch (error) {
-      console.error('Like toggle error:', error);
-      return { success: false, message: 'いいね操作に失敗しました' };
-    }
-  };
+
+      // 4. Debounce後にサーバーに送信（最後の状態のみ）
+      debounceTimerRef.current = setTimeout(() => {
+        // すべての保留中のアクションをバッチ処理
+        const actions = Array.from(pendingActionsRef.current.entries());
+        pendingActionsRef.current.clear();
+
+        actions.forEach(([id, shouldLike]) => {
+          if (shouldLike) {
+            const clip = allClips.find((c) => c.id === id);
+            if (clip) {
+              addLikeMutation.mutate(clip, {
+                onError: (error) => {
+                  console.error('Add like error:', error);
+                  // エラー時はキャッシュを再取得して同期
+                  queryClient.invalidateQueries({ queryKey: ['clips', 'liked'] });
+                },
+              });
+            }
+          } else {
+            removeLikeMutation.mutate(id, {
+              onError: (error) => {
+                console.error('Remove like error:', error);
+                // エラー時はキャッシュを再取得して同期
+                queryClient.invalidateQueries({ queryKey: ['clips', 'liked'] });
+              },
+            });
+          }
+        });
+      }, ANIMATION.LIKE_DEBOUNCE);
+    },
+    [allClips, queryClient, addLikeMutation, removeLikeMutation]
+  );
 
   // フィルターとソートを適用（useMemo で最適化）
   const filteredClips = useMemo(() => {

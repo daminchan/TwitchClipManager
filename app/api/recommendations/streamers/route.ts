@@ -6,15 +6,20 @@
  * - CLAUDE.md セクション6: API設計原則
  * - オンボーディングフロー設計.md: おすすめ配信者機能（クリップベース）
  *
+ * 機能:
+ * - 単一ゲーム: ?gameId=xxx&limit=6 (オンボーディング用)
+ * - 複数ゲーム: ?gameIds=xxx,yyy,zzz&limit=15 (ゲームベース追加用)
+ *
  * 理由:
- * - ゲームIDでクリップを取得し、クリップ再生数が多い配信者Top 6を抽出
+ * - ゲームIDでクリップを取得し、クリップ再生数が多い配信者を抽出
  * - Twitch APIには配信者アーカイブを期間で絞るクエリがない
  * - クリップはゲームIDで直接取得可能 + 期間指定可能
- * - APIリクエスト数が少ない（7回: クリップ1 + プロフィール6）
+ * - 後方互換性を保ちながら複数ゲーム対応
  */
 
 import { NextResponse } from 'next/server';
 import { getClipsByGame, getStreamerById } from '@/lib/twitch-api';
+import { TWITCH_API_CONFIG } from '@/lib/constants';
 import type { TwitchClip } from '@/types/twitch';
 
 interface BroadcasterStats {
@@ -27,33 +32,44 @@ interface BroadcasterStats {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const gameId = searchParams.get('gameId');
+    const gameId = searchParams.get('gameId');       // 単一ゲーム（既存）
+    const gameIds = searchParams.get('gameIds');     // 複数ゲーム（新機能）
+    const limit = parseInt(searchParams.get('limit') || '6', 10); // デフォルト6
 
-    if (!gameId) {
+    // パラメータバリデーション
+    if (!gameId && !gameIds) {
       return NextResponse.json(
-        { error: 'gameId is required', code: 'MISSING_PARAM' },
+        { error: 'gameId or gameIds is required', code: 'MISSING_PARAM' },
         { status: 400 }
       );
     }
 
-    // 直近3日間の期間を設定
+    // ゲームID配列を作成
+    const gameIdArray = gameIds ? gameIds.split(',').filter(Boolean) : [gameId!];
+
+    // 直近N日間の期間を設定
     const endedAt = new Date();
     const startedAt = new Date();
-    startedAt.setDate(startedAt.getDate() - 3);
+    startedAt.setDate(startedAt.getDate() - TWITCH_API_CONFIG.RECOMMENDATION_DAYS);
 
-    // 1. ゲームIDでクリップを取得（直近3日間、再生数順、最大100件）
-    const clips = await getClipsByGame(gameId, {
-      first: 100,
-      startedAt: startedAt.toISOString(),
-      endedAt: endedAt.toISOString(),
-    });
+    // 1. 複数ゲームのクリップを並列取得
+    const clipsPromises = gameIdArray.map(gid =>
+      getClipsByGame(gid, {
+        first: TWITCH_API_CONFIG.CLIPS_PER_QUERY,
+        startedAt: startedAt.toISOString(),
+        endedAt: endedAt.toISOString(),
+      })
+    );
 
-    if (clips.length === 0) {
+    const clipsArrays = await Promise.all(clipsPromises);
+    const allClips = clipsArrays.flat(); // 全ゲームのクリップをマージ
+
+    if (allClips.length === 0) {
       return NextResponse.json({ data: [] });
     }
 
     // 2. 日本の配信者のクリップのみフィルター
-    const jaClips = clips.filter((clip: TwitchClip) => clip.language === 'ja');
+    const jaClips = allClips.filter((clip: TwitchClip) => clip.language === 'ja');
 
     if (jaClips.length === 0) {
       return NextResponse.json({ data: [] });
@@ -77,14 +93,14 @@ export async function GET(request: Request) {
       broadcaster.total_views += clip.view_count;
     });
 
-    // 4. 総再生数でソートしてTop 6
-    const top6Broadcasters = Array.from(broadcasterMap.values())
+    // 4. 総再生数でソートして指定件数取得（limit）
+    const topBroadcasters = Array.from(broadcasterMap.values())
       .sort((a, b) => b.total_views - a.total_views)
-      .slice(0, 6);
+      .slice(0, limit);
 
     // 5. プロフィール画像を並列取得
     const results = await Promise.all(
-      top6Broadcasters.map(async (broadcaster) => {
+      topBroadcasters.map(async (broadcaster) => {
         try {
           const user = await getStreamerById(broadcaster.broadcaster_id);
           return {
@@ -94,7 +110,7 @@ export async function GET(request: Request) {
             profileImageUrl: user?.profile_image_url || '',
             totalClipViews: broadcaster.total_views,
             clipCount: broadcaster.clips.length,
-            topClips: broadcaster.clips.slice(0, 3), // 代表的なクリップ3つ
+            topClips: broadcaster.clips.slice(0, TWITCH_API_CONFIG.TOP_CLIPS_COUNT),
           };
         } catch (error) {
           console.error(
@@ -108,7 +124,7 @@ export async function GET(request: Request) {
             profileImageUrl: '',
             totalClipViews: broadcaster.total_views,
             clipCount: broadcaster.clips.length,
-            topClips: broadcaster.clips.slice(0, 3),
+            topClips: broadcaster.clips.slice(0, TWITCH_API_CONFIG.TOP_CLIPS_COUNT),
           };
         }
       })

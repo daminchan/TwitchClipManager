@@ -9,16 +9,14 @@
 
 import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Search, X } from 'lucide-react';
+import { X } from 'lucide-react';
 
 import { Header } from '@/components/layout/header';
 import { MobileNav } from '@/components/layout/mobile-nav';
 import { DashboardSidebar } from '@/components/dashboard/dashboard-sidebar';
-import { ClipSortTabs } from '@/components/dashboard/clip-sort-tabs';
 import { StreamerSearch } from '@/components/streamers/streamer-search';
 import { ClipGrid } from '@/components/clips/clip-grid';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Toast } from '@/components/ui/toast';
 import { useToast } from '@/hooks/use-toast';
 import { useFavoriteActions } from '@/hooks/use-favorite-actions';
@@ -88,14 +86,9 @@ export function DashboardContent({ userId, userEmail, isAuthenticated, skipAuth 
     await queryClient.invalidateQueries({ queryKey: ['favorites'] });
   };
 
-  // いいね/解除のラッパー（トースト表示付き）
-  const handleLikeToggle = async (clipId: string, isCurrentlyLiked: boolean) => {
-    const result = await handleLikeToggleHook(clipId, isCurrentlyLiked);
-    if (result) {
-      const toastType = result.success ? (isCurrentlyLiked ? 'info' : 'success') : 'error'
-      ;
-      showToast(result.message, toastType);
-    }
+  // いいね/解除（楽観的UI、即座に実行）
+  const handleLikeToggle = (clipId: string, isCurrentlyLiked: boolean) => {
+    handleLikeToggleHook(clipId, isCurrentlyLiked);
   };
 
   // モバイル検索イベントリスナー
@@ -111,7 +104,15 @@ export function DashboardContent({ userId, userEmail, isAuthenticated, skipAuth 
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] flex flex-col">
-      <Header onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+      <Header
+        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        showDashboardControls={true}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        sortType={sortType}
+        setSortType={setSortType}
+        clipCount={filteredClips.length}
+      />
 
       <div className="flex flex-1 overflow-hidden">
         {/* 左サイドバー */}
@@ -124,29 +125,6 @@ export function DashboardContent({ userId, userEmail, isAuthenticated, skipAuth 
         {/* メインコンテンツ */}
         <main className="flex-1 overflow-y-auto">
           <div className="p-6 pb-24 lg:pb-6">
-            {/* 検索バーとソート */}
-            <div className="mb-6 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <Input
-                    type="text"
-                    placeholder={LABELS.PLACEHOLDERS.SEARCH_CLIPS}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 bg-[#1a1a1a] border-0 text-gray-100 placeholder-gray-400"
-                  />
-                </div>
-              </div>
-
-              {/* ソートタブ */}
-              <ClipSortTabs
-                sortType={sortType}
-                onSortChange={setSortType}
-                clipCount={filteredClips.length}
-              />
-            </div>
-
             {/* クリップグリッド */}
             <div>
               <ClipGrid

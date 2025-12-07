@@ -2,7 +2,7 @@
 // 適用ルール:
 // - セクション4.6: コンポーネント構造
 // - セクション10.2: サーバー/クライアントコンポーネント分離
-// - オンボーディングフロー設計.md: ゲーム選択機能
+// - RECOMMENDATION_LIMITS定数の使用
 
 'use client';
 
@@ -13,17 +13,20 @@ import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CACHE_TIME } from '@/lib/constants';
+import { Badge } from '@/components/ui/badge';
+import { RECOMMENDATION_LIMITS, CACHE_TIME } from '@/lib/constants';
 import type { TwitchGame } from '@/types/twitch';
 
-interface GameSelectionStepProps {
-  onNext: (gameId: string, gameName: string) => void;
-  onBack?: () => void;
+interface MultiGameSelectionStepProps {
+  onNext: (games: TwitchGame[]) => void;
+  onCancel: () => void;
 }
 
-export function GameSelectionStep({ onNext, onBack }: GameSelectionStepProps) {
-  const [selectedGame, setSelectedGame] = useState<TwitchGame | null>(null);
+export function MultiGameSelectionStep({ onNext, onCancel }: MultiGameSelectionStepProps) {
+  const [selectedGames, setSelectedGames] = useState<TwitchGame[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const MAX_GAMES = RECOMMENDATION_LIMITS.GAME_BASED_ADD.MAX_GAMES;
 
   // 人気ゲーム一覧を取得
   const { data: gamesData, isLoading } = useQuery({
@@ -43,9 +46,25 @@ export function GameSelectionStep({ onNext, onBack }: GameSelectionStepProps) {
     game.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const toggleGame = (game: TwitchGame) => {
+    setSelectedGames((prev) => {
+      const isSelected = prev.some((g) => g.id === game.id);
+      if (isSelected) {
+        // 選択解除
+        return prev.filter((g) => g.id !== game.id);
+      } else {
+        // 選択（最大3個まで）
+        if (prev.length >= MAX_GAMES) {
+          return prev; // 最大数に達している場合は無視
+        }
+        return [...prev, game];
+      }
+    });
+  };
+
   const handleNext = () => {
-    if (selectedGame) {
-      onNext(selectedGame.id, selectedGame.name);
+    if (selectedGames.length > 0) {
+      onNext(selectedGames);
     }
   };
 
@@ -57,13 +76,13 @@ export function GameSelectionStep({ onNext, onBack }: GameSelectionStepProps) {
           好きなゲームを選択してください
         </h2>
         <p className="text-sm text-gray-400">
-          選択したゲームのおすすめ配信者を表示します
+          最大{MAX_GAMES}つまで選択できます。選択したゲームのおすすめ配信者を表示します
         </p>
       </div>
 
-      {/* 検索バー */}
-      <div className="mb-4">
-        <div className="relative">
+      {/* 検索バーと選択数バッジ */}
+      <div className="mb-4 flex gap-3 items-center">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
           <Input
             type="text"
@@ -73,6 +92,11 @@ export function GameSelectionStep({ onNext, onBack }: GameSelectionStepProps) {
             className="pl-10 bg-[#1a1a1a] border-0 text-gray-100 placeholder-gray-400"
           />
         </div>
+        {selectedGames.length > 0 && (
+          <Badge variant="secondary" className="bg-purple-600/20 text-purple-300 border-purple-500/30">
+            {selectedGames.length} / {MAX_GAMES} 選択中
+          </Badge>
+        )}
       </div>
 
       {/* ゲーム一覧 */}
@@ -89,7 +113,8 @@ export function GameSelectionStep({ onNext, onBack }: GameSelectionStepProps) {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredGames.map((game) => {
-              const isSelected = selectedGame?.id === game.id;
+              const isSelected = selectedGames.some((g) => g.id === game.id);
+              const isMaxReached = selectedGames.length >= MAX_GAMES && !isSelected;
               const boxArtUrl = game.box_art_url
                 .replace('{width}', '285')
                 .replace('{height}', '380');
@@ -97,10 +122,13 @@ export function GameSelectionStep({ onNext, onBack }: GameSelectionStepProps) {
               return (
                 <button
                   key={game.id}
-                  onClick={() => setSelectedGame(game)}
+                  onClick={() => toggleGame(game)}
+                  disabled={isMaxReached}
                   className={`group relative aspect-[3/4] rounded-lg overflow-hidden transition-all duration-300 ${
                     isSelected
                       ? 'ring-4 ring-purple-600 scale-105 shadow-xl shadow-purple-500/50'
+                      : isMaxReached
+                      ? 'opacity-50 cursor-not-allowed'
                       : 'hover:ring-2 hover:ring-gray-600 hover:scale-105 hover:shadow-lg'
                   }`}
                 >
@@ -148,21 +176,19 @@ export function GameSelectionStep({ onNext, onBack }: GameSelectionStepProps) {
 
       {/* フッターボタン */}
       <div className="flex gap-3">
-        {onBack && (
-          <Button
-            variant="outline"
-            onClick={onBack}
-            className="flex-1 bg-[#1a1a1a] border-gray-700 text-gray-100 hover:bg-[#2a2a2a]"
-          >
-            戻る
-          </Button>
-        )}
+        <Button
+          variant="outline"
+          onClick={onCancel}
+          className="flex-1 bg-[#1a1a1a] border-gray-700 text-gray-100 hover:bg-[#2a2a2a]"
+        >
+          キャンセル
+        </Button>
         <Button
           onClick={handleNext}
-          disabled={!selectedGame}
+          disabled={selectedGames.length === 0}
           className="flex-1 bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          次へ
+          次へ ({selectedGames.length}個選択)
         </Button>
       </div>
     </div>

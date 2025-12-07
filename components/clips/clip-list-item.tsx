@@ -56,21 +56,21 @@ export function ClipListItem({ clip, onDelete, onSelectClip, isDeleting, isSelec
 
   return (
     <div
-      className={`flex gap-4 p-2 rounded-lg transition-colors group cursor-pointer ${
+      className={`flex gap-3 lg:gap-4 p-2 rounded-lg transition-colors group cursor-pointer ${
         isSelected
           ? 'bg-gray-800 border-2 border-purple-600'
           : 'hover:bg-gray-900 border-2 border-transparent'
       }`}
       onClick={handleClick}
     >
-      {/* サムネイル（左側） */}
+      {/* サムネイル（左側） - モバイルで小さく、PCで大きく */}
       <div className="relative flex-shrink-0">
         <Image
           src={clip.thumbnail_url}
           alt={clip.title}
           width={246}
           height={138}
-          className="rounded-lg object-cover"
+          className="rounded-lg object-cover w-[160px] h-[90px] lg:w-[246px] lg:h-[138px]"
         />
         <div className="absolute bottom-1 right-1 bg-black bg-opacity-80 text-white text-xs px-1 rounded">
           {Math.floor(clip.duration)}s
@@ -88,8 +88,8 @@ export function ClipListItem({ clip, onDelete, onSelectClip, isDeleting, isSelec
         </div>
       </div>
 
-      {/* 3点メニュー */}
-      <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+      {/* 3点メニュー - モバイルで常に表示、PCでホバー時表示 */}
+      <div className="flex-shrink-0 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button

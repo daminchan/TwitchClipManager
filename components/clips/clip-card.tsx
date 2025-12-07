@@ -3,6 +3,7 @@
 // - セクション4.6: コンポーネント構造
 // - セクション8.2: Props型定義
 // - セクション10.1: 画像最適化（Next.js Image使用は今回はサムネイルURLをそのまま使用）
+// - セクション17: 定数管理（ANIMATION定数使用）
 
 'use client';
 
@@ -14,19 +15,27 @@ import { Button } from '@/components/ui/button';
 import { Heart } from 'lucide-react';
 
 import { formatViewCount, formatRelativeTime, formatDuration } from '@/lib/utils';
+import { ANIMATION } from '@/lib/constants';
 import type { TwitchClip } from '@/types/twitch';
+
+// 浮遊するハートのアニメーション型定義
+interface FloatingHeart {
+  id: number;
+  x: number;
+  y: number;
+}
 
 interface ClipCardProps {
   clip: TwitchClip;
   isLiked?: boolean;
-  onLikeToggle?: (clipId: string, isCurrentlyLiked: boolean) => Promise<void>;
+  onLikeToggle?: (clipId: string, isCurrentlyLiked: boolean) => void;
 }
 
 export function ClipCard({ clip, isLiked = false, onLikeToggle }: ClipCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [liked, setLiked] = useState(isLiked);
-  const [isLiking, setIsLiking] = useState(false);
+  const [floatingHearts, setFloatingHearts] = useState<FloatingHeart[]>([]);
+  const [heartIdCounter, setHeartIdCounter] = useState(0);
 
   const handleClick = () => {
     setIsModalOpen(true);
@@ -36,26 +45,37 @@ export function ClipCard({ clip, isLiked = false, onLikeToggle }: ClipCardProps)
     setIsModalOpen(false);
   };
 
-  const handleLikeClick = async (e: React.MouseEvent) => {
+  const handleLikeClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // カードクリックイベントを防ぐ
 
-    if (!onLikeToggle || isLiking) return;
+    if (!onLikeToggle) return;
 
-    setIsLiking(true);
-    try {
-      await onLikeToggle(clip.id, liked);
-      setLiked(!liked);
-    } catch (error) {
-      console.error('Like toggle error:', error);
-    } finally {
-      setIsLiking(false);
+    // いいねの場合のみアニメーション表示
+    if (!isLiked) {
+      // ボタンの位置を取得
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      // 新しいハートを追加
+      const newHeart: FloatingHeart = {
+        id: heartIdCounter,
+        x: x + (Math.random() - 0.5) * ANIMATION.LIKE_HEART_OFFSET,
+        y: y,
+      };
+
+      setFloatingHearts((prev) => [...prev, newHeart]);
+      setHeartIdCounter((prev) => prev + 1);
+
+      // アニメーション終了後に削除
+      setTimeout(() => {
+        setFloatingHearts((prev) => prev.filter((h) => h.id !== newHeart.id));
+      }, ANIMATION.LIKE_HEART_DURATION);
     }
-  };
 
-  // isLiked が外部から変更された場合に同期
-  useEffect(() => {
-    setLiked(isLiked);
-  }, [isLiked]);
+    // 連打可能 - YouTubeのように即座にUIが変わる
+    onLikeToggle(clip.id, isLiked);
+  };
 
   // ESCキーでモーダルを閉じる
   useEffect(() => {
@@ -169,20 +189,35 @@ export function ClipCard({ clip, isLiked = false, onLikeToggle }: ClipCardProps)
                 <h2 className="text-xl font-semibold text-gray-100 flex-1">{clip.title}</h2>
                 {/* いいねボタン */}
                 {onLikeToggle && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleLikeClick}
-                    disabled={isLiking}
-                    className={`flex items-center gap-2 transition-all ${
-                      liked
-                        ? 'bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/50'
-                        : 'bg-gray-700/50 hover:bg-gray-700 text-gray-300 border border-gray-600'
-                    }`}
-                  >
-                    <Heart className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} />
-                    <span className="text-sm font-medium">{liked ? 'いいね済み' : 'いいね'}</span>
-                  </Button>
+                  <div className="relative">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleLikeClick}
+                      className={`flex items-center gap-2 transition-all ${
+                        isLiked
+                          ? 'bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/50'
+                          : 'bg-gray-700/50 hover:bg-gray-700 text-gray-300 border border-gray-600'
+                      }`}
+                    >
+                      <Heart className={`w-5 h-5 transition-transform ${isLiked ? 'fill-current scale-110' : ''}`} />
+                      <span className="text-sm font-medium">{isLiked ? 'いいね済み' : 'いいね'}</span>
+                    </Button>
+
+                    {/* 浮遊するハートのアニメーション */}
+                    {floatingHearts.map((heart) => (
+                      <div
+                        key={heart.id}
+                        className="absolute pointer-events-none animate-float-heart"
+                        style={{
+                          left: `${heart.x}px`,
+                          top: `${heart.y}px`,
+                        }}
+                      >
+                        <span className="text-2xl">💛</span>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
               <div className="flex items-center gap-4 text-sm text-gray-400">
