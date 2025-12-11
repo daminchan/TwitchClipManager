@@ -16,7 +16,9 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { InlineLoadingSpinner } from '@/components/ui/loading-spinner';
 import { API_ENDPOINTS, LABELS, ANIMATION, CACHE_TIME } from '@/lib/constants';
+import { sortByLiveStatus } from '@/lib/utils';
 
 import type { FavoriteStreamer } from '@/types';
 import { removeFavoriteStreamer } from '@/actions/favorites';
@@ -139,7 +141,7 @@ export function FavoriteList({ onRemoveFavorite }: FavoriteListProps) {
   };
 
   if (isLoading) {
-    return <div className="text-center py-8 text-gray-400">{LABELS.BUTTONS.LOADING}</div>;
+    return <InlineLoadingSpinner />;
   }
 
   if (error) {
@@ -159,11 +161,7 @@ export function FavoriteList({ onRemoveFavorite }: FavoriteListProps) {
   }
 
   // LIVE中の人を優先してソート
-  const sortedFavorites = [...favorites].sort((a, b) => {
-    if (a.isLive && !b.isLive) return -1;
-    if (!a.isLive && b.isLive) return 1;
-    return 0;
-  });
+  const sortedFavorites = sortByLiveStatus(favorites);
 
   // 表示する配信者を決定
   const displayLimit = 5;

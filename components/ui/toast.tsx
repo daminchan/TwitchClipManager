@@ -6,6 +6,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { TIMING } from '@/lib/constants';
 
 interface ToastProps {
   message: string;
@@ -14,7 +15,7 @@ interface ToastProps {
   duration?: number;
 }
 
-export function Toast({ message, type = 'success', onClose, duration = 3000 }: ToastProps) {
+export function Toast({ message, type = 'success', onClose, duration = TIMING.TOAST_DURATION }: ToastProps) {
   useEffect(() => {
     const timer = setTimeout(onClose, duration);
     return () => clearTimeout(timer);

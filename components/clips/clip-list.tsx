@@ -8,7 +8,6 @@
 import { useState, useEffect } from 'react';
 import { ClipListItem } from './clip-list-item';
 import type { TwitchClip } from '@/types/twitch';
-import { ANIMATION } from '@/lib/constants';
 
 interface ClipListProps {
   clips: TwitchClip[];
@@ -24,7 +23,7 @@ export function ClipList({ clips, onDelete, onSelectClip, deletingClipId, curren
 
   // マウント後、アニメーション開始
   useEffect(() => {
-    const timer = setTimeout(() => setShowCards(true), ANIMATION.SIDEBAR_CONTENT_DELAY);
+    const timer = setTimeout(() => setShowCards(true), 50);
     return () => clearTimeout(timer);
   }, []);
 
@@ -57,11 +56,10 @@ export function ClipList({ clips, onDelete, onSelectClip, deletingClipId, curren
 
   return (
     <div className="space-y-2">
-      {clips.map((clip, index) => (
+      {clips.map((clip) => (
         <div
           key={clip.id}
           className={showCards ? 'animate-card' : 'opacity-0'}
-          style={showCards ? { animationDelay: `${index * ANIMATION.CARD_DELAY_STEP}ms` } : undefined}
         >
           <ClipListItem
             clip={clip}

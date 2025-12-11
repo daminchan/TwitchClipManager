@@ -5,6 +5,7 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { MoreVertical, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,8 @@ interface ClipListItemProps {
 }
 
 export function ClipListItem({ clip, onDelete, onSelectClip, isDeleting, isSelected }: ClipListItemProps) {
+  const [relativeDate, setRelativeDate] = useState<string>('');
+
   // 視聴回数をフォーマット
   const formatViewCount = (count: number): string => {
     if (count >= 10000) {
@@ -33,20 +36,23 @@ export function ClipListItem({ clip, onDelete, onSelectClip, isDeleting, isSelec
     return `${count.toLocaleString()}回視聴`;
   };
 
-  // 日付をフォーマット
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  // 日付をフォーマット（クライアントサイドでのみ計算 - Hydrationエラー防止）
+  useEffect(() => {
+    const formatDate = (dateString: string): string => {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffTime = Math.abs(now.getTime() - date.getTime());
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return '今日';
-    if (diffDays === 1) return '昨日';
-    if (diffDays < 7) return `${diffDays}日前`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)}週間前`;
-    if (diffDays < 365) return `${Math.floor(diffDays / 30)}か月前`;
-    return `${Math.floor(diffDays / 365)}年前`;
-  };
+      if (diffDays === 0) return '今日';
+      if (diffDays === 1) return '昨日';
+      if (diffDays < 7) return `${diffDays}日前`;
+      if (diffDays < 30) return `${Math.floor(diffDays / 7)}週間前`;
+      if (diffDays < 365) return `${Math.floor(diffDays / 30)}か月前`;
+      return `${Math.floor(diffDays / 365)}年前`;
+    };
+    setRelativeDate(formatDate(clip.created_at));
+  }, [clip.created_at]);
 
   const handleClick = () => {
     if (onSelectClip) {
@@ -84,7 +90,7 @@ export function ClipListItem({ clip, onDelete, onSelectClip, isDeleting, isSelec
         </h3>
         <p className="text-xs text-gray-400 mb-1">{clip.broadcaster_name}</p>
         <div className="text-xs text-gray-500">
-          {formatViewCount(clip.view_count)} • {formatDate(clip.created_at)}
+          {formatViewCount(clip.view_count)} • {relativeDate}
         </div>
       </div>
 

@@ -7,8 +7,8 @@
 
 'use client';
 
-import { useState, createContext, useContext } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useState, createContext, useContext, useMemo } from 'react';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { DndContext, DragOverlay, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
 import Image from 'next/image';
 import { Header } from '@/components/layout/header';
@@ -18,6 +18,7 @@ import { Toast } from '@/components/ui/toast';
 import { useToast } from '@/hooks/use-toast';
 import { useFavoriteActions } from '@/hooks/use-favorite-actions';
 import { addStreamerToFolder } from '@/actions/folders';
+import { API_ENDPOINTS, CACHE_TIME } from '@/lib/constants';
 
 import type { TwitchChannel } from '@/types/twitch';
 import type { FavoriteStreamer } from '@/types/database';
@@ -72,6 +73,27 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
   // ドラッグ&ドロップ状態
   const [isDragging, setIsDragging] = useState(false);
   const [activeStreamer, setActiveStreamer] = useState<FavoriteStreamer | null>(null);
+
+  // お気に入り配信者のIDリストを抽出（キャッシュを監視）
+  // FavoriteListコンポーネントがqueryFnを定義・実行するので、ここでは同じqueryFnを使用
+  const { data: favoritesData } = useQuery({
+    queryKey: ['favorites'],
+    queryFn: async () => {
+      const response = await fetch(API_ENDPOINTS.FAVORITES, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      if (!response.ok) return [];
+      const result = await response.json();
+      return result.data as FavoriteStreamer[];
+    },
+    staleTime: CACHE_TIME.DEFAULT_STALE_TIME,
+  });
+
+  const favoriteStreamerIds = useMemo(() => {
+    if (!favoritesData || !Array.isArray(favoritesData)) return [];
+    return favoritesData.map((f) => f.streamerId);
+  }, [favoritesData]);
 
   // お気に入り配信者を追加
   const handleAddFavorite = async (streamer: TwitchChannel) => {
@@ -159,8 +181,7 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
         });
 
         if (result.success) {
-          showToast('フォルダに配信者を追加しました', 'success');
-          // 実データで上書き
+          // 実データで上書き（トースト表示はなし - 連続追加時にうるさくなるため）
           await queryClient.invalidateQueries({ queryKey: ['folders'] });
         } else {
           // エラー時はロールバック
@@ -190,9 +211,7 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
                 isSidebarOpen={isSidebarOpen}
                 onAddFavorite={handleAddFavorite}
                 onRemoveFavorite={handleRemoveFavorite}
-                selectedFolderId={selectedFolderId}
-                onFolderClick={handleFolderClick}
-                isDragging={isDragging}
+                favoriteStreamerIds={favoriteStreamerIds}
               />
 
               {/* メインコンテンツ（ページごとに切り替わる） */}

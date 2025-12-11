@@ -5,13 +5,13 @@
 
 'use client';
 
-import { TrendingUp, Calendar, Sparkles, Folder } from 'lucide-react';
+import { TrendingUp, Calendar, Folder } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LABELS } from '@/lib/constants';
 import type { Folder as FolderType } from '@/types/database';
 
-export type SortType = 'all' | 'views' | 'date-desc' | 'date-asc';
+export type SortType = 'views' | 'date-desc' | 'date-asc';
 
 interface ClipSortTabsProps {
   sortType: SortType;
@@ -31,7 +31,6 @@ export function ClipSortTabs({
   onFolderClick
 }: ClipSortTabsProps) {
   const tabs = [
-    { value: 'all' as SortType, label: LABELS.SORT.ALL, icon: Sparkles },
     { value: 'views' as SortType, label: LABELS.SORT.VIEWS, icon: TrendingUp },
     { value: 'date-desc' as SortType, label: LABELS.SORT.DATE_DESC, icon: Calendar },
     { value: 'date-asc' as SortType, label: LABELS.SORT.DATE_ASC, icon: Calendar },

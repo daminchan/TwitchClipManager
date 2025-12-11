@@ -10,7 +10,9 @@ import { X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Toast } from '@/components/ui/toast';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useToast } from '@/hooks/use-toast';
+import { LABELS } from '@/lib/constants';
 import { MultiGameSelectionStep } from './multi-game-selection-step';
 import { MultiStreamerSelectionStep } from './multi-streamer-selection-step';
 import type { TwitchGame, RecommendedStreamer } from '@/types/twitch';
@@ -87,9 +89,8 @@ export function GameBasedAddModal({ isOpen, onClose, onAddStreamers }: GameBased
           {/* コンテンツ */}
           <div className="p-8 h-[80vh] overflow-y-auto">
             {isAdding ? (
-              <div className="flex flex-col items-center justify-center h-full">
-                <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mb-4" />
-                <p className="text-gray-400 text-lg">お気に入りに追加中...</p>
+              <div className="flex items-center justify-center h-full">
+                <LoadingSpinner size="lg" text={LABELS.MESSAGES.ADDING_FAVORITES} />
               </div>
             ) : step === 'game' ? (
               <MultiGameSelectionStep onNext={handleGameNext} onCancel={handleClose} />

@@ -186,4 +186,129 @@
   .animate-gradient {
     animation: gradient 3s ease infinite;
   }
+
+  /* ゆっくり回転（ローディング用） */
+  @keyframes spin-slow {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .animate-spin-slow {
+    animation: spin-slow 3s linear infinite;
+  }
+
+  /* ===================================
+   * 共通グリッドクラス
+   * =================================== */
+
+  /* クリップグリッド - クリップカード表示用 */
+  .grid-clips {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4;
+  }
+
+  /* 配信者グリッド - 配信者カード表示用 */
+  .grid-streamers {
+    @apply grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-3;
+  }
+
+  /* フォルダグリッド - フォルダカード表示用 */
+  .grid-folders {
+    @apply grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3;
+  }
+
+  /* ゲームグリッド - ゲーム選択用 */
+  .grid-games {
+    @apply grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4;
+  }
+
+  /* カラーパレットグリッド - フォルダカラー選択用 */
+  .grid-colors {
+    @apply grid grid-cols-4 gap-3;
+  }
+
+  /* モーダル内配信者グリッド - オンボーディング/サイドバーモーダル用 */
+  .grid-streamers-modal {
+    @apply grid grid-cols-2 md:grid-cols-3 gap-4;
+  }
+
+  /* サイドバーモーダル配信者グリッド - より多くの列を表示 */
+  .grid-streamers-sidebar {
+    @apply grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4;
+  }
+
+  /* ===================================
+   * 共通カードクラス
+   * =================================== */
+
+  /* ダークカードベース */
+  .card-dark {
+    @apply bg-[#1a1a1a] rounded-lg transition-all duration-200;
+  }
+
+  /* ホバーエフェクト付きダークカード */
+  .card-dark-hover {
+    @apply bg-[#1a1a1a] rounded-lg transition-all duration-200 hover:bg-[#222222] hover:scale-105;
+  }
+
+  /* 選択可能カード（アクティブ時のスタイル） */
+  .card-selectable-active {
+    @apply bg-purple-600/20 ring-2 ring-purple-600 scale-105 shadow-lg shadow-purple-500/30;
+  }
+
+  /* ===================================
+   * 共通ボタンスタイル
+   * =================================== */
+
+  /* プライマリボタン（紫系） */
+  .btn-primary {
+    @apply bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* セカンダリボタン（グレー系） */
+  .btn-secondary {
+    @apply bg-[#1a1a1a] border-gray-700 text-gray-100 hover:bg-[#2a2a2a];
+  }
+
+  /* デンジャーボタン（赤系） */
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-700 text-white;
+  }
+
+  /* ゴーストボタン */
+  .btn-ghost {
+    @apply text-gray-400 hover:text-gray-100 hover:bg-[#1a1a1a];
+  }
+
+  /* ===================================
+   * サイドバー共通スタイル
+   * =================================== */
+
+  /* サイドバーボタン（展開時） */
+  .sidebar-btn {
+    @apply w-full p-3 rounded-lg transition-all duration-200;
+    @apply focus:outline-none focus:ring-2;
+    transition: transform 0.1s ease-out;
+  }
+  .sidebar-btn:active:not(:disabled) {
+    transform: scale(0.95);
+  }
+
+  /* サイドバーボタン（折り畳み時） */
+  .sidebar-btn-collapsed {
+    @apply w-12 h-12 flex items-center justify-center rounded-lg transition-all duration-200;
+    @apply focus:outline-none focus:ring-2;
+    transition: transform 0.1s ease-out;
+  }
+  .sidebar-btn-collapsed:active:not(:disabled) {
+    transform: scale(0.95);
+  }
+
+  /* サイドバーセクションカード */
+  .sidebar-section {
+    @apply bg-[#1a1a1a] border border-gray-800 rounded-lg p-4;
+  }
 }
