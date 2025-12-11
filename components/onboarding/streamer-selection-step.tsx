@@ -9,10 +9,11 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
-import { Check, Loader2 } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { CACHE_TIME } from '@/lib/constants';
+import { SectionLoadingSpinner } from '@/components/ui/loading-spinner';
+import { CACHE_TIME, LABELS } from '@/lib/constants';
 import type { RecommendedStreamer } from '@/types/twitch';
 
 interface StreamerSelectionStepProps {
@@ -75,9 +76,8 @@ export function StreamerSelectionStep({
       {/* 配信者一覧 */}
       <div className="flex-1 overflow-y-auto mb-6">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center h-full">
-            <Loader2 className="w-12 h-12 text-purple-600 animate-spin mb-4" />
-            <p className="text-gray-400">おすすめ配信者を取得中...</p>
+          <div className="flex items-center justify-center h-full">
+            <SectionLoadingSpinner text={LABELS.MESSAGES.LOADING_STREAMERS} />
           </div>
         ) : streamers.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full">

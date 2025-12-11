@@ -6,6 +6,7 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import { ClipCard } from './clip-card';
 import type { TwitchClip } from '@/types/twitch';
 
@@ -17,9 +18,24 @@ interface ClipGridProps {
 }
 
 export function ClipGrid({ clips, isLoading, likedClipIds, onLikeToggle }: ClipGridProps) {
+  const [showCards, setShowCards] = useState(false);
+
+  // マウント後、カード表示アニメーション開始
+  useEffect(() => {
+    const timer = setTimeout(() => setShowCards(true), 50);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // クリップが更新されたらアニメーションをリセット
+  useEffect(() => {
+    setShowCards(false);
+    const timer = setTimeout(() => setShowCards(true), 50);
+    return () => clearTimeout(timer);
+  }, [clips]);
+
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+      <div className="grid-clips">
         {Array.from({ length: 10 }).map((_, i) => (
           <div
             key={i}
@@ -40,14 +56,18 @@ export function ClipGrid({ clips, isLoading, likedClipIds, onLikeToggle }: ClipG
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+    <div className="grid-clips">
       {clips.map((clip) => (
-        <ClipCard
+        <div
           key={clip.id}
-          clip={clip}
-          isLiked={likedClipIds?.has(clip.id)}
-          onLikeToggle={onLikeToggle}
-        />
+          className={showCards ? 'animate-card' : 'opacity-0'}
+        >
+          <ClipCard
+            clip={clip}
+            isLiked={likedClipIds?.has(clip.id)}
+            onLikeToggle={onLikeToggle}
+          />
+        </div>
       ))}
     </div>
   );

@@ -50,11 +50,12 @@ export function DisplayNameSection({ currentName, onSuccess, onError }: DisplayN
       const result = await updateDisplayName(name.trim());
 
       if (result.success) {
-        onSuccess(result.message);
         // クライアント側のセッションキャッシュを更新
         await update();
         // サーバーコンポーネントを更新
         router.refresh();
+        // 全ての処理が完了した後にトースト表示
+        onSuccess(result.message);
       } else {
         onError(result.message);
       }

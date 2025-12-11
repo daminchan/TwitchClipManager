@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -36,6 +36,24 @@ export function ClipCard({ clip, isLiked = false, onLikeToggle }: ClipCardProps)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [floatingHearts, setFloatingHearts] = useState<FloatingHeart[]>([]);
   const [heartIdCounter, setHeartIdCounter] = useState(0);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // クライアントサイドでのみマウント状態を更新（Hydrationエラー防止）
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // embedのparentはクライアントサイドでのみ取得
+  const embedParent = useMemo(() => {
+    if (!isMounted) return 'localhost';
+    return window.location.hostname;
+  }, [isMounted]);
+
+  // 相対時間の計算（クライアントサイドでのみ - Hydrationエラー防止）
+  const relativeTime = useMemo(() => {
+    if (!isMounted) return formatRelativeTime(clip.created_at); // SSR: 日付フォーマット
+    return formatRelativeTime(clip.created_at, new Date()); // クライアント: 相対時間
+  }, [isMounted, clip.created_at]);
 
   const handleClick = () => {
     setIsModalOpen(true);
@@ -144,7 +162,7 @@ export function ClipCard({ clip, isLiked = false, onLikeToggle }: ClipCardProps)
             <div className="flex items-center gap-2 text-xs text-gray-500">
               <span>{formatViewCount(clip.view_count)} views</span>
               <span>•</span>
-              <span>{formatRelativeTime(clip.created_at)}</span>
+              <span>{relativeTime}</span>
             </div>
           </div>
         </div>
@@ -176,7 +194,7 @@ export function ClipCard({ clip, isLiked = false, onLikeToggle }: ClipCardProps)
             {/* Twitch Embed iframe */}
             <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
               <iframe
-                src={`${clip.embed_url}&parent=${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}&autoplay=true`}
+                src={`${clip.embed_url}&parent=${embedParent}&autoplay=true`}
                 className="absolute top-0 left-0 w-full h-full"
                 allowFullScreen
                 title={clip.title}
@@ -225,7 +243,7 @@ export function ClipCard({ clip, isLiked = false, onLikeToggle }: ClipCardProps)
                 <span>•</span>
                 <span>{formatViewCount(clip.view_count)} views</span>
                 <span>•</span>
-                <span>{formatRelativeTime(clip.created_at)}</span>
+                <span>{relativeTime}</span>
               </div>
               <div className="mt-4">
                 <a

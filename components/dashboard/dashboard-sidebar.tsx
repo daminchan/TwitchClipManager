@@ -2,52 +2,39 @@
 // 適用ルール:
 // - セクション4.6: コンポーネント構造
 // - セクション8.2: Props型定義
+// - CSS共通クラス使用（sidebar-btn, sidebar-section）
 
 'use client';
 
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { Search, Heart, ThumbsUp, Gamepad2, Folder as FolderIcon, Plus, ChevronRight } from 'lucide-react';
-import { StreamerSearch } from '@/components/streamers/streamer-search';
-import { FavoriteList } from '@/components/streamers/favorite-list';
+import { Search, Heart, ThumbsUp, Gamepad2, Radio, ChevronRight } from 'lucide-react';
+import { StreamerSearchModal } from '@/components/streamers/streamer-search-modal';
+import { LiveStreamerList } from '@/components/streamers/live-streamer-list';
 import { GameBasedAddModal } from '@/components/sidebar/game-based-add-modal';
-import { FolderCreateModal } from '@/components/folders/folder-create-modal';
-import { FolderEditModal } from '@/components/folders/folder-edit-modal';
-import { FolderDeleteConfirm } from '@/components/folders/folder-delete-confirm';
-import { FolderStreamersModal } from '@/components/folders/folder-streamers-modal';
-import { FolderList } from '@/components/folders/folder-list';
 import { addMultipleFavoriteStreamers } from '@/actions/favorites';
 import { LABELS, ROUTES } from '@/lib/constants';
 import type { TwitchChannel, RecommendedStreamer } from '@/types/twitch';
-import type { Folder } from '@/types/database';
 
 interface DashboardSidebarProps {
   isSidebarOpen: boolean;
   onAddFavorite?: (streamer: TwitchChannel) => void;
   onRemoveFavorite?: () => void;
-  isDragging?: boolean;
-  selectedFolderId?: string | null;
-  onFolderClick?: (folderId: string) => void;
+  favoriteStreamerIds?: string[];
 }
 
 export function DashboardSidebar({
   isSidebarOpen,
   onAddFavorite,
   onRemoveFavorite,
-  isDragging = false,
-  selectedFolderId,
-  onFolderClick,
+  favoriteStreamerIds = [],
 }: DashboardSidebarProps) {
   const queryClient = useQueryClient();
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isGameModalOpen, setIsGameModalOpen] = useState(false);
-  const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
-  const [folderToEdit, setFolderToEdit] = useState<Folder | null>(null);
-  const [folderToDelete, setFolderToDelete] = useState<Folder | null>(null);
-  const [folderToView, setFolderToView] = useState<Folder | null>(null);
 
   const handleAddStreamersFromGames = async (streamers: RecommendedStreamer[]) => {
-    // 一括追加アクションを呼び出し（重複は自動スキップ）
     const result = await addMultipleFavoriteStreamers(
       streamers.map((streamer) => ({
         streamerId: streamer.userId,
@@ -57,14 +44,12 @@ export function DashboardSidebar({
       }))
     );
 
-    // キャッシュ無効化
     await queryClient.invalidateQueries({ queryKey: ['favorites'] });
     await queryClient.invalidateQueries({
       queryKey: ['clips', 'favorites'],
       refetchType: 'active'
     });
 
-    // 結果をスロー（モーダル側でキャッチしてtoast表示）
     if (!result.success) {
       throw new Error(result.message);
     }
@@ -72,264 +57,165 @@ export function DashboardSidebar({
     return result;
   };
 
-  const handleFolderCreated = async () => {
-    // フォルダ一覧を再取得
-    await queryClient.invalidateQueries({ queryKey: ['folders'] });
-  };
-
-  const handleFolderEdit = (folder: Folder) => {
-    setFolderToEdit(folder);
-  };
-
-  const handleFolderEditSuccess = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['folders'] });
-    setFolderToEdit(null);
-  };
-
-  const handleFolderDelete = (folder: Folder) => {
-    setFolderToDelete(folder);
-  };
-
-  const handleFolderDeleteSuccess = (deletedFolderId: string) => {
-    // 楽観的UI: キャッシュから削除（再取得しない）
-    queryClient.setQueryData(['folders'], (oldData: any) => {
-      if (!oldData?.data) return oldData;
-      return {
-        ...oldData,
-        data: oldData.data.filter((f: Folder) => f.id !== deletedFolderId),
-      };
-    });
-
-    setFolderToDelete(null);
-  };
-
-  const handleViewStreamers = (folder: Folder) => {
-    setFolderToView(folder);
-  };
-
-  const handleViewStreamersSuccess = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['folders'] });
-  };
-
   return (
     <aside
       className={`
         ${isSidebarOpen ? 'w-80' : 'w-20'}
         hidden lg:block
-        bg-[#0f0f0f] border-r border-[#2a2a2a] overflow-y-auto flex-shrink-0 transition-all duration-300
+        bg-[#0f0f0f] border-r border-[#2a2a2a] overflow-y-auto overflow-x-hidden flex-shrink-0 transition-[width] duration-300 ease-in-out
       `}
     >
-      <div className="p-4 space-y-4">
-        {/* 配信者追加セクション（検索 + ゲーム） */}
-        <div className={`${isSidebarOpen ? 'bg-[#1a1a1a] border border-gray-800 rounded-lg p-4 space-y-4' : 'space-y-4'}`}>
-          {/* 検索 */}
-          <div>
-            <div className="flex items-center gap-2">
-              <Search className={`${isSidebarOpen ? 'w-5 h-5' : 'w-6 h-6'} text-gray-400 flex-shrink-0`} />
+      <div className={`p-4 space-y-4 ${isSidebarOpen ? 'min-w-[288px]' : 'min-w-[48px]'}`}>
+        {/* 配信者追加セクション */}
+        <div className={isSidebarOpen ? 'sidebar-section space-y-3' : 'space-y-2'}>
+          {/* 検索モーダルボタン */}
+          <button
+            onClick={() => setIsSearchModalOpen(true)}
+            className={`
+              ${isSidebarOpen ? 'sidebar-btn' : 'sidebar-btn-collapsed'}
+              ${isSidebarOpen
+                ? 'bg-gradient-to-r from-purple-600/20 to-pink-600/20 hover:from-purple-600/30 hover:to-pink-600/30 border border-purple-500/30 hover:border-purple-500/50'
+                : 'bg-purple-600/20 hover:bg-purple-600/30'
+              }
+              focus:ring-purple-500
+            `}
+          >
+            <div className={`flex items-center ${isSidebarOpen ? 'gap-3' : 'justify-center'}`}>
+              <Search className="w-5 h-5 text-purple-400 flex-shrink-0" />
               {isSidebarOpen && (
-                <h2 className="text-sm font-semibold text-gray-100 whitespace-nowrap">
-                  {LABELS.SECTIONS.SEARCH_STREAMERS}
-                </h2>
+                <span className="text-sm font-medium text-purple-100">
+                  配信者を検索して追加
+                </span>
               )}
             </div>
-            {isSidebarOpen && onAddFavorite && (
-              <div className="mt-4">
-                <StreamerSearch
-                  onSelectStreamer={(streamer) => {
-                    onAddFavorite(streamer);
-                  }}
-                />
-              </div>
-            )}
-          </div>
+          </button>
 
-          {/* 区切り線（枠内） */}
-          {isSidebarOpen && (
-            <div className="border-t border-gray-800"></div>
-          )}
+          <div className={`border-t border-gray-800 transition-opacity duration-200 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 h-0'}`} />
 
           {/* ゲームから追加 */}
           <button
             onClick={() => setIsGameModalOpen(true)}
             className={`
-              ${isSidebarOpen ? 'w-full' : 'w-auto'}
+              ${isSidebarOpen ? 'sidebar-btn' : 'sidebar-btn-collapsed'}
               ${isSidebarOpen
                 ? 'bg-gradient-to-r from-green-600/20 to-emerald-600/20 hover:from-green-600/30 hover:to-emerald-600/30 border border-green-500/30 hover:border-green-500/50'
                 : 'bg-green-600/20 hover:bg-green-600/30'
               }
-              rounded-lg p-4 transition-all duration-200 button-press-feedback
-              focus:outline-none focus:ring-2 focus:ring-green-500/50
+              focus:ring-green-500
             `}
           >
-            <div className="flex items-center gap-2">
-              <Gamepad2 className={`${isSidebarOpen ? 'w-5 h-5' : 'w-6 h-6'} text-green-400 flex-shrink-0`} />
+            <div className={`flex items-center ${isSidebarOpen ? 'gap-3' : 'justify-center'}`}>
+              <Gamepad2 className="w-5 h-5 text-green-400 flex-shrink-0" />
               {isSidebarOpen && (
-                <h2 className="text-sm font-semibold text-green-100 whitespace-nowrap">
+                <span className="text-sm font-medium text-green-100">
                   {LABELS.SECTIONS.GAME_BASED_ADD}
-                </h2>
+                </span>
               )}
             </div>
           </button>
         </div>
 
-        {/* 区切り線 */}
-        {isSidebarOpen && (
-          <div className="border-t border-gray-800"></div>
-        )}
+        <div className={`border-t border-gray-800 transition-opacity duration-200 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 h-0'}`} />
 
         {/* お気に入りクリップセクション */}
-        <div className={`${isSidebarOpen ? 'bg-[#1a1a1a] border border-gray-800 rounded-lg p-4' : ''}`}>
+        <div className={isSidebarOpen ? 'sidebar-section' : ''}>
           <Link href={ROUTES.FAVORITES_CLIPS} className="block">
             <div className={`
-              ${isSidebarOpen ? 'w-full' : 'w-auto'}
+              ${isSidebarOpen ? 'sidebar-btn' : 'sidebar-btn-collapsed'}
               ${isSidebarOpen
                 ? 'bg-gradient-to-r from-pink-600/20 to-rose-600/20 hover:from-pink-600/30 hover:to-rose-600/30 active:from-pink-600/40 active:to-rose-600/40 border border-pink-500/30 hover:border-pink-500/50'
                 : 'bg-pink-600/20 hover:bg-pink-600/30 active:bg-pink-600/40'
               }
-              rounded-lg p-4 transition-all duration-200 button-press-feedback
-              focus:outline-none focus:ring-2 focus:ring-pink-500/50
-              cursor-pointer
-              active:scale-95 active:opacity-70
+              focus:ring-pink-500 group cursor-pointer
             `}>
-              <div className="flex items-center gap-2">
-                <ThumbsUp className={`${isSidebarOpen ? 'w-5 h-5' : 'w-6 h-6'} text-pink-400 flex-shrink-0`} />
+              <div className={`flex items-center ${isSidebarOpen ? 'gap-3' : 'justify-center'}`}>
+                <ThumbsUp className="w-5 h-5 text-pink-400 flex-shrink-0" />
                 {isSidebarOpen && (
-                  <h2 className="text-sm font-semibold text-pink-100 whitespace-nowrap">
-                    {LABELS.SECTIONS.FAVORITE_CLIPS}
-                  </h2>
+                  <>
+                    <span className="text-sm font-medium text-pink-100 flex-1">
+                      {LABELS.SECTIONS.FAVORITE_CLIPS}
+                    </span>
+                    <ChevronRight className="w-4 h-4 text-pink-300 group-hover:text-pink-100 transition-colors" />
+                  </>
                 )}
               </div>
             </div>
           </Link>
         </div>
 
-        {/* 区切り線 */}
-        {isSidebarOpen && (
-          <div className="border-t border-gray-800"></div>
-        )}
+        <div className={`border-t border-gray-800 transition-opacity duration-200 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 h-0'}`} />
 
         {/* お気に入り配信者セクション */}
-        <div className={`${isSidebarOpen ? 'bg-[#1a1a1a] border border-gray-800 rounded-lg p-4' : ''}`}>
+        <div className={isSidebarOpen ? 'sidebar-section' : ''}>
           <Link href={ROUTES.FAVORITES} className="block">
             <div className={`
-              ${isSidebarOpen ? 'w-full' : 'w-auto'}
+              ${isSidebarOpen ? 'sidebar-btn' : 'sidebar-btn-collapsed'}
               ${isSidebarOpen
                 ? 'bg-gradient-to-r from-purple-600/20 to-pink-600/20 hover:from-purple-600/30 hover:to-pink-600/30 active:from-purple-600/40 active:to-pink-600/40 border border-purple-500/30 hover:border-purple-500/50'
                 : 'bg-purple-600/20 hover:bg-purple-600/30 active:bg-purple-600/40'
               }
-              rounded-lg p-4 transition-all duration-200 button-press-feedback
-              focus:outline-none focus:ring-2 focus:ring-purple-500/50
-              group cursor-pointer
-              active:scale-95 active:opacity-70
+              focus:ring-purple-500 group cursor-pointer
             `}>
-              <div className="flex items-center gap-2">
-                <Heart className={`${isSidebarOpen ? 'w-5 h-5' : 'w-6 h-6'} text-purple-400 flex-shrink-0`} />
+              <div className={`flex items-center ${isSidebarOpen ? 'gap-3' : 'justify-center'}`}>
+                <Heart className="w-5 h-5 text-purple-400 flex-shrink-0" />
                 {isSidebarOpen && (
                   <>
-                    <h2 className="text-sm font-semibold text-purple-100 whitespace-nowrap flex-1">
+                    <span className="text-sm font-medium text-purple-100 flex-1">
                       {LABELS.SECTIONS.FAVORITE_STREAMERS}
-                    </h2>
+                    </span>
                     <ChevronRight className="w-4 h-4 text-purple-300 group-hover:text-purple-100 transition-colors" />
                   </>
                 )}
               </div>
             </div>
           </Link>
-          {isSidebarOpen && (
-            <div className="mt-4">
-              <FavoriteList
-                onRemoveFavorite={onRemoveFavorite}
-              />
-            </div>
-          )}
         </div>
 
-        {/* 区切り線 */}
-        {isSidebarOpen && (
-          <div className="border-t border-gray-800"></div>
-        )}
+        <div className={`border-t border-gray-800 transition-opacity duration-200 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 h-0'}`} />
 
-        {/* フォルダセクション */}
-        <div className={`${isSidebarOpen ? 'bg-[#1a1a1a] border border-gray-800 rounded-lg p-4' : ''}`}>
+        {/* 現在LIVE中の配信者セクション */}
+        <div className={isSidebarOpen ? 'sidebar-section' : ''}>
           <div className={`
-            ${isSidebarOpen ? 'w-full' : 'w-auto'}
+            ${isSidebarOpen ? 'sidebar-btn' : 'sidebar-btn-collapsed'}
             ${isSidebarOpen
-              ? 'bg-gradient-to-r from-blue-600/20 to-cyan-600/20 hover:from-blue-600/30 hover:to-cyan-600/30 border border-blue-500/30 hover:border-blue-500/50'
-              : 'bg-blue-600/20 hover:bg-blue-600/30'
+              ? 'bg-gradient-to-r from-red-600/20 to-orange-600/20 border border-red-500/30'
+              : 'bg-red-600/20'
             }
-            rounded-lg p-4 transition-all duration-200 button-press-feedback
           `}>
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 flex-1">
-                <FolderIcon className={`${isSidebarOpen ? 'w-5 h-5' : 'w-6 h-6'} text-blue-400 flex-shrink-0`} />
-                {isSidebarOpen && (
-                  <h2 className="text-sm font-semibold text-blue-100 whitespace-nowrap">
-                    フォルダ
-                  </h2>
-                )}
-              </div>
+            <div className={`flex items-center ${isSidebarOpen ? 'gap-3' : 'justify-center'}`}>
+              <Radio className="w-5 h-5 text-red-400 flex-shrink-0" />
               {isSidebarOpen && (
-                <button
-                  onClick={() => setIsFolderModalOpen(true)}
-                  className="p-1 hover:bg-blue-500/20 rounded transition-colors button-press-feedback focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                  aria-label="フォルダを作成"
-                >
-                  <Plus className="w-4 h-4 text-blue-300 hover:text-blue-100" />
-                </button>
+                <span className="text-sm font-medium text-red-100">
+                  現在LIVE中
+                </span>
               )}
             </div>
           </div>
           {isSidebarOpen && (
-            <div className="mt-4 space-y-2">
-              <FolderList
-                isDragging={isDragging}
-                selectedFolderId={selectedFolderId}
-                onFolderClick={onFolderClick}
-                onFolderEdit={handleFolderEdit}
-                onFolderDelete={handleFolderDelete}
-                onViewStreamers={handleViewStreamers}
-              />
+            <div className="mt-3">
+              <LiveStreamerList />
             </div>
           )}
         </div>
       </div>
+
+      {/* 配信者検索モーダル */}
+      {onAddFavorite && (
+        <StreamerSearchModal
+          isOpen={isSearchModalOpen}
+          onClose={() => setIsSearchModalOpen(false)}
+          onSelectStreamer={(streamer) => {
+            onAddFavorite(streamer);
+          }}
+          addedStreamerIds={favoriteStreamerIds}
+        />
+      )}
 
       {/* ゲームベース追加モーダル */}
       <GameBasedAddModal
         isOpen={isGameModalOpen}
         onClose={() => setIsGameModalOpen(false)}
         onAddStreamers={handleAddStreamersFromGames}
-      />
-
-      {/* フォルダ作成モーダル */}
-      <FolderCreateModal
-        isOpen={isFolderModalOpen}
-        onClose={() => setIsFolderModalOpen(false)}
-        onSuccess={handleFolderCreated}
-      />
-
-      {/* フォルダ編集モーダル */}
-      <FolderEditModal
-        isOpen={!!folderToEdit}
-        folder={folderToEdit}
-        onClose={() => setFolderToEdit(null)}
-        onSuccess={handleFolderEditSuccess}
-      />
-
-      {/* フォルダ削除確認モーダル */}
-      <FolderDeleteConfirm
-        isOpen={!!folderToDelete}
-        folder={folderToDelete}
-        onClose={() => setFolderToDelete(null)}
-        onSuccess={handleFolderDeleteSuccess}
-      />
-
-      {/* フォルダ内配信者表示モーダル */}
-      <FolderStreamersModal
-        isOpen={!!folderToView}
-        folder={folderToView}
-        onClose={() => setFolderToView(null)}
-        onSuccess={handleViewStreamersSuccess}
       />
     </aside>
   );

@@ -123,11 +123,17 @@ export const LABELS = {
     NO_FAVORITE_STREAMERS: 'お気に入り配信者を追加しよう',
     NO_FAVORITE_STREAMERS_DESC: '好きなゲームから配信者を見つけて、お気に入りのクリップを楽しもう',
     ADD_FAVORITE_STREAMERS: '配信者を追加',
+    // お気に入りページ
+    FAVORITES_PAGE_DESC: 'アイコンをドラッグしてフォルダに追加できます。フォルダはクリップ一覧でフィルターとして使用できます。',
+    // ローディング
+    LOADING_STREAMERS: 'おすすめ配信者を取得中...',
+    LOADING_GAMES: '人気ゲームを読み込み中...',
+    LOADING_CLIPS: 'クリップを読み込み中...',
+    ADDING_FAVORITES: 'お気に入りに追加中...',
   },
 
   // ソートオプション
   SORT: {
-    ALL: 'すべて',
     VIEWS: '再生数',
     DATE_DESC: '新しい順',
     DATE_ASC: '古い順',

@@ -13,7 +13,9 @@ import { AuthStep } from './auth-step';
 import { GameSelectionStep } from './game-selection-step';
 import { StreamerSelectionStep } from './streamer-selection-step';
 import { CompletionStep } from './completion-step';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { addMultipleFavoriteStreamers } from '@/actions/favorites';
+import { LABELS } from '@/lib/constants';
 import type { RecommendedStreamer } from '@/types/twitch';
 
 type OnboardingStep = 'auth' | 'game' | 'streamer' | 'completion';
@@ -215,9 +217,8 @@ export function OnboardingModal({ isOpen, onClose, skipAuth = false }: Onboardin
         {/* ローディングオーバーレイ */}
         {isPending && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg animate-in fade-in duration-200">
-            <div className="text-center animate-in zoom-in-95 duration-300">
-              <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-gray-300 text-lg font-medium">お気に入りに追加中...</p>
+            <div className="animate-in zoom-in-95 duration-300">
+              <LoadingSpinner size="lg" text={LABELS.MESSAGES.ADDING_FAVORITES} />
             </div>
           </div>
         )}

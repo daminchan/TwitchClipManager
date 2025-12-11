@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { X, SkipBack, SkipForward, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { TwitchClip } from '@/types/twitch';
@@ -29,6 +29,19 @@ export function ClipPlayerModal({
   currentIndex,
   totalClips,
 }: ClipPlayerModalProps) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  // クライアントサイドでのみマウント状態を更新（Hydrationエラー防止）
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // embedのparentはクライアントサイドでのみ取得
+  const embedParent = useMemo(() => {
+    if (!isMounted) return 'localhost';
+    return window.location.hostname;
+  }, [isMounted]);
+
   // ESCキーで閉じる
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -73,7 +86,7 @@ export function ClipPlayerModal({
         <div className="w-full max-w-3xl">
           <div className="relative w-full aspect-video bg-gray-900 rounded-lg overflow-hidden">
             <iframe
-              src={`${clip.embed_url}&parent=${typeof window !== 'undefined' ? window.location.hostname : ''}`}
+              src={`${clip.embed_url}&parent=${embedParent}`}
               className="absolute inset-0 w-full h-full"
               allowFullScreen
             />

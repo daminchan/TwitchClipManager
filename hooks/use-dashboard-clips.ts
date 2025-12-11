@@ -14,7 +14,7 @@ import { useState, useMemo, useCallback, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { TwitchClip } from '@/types/twitch';
 import type { SortType } from '@/components/dashboard/clip-sort-tabs';
-import { API_ENDPOINTS, LABELS, ANIMATION } from '@/lib/constants';
+import { API_ENDPOINTS, LABELS, ANIMATION, CACHE_TIME } from '@/lib/constants';
 import { getLikedClips, addLikedClip, removeLikedClip } from '@/actions/liked-clips';
 
 export function useDashboardClips() {
@@ -56,7 +56,7 @@ export function useDashboardClips() {
 
       return result.data as TwitchClip[];
     },
-    staleTime: 5 * 60 * 1000, // 5分間キャッシュ
+    staleTime: CACHE_TIME.DEFAULT_STALE_TIME,
   });
 
   // いいねしたクリップIDを取得（React Query）
@@ -69,7 +69,7 @@ export function useDashboardClips() {
       }
       return [];
     },
-    staleTime: 5 * 60 * 1000, // 5分間キャッシュ
+    staleTime: CACHE_TIME.DEFAULT_STALE_TIME,
   });
 
   // likedClipIds を Set に変換
