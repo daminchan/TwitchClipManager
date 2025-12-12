@@ -23,6 +23,7 @@ interface GameBasedAddModalProps {
 export function GameBasedAddModal({ isOpen, onClose, onAddStreamers }: GameBasedAddModalProps) {
   const [step, setStep] = useState<Step>('game');
   const [selectedGames, setSelectedGames] = useState<TwitchGame[]>([]);
+  const [isAdding, setIsAdding] = useState(false);
 
   if (!isOpen) return null;
 
@@ -32,18 +33,20 @@ export function GameBasedAddModal({ isOpen, onClose, onAddStreamers }: GameBased
   };
 
   const handleStreamerNext = async (streamers: RecommendedStreamer[]) => {
-    // 即座にモーダルを閉じる（楽観的UI）
-    handleClose();
+    setIsAdding(true);
 
     try {
       const result = await onAddStreamers(streamers);
-      // 成功メッセージは親コンポーネントのtoastで表示される想定
-      // エラーの場合のみここでハンドリング
-      if (!result.success) {
+      if (result.success) {
+        // 追加完了後にモーダルを閉じる
+        handleClose();
+      } else {
         console.error('Failed to add streamers:', result.message);
+        setIsAdding(false);
       }
     } catch (error) {
       console.error('Failed to add streamers:', error);
+      setIsAdding(false);
     }
   };
 
@@ -54,6 +57,7 @@ export function GameBasedAddModal({ isOpen, onClose, onAddStreamers }: GameBased
   const handleClose = () => {
     setStep('game');
     setSelectedGames([]);
+    setIsAdding(false);
     onClose();
   };
 
@@ -81,6 +85,7 @@ export function GameBasedAddModal({ isOpen, onClose, onAddStreamers }: GameBased
               selectedGames={selectedGames}
               onNext={handleStreamerNext}
               onBack={handleBack}
+              isAdding={isAdding}
             />
           )}
         </div>
