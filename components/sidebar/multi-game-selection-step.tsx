@@ -67,17 +67,9 @@ export function MultiGameSelectionStep({ onNext, onCancel }: MultiGameSelectionS
   const displayGames = useMemo(() => {
     if (debouncedQuery.length >= 2) {
       // 検索モード: API検索結果を表示
-      // デバッグ: 検索結果の画像URLを確認
-      if (searchResults.length > 0) {
-        console.log('[DEBUG] Search result box_art_url:', searchResults[0].box_art_url);
-      }
       return searchResults;
     } else {
       // 通常モード: 人気ゲームをローカルフィルタリング
-      // デバッグ: トップゲームの画像URLを確認
-      if (topGames.length > 0) {
-        console.log('[DEBUG] Top game box_art_url:', topGames[0].box_art_url);
-      }
       if (searchQuery.length > 0) {
         return topGames.filter((game) =>
           game.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -182,9 +174,10 @@ export function MultiGameSelectionStep({ onNext, onCancel }: MultiGameSelectionS
             {displayGames.map((game) => {
               const isSelected = selectedGames.some((g) => g.id === game.id);
               const isMaxReached = selectedGames.length >= MAX_GAMES && !isSelected;
-              const boxArtUrl = game.box_art_url
-                .replace('{width}', '480')
-                .replace('{height}', '640');
+              // 検索APIは固定サイズURLを返すため、game.idから正しいURLを構築
+              const boxArtUrl = game.box_art_url.includes('{width}')
+                ? game.box_art_url.replace('{width}', '480').replace('{height}', '640')
+                : `https://static-cdn.jtvnw.net/ttv-boxart/${game.id}-480x640.jpg`;
 
               return (
                 <button
