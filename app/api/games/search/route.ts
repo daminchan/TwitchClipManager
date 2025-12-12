@@ -31,10 +31,6 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('Search games error:', error);
 
-    if (error instanceof Error) {
-      console.error('Error details:', error.message);
-    }
-
     return NextResponse.json(
       {
         error: 'ゲームの検索に失敗しました',
