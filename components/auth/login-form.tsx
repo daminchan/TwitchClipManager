@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,8 @@ import { APP_CONFIG, LABELS, ROUTES } from '@/lib/constants';
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get('callbackUrl') || ROUTES.DASHBOARD;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -52,7 +54,8 @@ export function LoginForm() {
         return;
       }
 
-      router.push(ROUTES.DASHBOARD);
+      // callbackUrlがあればそこへ、なければダッシュボードへ
+      router.push(callbackUrl);
       router.refresh();
     } catch (error) {
       console.error('Login error:', error);
