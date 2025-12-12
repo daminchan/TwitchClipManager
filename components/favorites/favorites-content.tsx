@@ -11,7 +11,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
-import { ArrowLeft, Folder as FolderIcon, Plus, Edit2, Trash2, Users, GripVertical, Twitch } from 'lucide-react';
+import { ArrowLeft, Folder as FolderIcon, Plus, Edit2, Trash2, Users, GripVertical, Twitch, RefreshCw } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { FolderCreateModal } from '@/components/folders/folder-create-modal';
@@ -280,22 +280,28 @@ interface DraggableStreamerCardProps {
 }
 
 function DraggableStreamerCard({ favorite, onDelete }: DraggableStreamerCardProps) {
+  // temp-で始まるIDは同期中（楽観的UI追加中）
+  const isSyncing = favorite.id.startsWith('temp-');
+
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: favorite.id,
     data: {
       streamer: favorite,
     },
+    disabled: isSyncing, // 同期中はドラッグ不可
   });
 
   // Twitchページを開く
   const handleTwitchClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (isSyncing) return; // 同期中は無効
     window.open(`https://twitch.tv/${favorite.streamerLogin}`, '_blank');
   };
 
   // TODO: 配信者個別ページへのリンク（未実装）
   const handleStreamerClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    if (isSyncing) return; // 同期中は無効
     // 将来的に /streamers/[id] へ遷移
     console.log('Navigate to streamer page:', favorite.streamerId);
   };
@@ -305,18 +311,36 @@ function DraggableStreamerCard({ favorite, onDelete }: DraggableStreamerCardProp
       ref={setNodeRef}
       className={`relative ${isDragging ? 'opacity-10' : ''}`}
     >
-      <div className="group bg-[#1a1a1a] hover:bg-[#222222] rounded-lg p-4 transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/10">
+      <div className={`group rounded-lg p-4 transition-all duration-200 ${
+        isSyncing
+          ? 'bg-[#1a1a1a]/50 cursor-not-allowed'
+          : 'bg-[#1a1a1a] hover:bg-[#222222] hover:shadow-lg hover:shadow-purple-500/10'
+      }`}>
+        {/* 同期中バッジ */}
+        {isSyncing && (
+          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10">
+            <span className="flex items-center gap-1 text-xs text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded-full">
+              <RefreshCw className="w-3 h-3 animate-spin" />
+              追加中
+            </span>
+          </div>
+        )}
+
         {/* ドラッグハンドル（アイコン部分のみ） */}
         <div
-          {...listeners}
-          {...attributes}
-          className="relative w-24 h-24 mx-auto mb-3 cursor-grab active:cursor-grabbing"
+          {...(isSyncing ? {} : listeners)}
+          {...(isSyncing ? {} : attributes)}
+          className={`relative w-24 h-24 mx-auto mb-3 ${
+            isSyncing ? 'cursor-not-allowed opacity-50' : 'cursor-grab active:cursor-grabbing'
+          }`}
         >
-          {/* ドラッグインジケーター（ホバー時表示） */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
-            <div className="absolute inset-0 bg-black/30 rounded-full" />
-            <GripVertical className="w-6 h-6 text-white drop-shadow-lg" />
-          </div>
+          {/* ドラッグインジケーター（ホバー時表示、同期中は非表示） */}
+          {!isSyncing && (
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
+              <div className="absolute inset-0 bg-black/30 rounded-full" />
+              <GripVertical className="w-6 h-6 text-white drop-shadow-lg" />
+            </div>
+          )}
 
           {favorite.streamerImage ? (
             <Image
@@ -338,38 +362,49 @@ function DraggableStreamerCard({ favorite, onDelete }: DraggableStreamerCardProp
         {/* 配信者名（クリックで個別ページへ - 未実装） */}
         <button
           onClick={handleStreamerClick}
-          className="w-full text-center group/link hover:text-purple-400 transition-colors"
+          disabled={isSyncing}
+          className={`w-full text-center transition-colors ${
+            isSyncing
+              ? 'opacity-50 cursor-not-allowed'
+              : 'group/link hover:text-purple-400'
+          }`}
         >
-          <p className="text-sm font-semibold text-gray-100 group-hover/link:text-purple-400 line-clamp-1 mb-1">
+          <p className={`text-sm font-semibold line-clamp-1 mb-1 ${
+            isSyncing ? 'text-gray-400' : 'text-gray-100 group-hover/link:text-purple-400'
+          }`}>
             {favorite.streamerName}
           </p>
-          <p className="text-xs text-gray-400 group-hover/link:text-purple-300 line-clamp-1">
+          <p className={`text-xs line-clamp-1 ${
+            isSyncing ? 'text-gray-500' : 'text-gray-400 group-hover/link:text-purple-300'
+          }`}>
             @{favorite.streamerLogin}
           </p>
         </button>
 
-        {/* アクションボタン（右上） */}
-        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
-          {/* Twitchへリンク */}
-          <button
-            onClick={handleTwitchClick}
-            className="p-1.5 bg-purple-600/80 hover:bg-purple-500 rounded-full transition-colors"
-            aria-label="Twitchで開く"
-          >
-            <Twitch className="w-3 h-3 text-white" />
-          </button>
-          {/* 削除ボタン */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete();
-            }}
-            className="p-1.5 bg-gray-800/80 hover:bg-red-900/80 rounded-full transition-colors"
-            aria-label="お気に入りから削除"
-          >
-            <Trash2 className="w-3 h-3 text-gray-300 hover:text-red-400" />
-          </button>
-        </div>
+        {/* アクションボタン（右上、同期中は非表示） */}
+        {!isSyncing && (
+          <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+            {/* Twitchへリンク */}
+            <button
+              onClick={handleTwitchClick}
+              className="p-1.5 bg-purple-600/80 hover:bg-purple-500 rounded-full transition-colors"
+              aria-label="Twitchで開く"
+            >
+              <Twitch className="w-3 h-3 text-white" />
+            </button>
+            {/* 削除ボタン */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              className="p-1.5 bg-gray-800/80 hover:bg-red-900/80 rounded-full transition-colors"
+              aria-label="お気に入りから削除"
+            >
+              <Trash2 className="w-3 h-3 text-gray-300 hover:text-red-400" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

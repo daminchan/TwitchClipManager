@@ -9,7 +9,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
-import { Check } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { SectionLoadingSpinner } from '@/components/ui/loading-spinner';
@@ -20,12 +20,14 @@ interface MultiStreamerSelectionStepProps {
   selectedGames: TwitchGame[];
   onNext: (selectedStreamers: RecommendedStreamer[]) => void;
   onBack: () => void;
+  isAdding?: boolean;
 }
 
 export function MultiStreamerSelectionStep({
   selectedGames,
   onNext,
   onBack,
+  isAdding = false,
 }: MultiStreamerSelectionStepProps) {
   const [selectedStreamerIds, setSelectedStreamerIds] = useState<Set<string>>(new Set());
 
@@ -159,16 +161,24 @@ export function MultiStreamerSelectionStep({
         <Button
           variant="outline"
           onClick={onBack}
-          className="flex-1 bg-[#1a1a1a] border-gray-700 text-gray-100 hover:bg-[#2a2a2a]"
+          disabled={isAdding}
+          className="flex-1 bg-[#1a1a1a] border-gray-700 text-gray-100 hover:bg-[#2a2a2a] disabled:opacity-50"
         >
           戻る
         </Button>
         <Button
           onClick={handleNext}
-          disabled={selectedStreamerIds.size === 0 || isLoading}
+          disabled={selectedStreamerIds.size === 0 || isLoading || isAdding}
           className="flex-1 bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          お気に入りに追加 ({selectedStreamerIds.size}人選択)
+          {isAdding ? (
+            <span className="flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              追加中...
+            </span>
+          ) : (
+            `お気に入りに追加 (${selectedStreamerIds.size}人選択)`
+          )}
         </Button>
       </div>
     </div>

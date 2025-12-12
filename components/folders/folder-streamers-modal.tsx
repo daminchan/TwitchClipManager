@@ -127,52 +127,73 @@ export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: Fol
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {localStreamers.map((streamer) => (
-                <div
-                  key={streamer.id}
-                  className="group bg-[#1a1a1a] hover:bg-[#222222] rounded-lg p-4 transition-all duration-200"
-                >
-                  <div className="flex items-center gap-3">
-                    {/* プロフィール画像 */}
-                    <div className="relative w-12 h-12 flex-shrink-0">
-                      {streamer.streamerImage ? (
-                        <Image
-                          src={streamer.streamerImage}
-                          alt={streamer.streamerName}
-                          fill
-                          className="rounded-full object-cover"
-                          sizes="48px"
-                        />
-                      ) : (
-                        <div className="w-full h-full rounded-full bg-purple-600 flex items-center justify-center">
-                          <span className="text-lg text-white font-bold">
-                            {streamer.streamerName.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
+              {localStreamers.map((streamer) => {
+                // temp-で始まるIDは同期中（楽観的UI追加中）
+                const isSyncing = streamer.id.startsWith('temp-');
+
+                return (
+                  <div
+                    key={streamer.id}
+                    className={`relative group rounded-lg p-4 transition-all duration-200 ${
+                      isSyncing
+                        ? 'bg-[#1a1a1a]/50 cursor-not-allowed'
+                        : 'bg-[#1a1a1a] hover:bg-[#222222]'
+                    }`}
+                  >
+                    {/* 同期中バッジ */}
+                    {isSyncing && (
+                      <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10">
+                        <span className="flex items-center gap-1 text-xs text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded-full">
+                          <RefreshCw className="w-3 h-3 animate-spin" />
+                          追加中
+                        </span>
+                      </div>
+                    )}
+
+                    <div className={`flex items-center gap-3 ${isSyncing ? 'opacity-50' : ''}`}>
+                      {/* プロフィール画像 */}
+                      <div className="relative w-12 h-12 flex-shrink-0">
+                        {streamer.streamerImage ? (
+                          <Image
+                            src={streamer.streamerImage}
+                            alt={streamer.streamerName}
+                            fill
+                            className="rounded-full object-cover"
+                            sizes="48px"
+                          />
+                        ) : (
+                          <div className="w-full h-full rounded-full bg-purple-600 flex items-center justify-center">
+                            <span className="text-lg text-white font-bold">
+                              {streamer.streamerName.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 配信者情報 */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-100 truncate">
+                          {streamer.streamerName}
+                        </p>
+                        <p className="text-xs text-gray-400 truncate">
+                          @{streamer.streamerLogin}
+                        </p>
+                      </div>
+
+                      {/* 削除ボタン（同期中は非表示） */}
+                      {!isSyncing && (
+                        <button
+                          onClick={() => handleRemoveStreamer(streamer.streamerId)}
+                          className="p-2 hover:bg-red-900/30 rounded transition-colors button-press-feedback opacity-0 group-hover:opacity-100"
+                          aria-label="フォルダから削除"
+                        >
+                          <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-400" />
+                        </button>
                       )}
                     </div>
-
-                    {/* 配信者情報 */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-100 truncate">
-                        {streamer.streamerName}
-                      </p>
-                      <p className="text-xs text-gray-400 truncate">
-                        @{streamer.streamerLogin}
-                      </p>
-                    </div>
-
-                    {/* 削除ボタン */}
-                    <button
-                      onClick={() => handleRemoveStreamer(streamer.streamerId)}
-                      className="p-2 hover:bg-red-900/30 rounded transition-colors button-press-feedback opacity-0 group-hover:opacity-100"
-                      aria-label="フォルダから削除"
-                    >
-                      <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-400" />
-                    </button>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

@@ -35,6 +35,7 @@ export function DashboardSidebar({
   const [isGameModalOpen, setIsGameModalOpen] = useState(false);
 
   const handleAddStreamersFromGames = async (streamers: RecommendedStreamer[]) => {
+    // サーバーアクション実行（追加完了を待つ）
     const result = await addMultipleFavoriteStreamers(
       streamers.map((streamer) => ({
         streamerId: streamer.userId,
@@ -44,15 +45,16 @@ export function DashboardSidebar({
       }))
     );
 
+    if (!result.success) {
+      throw new Error(result.message);
+    }
+
+    // 追加完了後にデータを再取得
     await queryClient.invalidateQueries({ queryKey: ['favorites'] });
     await queryClient.invalidateQueries({
       queryKey: ['clips', 'favorites'],
       refetchType: 'active'
     });
-
-    if (!result.success) {
-      throw new Error(result.message);
-    }
 
     return result;
   };
@@ -107,7 +109,7 @@ export function DashboardSidebar({
             <div className={`flex items-center ${isSidebarOpen ? 'gap-3' : 'justify-center'}`}>
               <Gamepad2 className="w-5 h-5 text-green-400 flex-shrink-0" />
               {isSidebarOpen && (
-                <span className="text-sm font-medium text-green-100">
+                <span className="text-sm font-medium text-green-100 whitespace-nowrap">
                   {LABELS.SECTIONS.GAME_BASED_ADD}
                 </span>
               )}
