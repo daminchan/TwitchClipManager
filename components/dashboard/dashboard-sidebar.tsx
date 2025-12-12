@@ -64,6 +64,7 @@ export function DashboardSidebar({
       className={`
         ${isSidebarOpen ? 'w-80' : 'w-20'}
         hidden lg:block
+        h-[calc(100vh-64px)] sticky top-16
         bg-[#0f0f0f] border-r border-[#2a2a2a] overflow-y-auto overflow-x-hidden flex-shrink-0 transition-[width] duration-300 ease-in-out
       `}
     >

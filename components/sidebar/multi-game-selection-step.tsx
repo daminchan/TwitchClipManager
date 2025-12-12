@@ -175,8 +175,8 @@ export function MultiGameSelectionStep({ onNext, onCancel }: MultiGameSelectionS
               const isSelected = selectedGames.some((g) => g.id === game.id);
               const isMaxReached = selectedGames.length >= MAX_GAMES && !isSelected;
               const boxArtUrl = game.box_art_url
-                .replace('{width}', '285')
-                .replace('{height}', '380');
+                .replace('{width}', '480')
+                .replace('{height}', '640');
 
               return (
                 <button

@@ -236,12 +236,12 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <FolderContext.Provider value={{ selectedFolderId, setSelectedFolderId }}>
         <DragContext.Provider value={{ isDragging, activeStreamer, pendingAdditions }}>
-          <div className="min-h-screen bg-[#0f0f0f] flex flex-col">
+          <div className="min-h-screen bg-[#0f0f0f]">
             {/* 固定ヘッダー */}
             <Header onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
-            <div className="flex flex-1 overflow-hidden">
-              {/* 固定サイドバー */}
+            <div className="flex">
+              {/* 固定サイドバー（sticky） */}
               <DashboardSidebar
                 isSidebarOpen={isSidebarOpen}
                 onAddFavorite={handleAddFavorite}
@@ -250,7 +250,7 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
               />
 
               {/* メインコンテンツ（ページごとに切り替わる） */}
-              <main className="flex-1 overflow-y-auto bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a]">
+              <main className="flex-1 min-h-[calc(100vh-64px)] bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a]">
                 {children}
               </main>
             </div>

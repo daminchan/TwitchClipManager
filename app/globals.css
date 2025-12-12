@@ -307,8 +307,8 @@
     transform: scale(0.95);
   }
 
-  /* サイドバーセクションカード */
+  /* サイドバーセクション（ボタンのグルーピング用） */
   .sidebar-section {
-    @apply bg-[#1a1a1a] border border-gray-800 rounded-lg p-4;
+    @apply space-y-2;
   }
 }
