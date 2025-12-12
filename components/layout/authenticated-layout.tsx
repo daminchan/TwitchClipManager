@@ -236,7 +236,7 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <FolderContext.Provider value={{ selectedFolderId, setSelectedFolderId }}>
         <DragContext.Provider value={{ isDragging, activeStreamer, pendingAdditions }}>
-          <div className="min-h-screen bg-[#0f0f0f] flex flex-col">
+          <div className="h-screen bg-[#0f0f0f] flex flex-col overflow-hidden">
             {/* 固定ヘッダー */}
             <Header onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 

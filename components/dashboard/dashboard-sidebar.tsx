@@ -63,7 +63,7 @@ export function DashboardSidebar({
     <aside
       className={`
         ${isSidebarOpen ? 'w-80' : 'w-20'}
-        hidden lg:block
+        hidden lg:block h-full
         bg-[#0f0f0f] border-r border-[#2a2a2a] overflow-y-auto overflow-x-hidden flex-shrink-0 transition-[width] duration-300 ease-in-out
       `}
     >

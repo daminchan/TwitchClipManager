@@ -174,9 +174,10 @@ export function MultiGameSelectionStep({ onNext, onCancel }: MultiGameSelectionS
             {displayGames.map((game) => {
               const isSelected = selectedGames.some((g) => g.id === game.id);
               const isMaxReached = selectedGames.length >= MAX_GAMES && !isSelected;
-              const boxArtUrl = game.box_art_url
-                .replace('{width}', '285')
-                .replace('{height}', '380');
+              // 検索APIは固定サイズURLを返すため、game.idから正しいURLを構築
+              const boxArtUrl = game.box_art_url.includes('{width}')
+                ? game.box_art_url.replace('{width}', '480').replace('{height}', '640')
+                : `https://static-cdn.jtvnw.net/ttv-boxart/${game.id}-480x640.jpg`;
 
               return (
                 <button
@@ -196,7 +197,9 @@ export function MultiGameSelectionStep({ onNext, onCancel }: MultiGameSelectionS
                     alt={game.name}
                     fill
                     className="object-cover"
-                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    sizes="240px"
+                    quality={90}
+                    unoptimized
                   />
                   <div
                     className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity ${
