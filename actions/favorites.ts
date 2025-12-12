@@ -69,7 +69,7 @@ export async function addFavoriteStreamer(
     });
 
     // キャッシュを再検証
-    revalidatePath('/dashboard');
+    revalidatePath('/');
     revalidatePath('/favorites-clips');
 
     return {
@@ -135,7 +135,7 @@ export async function removeFavoriteStreamer(streamerId: string): Promise<Action
     });
 
     // キャッシュを再検証
-    revalidatePath('/dashboard');
+    revalidatePath('/');
     revalidatePath('/favorites');
     revalidatePath('/favorites-clips');
 
@@ -235,7 +235,7 @@ export async function addMultipleFavoriteStreamers(
 
     // キャッシュを再検証
     revalidatePath('/');
-    revalidatePath('/dashboard');
+    revalidatePath('/');
     revalidatePath('/favorites-clips');
 
     // 正確なメッセージを返す
