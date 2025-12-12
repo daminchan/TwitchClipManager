@@ -6,9 +6,9 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Search } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
@@ -25,11 +25,20 @@ interface MultiGameSelectionStepProps {
 export function MultiGameSelectionStep({ onNext, onCancel }: MultiGameSelectionStepProps) {
   const [selectedGames, setSelectedGames] = useState<TwitchGame[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
 
   const MAX_GAMES = RECOMMENDATION_LIMITS.GAME_BASED_ADD.MAX_GAMES;
 
+  // 検索クエリのデバウンス（300ms）
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   // 人気ゲーム一覧を取得
-  const { data: gamesData, isLoading } = useQuery({
+  const { data: topGamesData, isLoading: isLoadingTop } = useQuery({
     queryKey: ['games', 'top'],
     queryFn: async () => {
       const res = await fetch('/api/games/top');
@@ -39,12 +48,39 @@ export function MultiGameSelectionStep({ onNext, onCancel }: MultiGameSelectionS
     staleTime: CACHE_TIME.GAMES,
   });
 
-  const games: TwitchGame[] = gamesData?.data || [];
+  // ゲーム検索（デバウンス後のクエリがある場合のみ）
+  const { data: searchGamesData, isLoading: isLoadingSearch } = useQuery({
+    queryKey: ['games', 'search', debouncedQuery],
+    queryFn: async () => {
+      const res = await fetch(`/api/games/search?q=${encodeURIComponent(debouncedQuery)}`);
+      if (!res.ok) throw new Error('Failed to search games');
+      return res.json();
+    },
+    enabled: debouncedQuery.length >= 2, // 2文字以上で検索
+    staleTime: CACHE_TIME.GAMES,
+  });
 
-  // 検索フィルター
-  const filteredGames = games.filter((game) =>
-    game.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const topGames: TwitchGame[] = topGamesData?.data || [];
+  const searchResults: TwitchGame[] = searchGamesData?.data || [];
+
+  // 表示するゲーム一覧を決定
+  const displayGames = useMemo(() => {
+    if (debouncedQuery.length >= 2) {
+      // 検索モード: API検索結果を表示
+      return searchResults;
+    } else {
+      // 通常モード: 人気ゲームをローカルフィルタリング
+      if (searchQuery.length > 0) {
+        return topGames.filter((game) =>
+          game.name.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      }
+      return topGames;
+    }
+  }, [debouncedQuery, searchQuery, topGames, searchResults]);
+
+  const isLoading = isLoadingTop || (debouncedQuery.length >= 2 && isLoadingSearch);
+  const isSearching = searchQuery.length >= 2 && searchQuery !== debouncedQuery;
 
   const toggleGame = (game: TwitchGame) => {
     setSelectedGames((prev) => {
@@ -83,10 +119,14 @@ export function MultiGameSelectionStep({ onNext, onCancel }: MultiGameSelectionS
       {/* 検索バーと選択数バッジ */}
       <div className="mb-4 flex gap-3 items-center">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          {isSearching ? (
+            <Loader2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400 animate-spin" />
+          ) : (
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          )}
           <Input
             type="text"
-            placeholder="ゲームを検索..."
+            placeholder="ゲームを検索...（例: ストリートファイター）"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 bg-[#1a1a1a] border-0 text-gray-100 placeholder-gray-400"
@@ -99,6 +139,13 @@ export function MultiGameSelectionStep({ onNext, onCancel }: MultiGameSelectionS
         )}
       </div>
 
+      {/* 検索モード表示 */}
+      {debouncedQuery.length >= 2 && (
+        <div className="mb-4 text-sm text-gray-400">
+          「{debouncedQuery}」の検索結果: {displayGames.length}件
+        </div>
+      )}
+
       {/* ゲーム一覧 */}
       <div className="flex-1 overflow-y-auto mb-6">
         {isLoading ? (
@@ -110,9 +157,21 @@ export function MultiGameSelectionStep({ onNext, onCancel }: MultiGameSelectionS
               />
             ))}
           </div>
+        ) : displayGames.length === 0 ? (
+          <div className="text-center py-16">
+            <Search className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+            <p className="text-gray-400">
+              {searchQuery.length >= 2 ? '該当するゲームが見つかりませんでした' : 'ゲームが見つかりませんでした'}
+            </p>
+            {searchQuery.length >= 2 && (
+              <p className="text-sm text-gray-500 mt-2">
+                別のキーワードで検索してみてください
+              </p>
+            )}
+          </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filteredGames.map((game) => {
+            {displayGames.map((game) => {
               const isSelected = selectedGames.some((g) => g.id === game.id);
               const isMaxReached = selectedGames.length >= MAX_GAMES && !isSelected;
               const boxArtUrl = game.box_art_url

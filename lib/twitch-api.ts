@@ -177,6 +177,18 @@ export async function getTopGames(limit: number = 50) {
 }
 
 /**
+ * ゲームを名前で検索
+ */
+export async function searchGames(query: string, limit: number = 20) {
+  const data = await twitchApiRequest('/search/categories', {
+    query,
+    first: limit.toString(),
+  });
+
+  return data.data;
+}
+
+/**
  * ゲームIDでクリップを取得（期間指定可能、再生数順）
  */
 export async function getClipsByGame(

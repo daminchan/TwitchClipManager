@@ -35,6 +35,26 @@ export function DashboardSidebar({
   const [isGameModalOpen, setIsGameModalOpen] = useState(false);
 
   const handleAddStreamersFromGames = async (streamers: RecommendedStreamer[]) => {
+    // 楽観的UI: 即座にキャッシュを更新
+    const newFavorites = streamers.map((streamer) => ({
+      id: `temp-${streamer.userId}`,
+      userId: '', // 一時的な値
+      streamerId: streamer.userId,
+      streamerName: streamer.userName,
+      streamerLogin: streamer.userLogin,
+      streamerImage: streamer.profileImageUrl,
+      createdAt: new Date().toISOString(),
+    }));
+
+    queryClient.setQueryData(['favorites'], (oldData: any) => {
+      if (!oldData || !Array.isArray(oldData)) return newFavorites;
+      // 重複を除いて追加
+      const existingIds = new Set(oldData.map((f: any) => f.streamerId));
+      const uniqueNew = newFavorites.filter((f) => !existingIds.has(f.streamerId));
+      return [...oldData, ...uniqueNew];
+    });
+
+    // バックグラウンドでサーバーアクション実行
     const result = await addMultipleFavoriteStreamers(
       streamers.map((streamer) => ({
         streamerId: streamer.userId,
@@ -44,6 +64,7 @@ export function DashboardSidebar({
       }))
     );
 
+    // 実データで上書き
     await queryClient.invalidateQueries({ queryKey: ['favorites'] });
     await queryClient.invalidateQueries({
       queryKey: ['clips', 'favorites'],
@@ -107,7 +128,7 @@ export function DashboardSidebar({
             <div className={`flex items-center ${isSidebarOpen ? 'gap-3' : 'justify-center'}`}>
               <Gamepad2 className="w-5 h-5 text-green-400 flex-shrink-0" />
               {isSidebarOpen && (
-                <span className="text-sm font-medium text-green-100">
+                <span className="text-sm font-medium text-green-100 whitespace-nowrap">
                   {LABELS.SECTIONS.GAME_BASED_ADD}
                 </span>
               )}
