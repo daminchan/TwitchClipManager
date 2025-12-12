@@ -91,11 +91,26 @@ export function FavoritesContent() {
   };
 
   const handleStreamerDeleteSuccess = async (deletedStreamerId: string) => {
-    // 楽観的UI: キャッシュから削除
+    // 楽観的UI: お気に入りキャッシュから削除
     queryClient.setQueryData(['favorites'], (oldData: FavoriteStreamer[] | undefined) => {
       if (!oldData) return oldData;
       return oldData.filter((f) => f.streamerId !== deletedStreamerId);
     });
+
+    // 楽観的UI: 全フォルダからも削除（サーバー側でも同時削除されるため）
+    queryClient.setQueryData(['folders'], (oldData: any) => {
+      if (!oldData?.data) return oldData;
+      return {
+        ...oldData,
+        data: oldData.data.map((folder: Folder) => ({
+          ...folder,
+          folderStreamers: folder.folderStreamers?.filter(
+            (fs) => fs.streamerId !== deletedStreamerId
+          ) || [],
+        })),
+      };
+    });
+
     // クリップも再取得
     await queryClient.invalidateQueries({
       queryKey: ['clips', 'favorites'],
@@ -371,12 +386,17 @@ interface DroppableFolderCardProps {
 
 function DroppableFolderCard({ folder, isDragging, onView, onEdit, onDelete }: DroppableFolderCardProps) {
   const [isHovered, setIsHovered] = useState(false);
+
+  // 作成中フォルダ（temp-で始まるID）はD&D不可
+  const isPending = folder.id.startsWith('temp-');
+
   const { setNodeRef, isOver } = useDroppable({
     id: folder.id,
     data: {
       type: 'folder',
       folder,
     },
+    disabled: isPending, // 作成中はドロップ不可
   });
 
   const streamerCount = folder.folderStreamers?.length || 0;
@@ -394,20 +414,32 @@ function DroppableFolderCard({ folder, isDragging, onView, onEdit, onDelete }: D
   return (
     <div
       ref={setNodeRef}
-      onClick={onView}
+      onClick={isPending ? undefined : onView}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className={`
-        relative bg-[#1a1a1a] rounded-lg p-4 transition-all duration-200 cursor-pointer
-        ${isDragging
-          ? 'ring-2 ring-blue-500 ring-opacity-50 animate-pulse'
-          : 'hover:bg-[#222222] hover:scale-105 hover:shadow-lg hover:shadow-blue-500/10'
+        relative bg-[#1a1a1a] rounded-lg p-4 transition-all duration-200
+        ${isPending
+          ? 'opacity-50 cursor-not-allowed'
+          : 'cursor-pointer'
         }
-        ${isOver ? 'bg-blue-500/20 ring-2 ring-blue-400 scale-105' : ''}
+        ${isDragging && !isPending
+          ? 'ring-2 ring-blue-500 ring-opacity-50 animate-pulse'
+          : !isPending ? 'hover:bg-[#222222] hover:scale-105 hover:shadow-lg hover:shadow-blue-500/10' : ''
+        }
+        ${isOver && !isPending ? 'bg-blue-500/20 ring-2 ring-blue-400 scale-105' : ''}
       `}
     >
-      {/* アクションボタン（ホバー時表示） */}
-      {isHovered && !isDragging && (
+      {/* 作成中インジケーター */}
+      {isPending && (
+        <div className="absolute top-2 left-2 flex items-center gap-1.5 z-10">
+          <div className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-xs text-blue-400">作成中...</span>
+        </div>
+      )}
+
+      {/* アクションボタン（ホバー時表示、作成中は非表示） */}
+      {isHovered && !isDragging && !isPending && (
         <div className="absolute top-2 right-2 flex gap-1 z-10">
           <button
             onClick={handleEdit}

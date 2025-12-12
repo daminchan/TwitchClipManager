@@ -8,6 +8,7 @@
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { LABELS } from '@/lib/constants';
 import type { CreateFolderInput, UpdateFolderInput, AddStreamerToFolderInput } from '@/types/database';
 
 export interface ActionResult {
@@ -24,7 +25,7 @@ export async function getFolders(): Promise<ActionResult> {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return { success: false, message: '認証が必要です', error: 'Unauthorized' };
+      return { success: false, message: LABELS.ERRORS.AUTH_REQUIRED, error: 'Unauthorized' };
     }
 
     const folders = await prisma.folder.findMany({
@@ -49,7 +50,7 @@ export async function createFolder(input: CreateFolderInput): Promise<ActionResu
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return { success: false, message: '認証が必要です', error: 'Unauthorized' };
+      return { success: false, message: LABELS.ERRORS.AUTH_REQUIRED, error: 'Unauthorized' };
     }
 
     // バリデーション
@@ -103,7 +104,7 @@ export async function updateFolder(folderId: string, input: UpdateFolderInput): 
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return { success: false, message: '認証が必要です', error: 'Unauthorized' };
+      return { success: false, message: LABELS.ERRORS.AUTH_REQUIRED, error: 'Unauthorized' };
     }
 
     // フォルダの所有権チェック
@@ -162,7 +163,7 @@ export async function deleteFolder(folderId: string): Promise<ActionResult> {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return { success: false, message: '認証が必要です', error: 'Unauthorized' };
+      return { success: false, message: LABELS.ERRORS.AUTH_REQUIRED, error: 'Unauthorized' };
     }
 
     // フォルダの所有権チェック
@@ -199,7 +200,7 @@ export async function addStreamerToFolder(folderId: string, input: AddStreamerTo
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return { success: false, message: '認証が必要です', error: 'Unauthorized' };
+      return { success: false, message: LABELS.ERRORS.AUTH_REQUIRED, error: 'Unauthorized' };
     }
 
     // フォルダの所有権チェック
@@ -226,7 +227,7 @@ export async function addStreamerToFolder(folderId: string, input: AddStreamerTo
     });
 
     if (existing) {
-      return { success: false, message: 'この配信者は既にフォルダに追加されています', error: 'Already exists' };
+      return { success: false, message: LABELS.ERRORS.STREAMER_ALREADY_IN_FOLDER, error: 'Already exists' };
     }
 
     const folderStreamer = await prisma.folderStreamer.create({
@@ -245,7 +246,7 @@ export async function addStreamerToFolder(folderId: string, input: AddStreamerTo
     return { success: true, message: 'フォルダに配信者を追加しました', data: folderStreamer };
   } catch (error) {
     console.error('Add streamer to folder error:', error);
-    return { success: false, message: 'フォルダへの配信者追加に失敗しました', error: 'Internal server error' };
+    return { success: false, message: LABELS.ERRORS.STREAMER_ADD_TO_FOLDER_FAILED, error: 'Internal server error' };
   }
 }
 
@@ -256,7 +257,7 @@ export async function removeStreamerFromFolder(folderId: string, streamerId: str
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return { success: false, message: '認証が必要です', error: 'Unauthorized' };
+      return { success: false, message: LABELS.ERRORS.AUTH_REQUIRED, error: 'Unauthorized' };
     }
 
     // フォルダの所有権チェック
@@ -287,7 +288,7 @@ export async function removeStreamerFromFolder(folderId: string, streamerId: str
     return { success: true, message: 'フォルダから配信者を削除しました' };
   } catch (error) {
     console.error('Remove streamer from folder error:', error);
-    return { success: false, message: 'フォルダからの配信者削除に失敗しました', error: 'Internal server error' };
+    return { success: false, message: LABELS.ERRORS.STREAMER_REMOVE_FROM_FOLDER_FAILED, error: 'Internal server error' };
   }
 }
 
@@ -298,7 +299,7 @@ export async function updateFoldersOrder(folderOrders: { id: string; order: numb
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return { success: false, message: '認証が必要です', error: 'Unauthorized' };
+      return { success: false, message: LABELS.ERRORS.AUTH_REQUIRED, error: 'Unauthorized' };
     }
 
     // トランザクションで一括更新

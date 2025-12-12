@@ -5,13 +5,11 @@
 
 'use client';
 
-import { useState, useTransition, useEffect } from 'react';
-import { X, Trash2, Users, UserPlus } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { X, Trash2, Users, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { removeStreamerFromFolder } from '@/actions/folders';
-import { ROUTES } from '@/lib/constants';
 import type { Folder, FolderStreamer } from '@/types/database';
 
 interface FolderStreamersModalProps {
@@ -22,9 +20,9 @@ interface FolderStreamersModalProps {
 }
 
 export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: FolderStreamersModalProps) {
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
   const [localStreamers, setLocalStreamers] = useState<FolderStreamer[]>([]);
+  const [pendingCount, setPendingCount] = useState(0);
+  const pendingCountRef = useRef(0); // 非同期処理中のカウント追跡用
 
   // folderが変更されたらローカルステートを更新（楽観的更新用）
   useEffect(() => {
@@ -33,38 +31,46 @@ export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: Fol
     }
   }, [folder]);
 
+  // モーダルが開いたときにpendingCountをリセット
+  useEffect(() => {
+    if (isOpen) {
+      setPendingCount(0);
+      pendingCountRef.current = 0;
+    }
+  }, [isOpen]);
+
   if (!isOpen || !folder) return null;
 
   const handleRemoveStreamer = async (streamerId: string) => {
-    setDeletingId(streamerId);
-
     // 楽観的更新：即座にUIから削除
+    const previousStreamers = [...localStreamers];
     const updatedStreamers = localStreamers.filter(s => s.streamerId !== streamerId);
     setLocalStreamers(updatedStreamers);
 
-    startTransition(async () => {
-      const result = await removeStreamerFromFolder(folder.id, streamerId);
+    // 同期中カウントを増加
+    setPendingCount(prev => prev + 1);
+    pendingCountRef.current += 1;
 
-      if (result.success) {
-        onSuccess();
-        // フォルダが空になったら閉じる
-        if (updatedStreamers.length === 0) {
-          onClose();
-        }
-      } else {
-        // エラー時は元に戻す
-        setLocalStreamers(folder.folderStreamers || []);
-        alert(result.message);
-      }
+    // バックグラウンドでAPI呼び出し
+    const result = await removeStreamerFromFolder(folder.id, streamerId);
 
-      setDeletingId(null);
-    });
+    // 同期中カウントを減少
+    pendingCountRef.current -= 1;
+    setPendingCount(pendingCountRef.current);
+
+    if (result.success) {
+      onSuccess();
+    } else {
+      // エラー時は元に戻す（ロールバック）
+      setLocalStreamers(previousStreamers);
+      alert(result.message);
+    }
   };
 
   const handleClose = () => {
-    if (!isPending) {
-      onClose();
-    }
+    // 同期中は閉じれない
+    if (pendingCount > 0) return;
+    onClose();
   };
 
   return (
@@ -81,15 +87,28 @@ export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: Fol
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-100">{folder.name}</h2>
-              <p className="text-sm text-gray-400">
-                {localStreamers.length}人の配信者
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-gray-400">
+                  {localStreamers.length}人の配信者
+                </p>
+                {/* 同期中インジケーター */}
+                {pendingCount > 0 && (
+                  <span className="flex items-center gap-1.5 text-xs text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded-full">
+                    <RefreshCw className="w-3 h-3 animate-spin" />
+                    同期中: {pendingCount}件
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           <button
             onClick={handleClose}
-            disabled={isPending}
-            className="p-2 hover:bg-[#1a1a1a] rounded-full transition-colors button-press-feedback"
+            disabled={pendingCount > 0}
+            className={`p-2 rounded-full transition-colors button-press-feedback ${
+              pendingCount > 0
+                ? 'opacity-50 cursor-not-allowed'
+                : 'hover:bg-[#1a1a1a]'
+            }`}
             aria-label="閉じる"
           >
             <X className="w-5 h-5 text-gray-400" />
@@ -146,15 +165,10 @@ export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: Fol
                     {/* 削除ボタン */}
                     <button
                       onClick={() => handleRemoveStreamer(streamer.streamerId)}
-                      disabled={deletingId === streamer.streamerId}
                       className="p-2 hover:bg-red-900/30 rounded transition-colors button-press-feedback opacity-0 group-hover:opacity-100"
                       aria-label="フォルダから削除"
                     >
-                      {deletingId === streamer.streamerId ? (
-                        <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin"></div>
-                      ) : (
-                        <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-400" />
-                      )}
+                      <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-400" />
                     </button>
                   </div>
                 </div>
@@ -164,22 +178,25 @@ export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: Fol
         </div>
 
         {/* フッター */}
-        <div className="p-6 border-t border-[#2a2a2a] space-y-3">
-          <Link href={ROUTES.FAVORITES} className="block" onClick={handleClose}>
-            <Button
-              className="w-full button-press-feedback bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
-            >
-              <UserPlus className="w-4 h-4 mr-2" />
-              配信者を追加
-            </Button>
-          </Link>
+        <div className="p-6 border-t border-[#2a2a2a]">
           <Button
             onClick={handleClose}
-            disabled={isPending}
-            className="w-full button-press-feedback"
+            disabled={pendingCount > 0}
+            className={`w-full button-press-feedback ${
+              pendingCount > 0
+                ? 'opacity-50 cursor-not-allowed'
+                : ''
+            }`}
             variant="outline"
           >
-            閉じる
+            {pendingCount > 0 ? (
+              <span className="flex items-center gap-2">
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                同期完了までお待ちください...
+              </span>
+            ) : (
+              '閉じる'
+            )}
           </Button>
         </div>
       </div>

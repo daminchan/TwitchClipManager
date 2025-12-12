@@ -132,6 +132,38 @@ export const LABELS = {
     ADDING_FAVORITES: 'お気に入りに追加中...',
   },
 
+  // エラーメッセージ
+  ERRORS: {
+    // 認証
+    AUTH_REQUIRED: '認証が必要です',
+    LOGIN_FAILED: 'メールアドレスまたはパスワードが正しくありません',
+    REQUIRED_EMAIL_PASSWORD: 'メールアドレスとパスワードを入力してください',
+    PASSWORD_TOO_SHORT: 'パスワードは6文字以上で入力してください',
+    NAME_TOO_LONG: '名前は50文字以内で入力してください',
+    SIGNUP_FAILED: '登録に失敗しました',
+    GOOGLE_LOGIN_FAILED: 'Googleログインに失敗しました',
+    // フォルダ
+    FOLDER_NOT_FOUND: 'フォルダが見つかりません',
+    FOLDER_CREATE_FAILED: 'フォルダの作成に失敗しました',
+    FOLDER_UPDATE_FAILED: 'フォルダの更新に失敗しました',
+    FOLDER_DELETE_FAILED: 'フォルダの削除に失敗しました',
+    // フォルダ内配信者
+    STREAMER_ALREADY_IN_FOLDER: 'この配信者は既にこのフォルダに追加されています',
+    STREAMER_ADD_TO_FOLDER_FAILED: 'フォルダへの追加に失敗しました。しばらくしてから再度お試しください',
+    STREAMER_REMOVE_FROM_FOLDER_FAILED: 'フォルダからの削除に失敗しました',
+    // お気に入り
+    FAVORITE_ALREADY_EXISTS: 'この配信者は既にお気に入りに追加されています',
+    FAVORITE_ADD_FAILED: 'お気に入りへの追加に失敗しました',
+    FAVORITE_REMOVE_FAILED: 'お気に入りからの削除に失敗しました',
+    // ゲーム・配信者取得
+    GAME_FETCH_FAILED: 'ゲーム一覧の取得に失敗しました',
+    STREAMER_FETCH_FAILED: 'おすすめ配信者の取得に失敗しました',
+    // 汎用
+    UNKNOWN_ERROR: '予期しないエラーが発生しました',
+    NETWORK_ERROR: '通信エラーが発生しました。接続を確認してください',
+    PROCESSING: '処理中です。しばらくお待ちください',
+  },
+
   // ソートオプション
   SORT: {
     VIEWS: '再生数',
@@ -205,25 +237,6 @@ export const LABELS = {
     STEPS: {
       GAME_SELECTION: 'ゲーム選択',
       STREAMER_SELECTION: '配信者選択',
-    },
-  },
-
-  // エラーメッセージ
-  ERRORS: {
-    AUTH: {
-      REQUIRED_EMAIL_PASSWORD: 'メールアドレスとパスワードを入力してください',
-      PASSWORD_TOO_SHORT: 'パスワードは{{min}}文字以上で入力してください',
-      NAME_TOO_LONG: '名前は{{max}}文字以内で入力してください',
-      SIGNUP_FAILED: '登録に失敗しました',
-      LOGIN_FAILED: 'ログインに失敗しました',
-      GOOGLE_LOGIN_FAILED: 'Googleログインに失敗しました',
-      GENERAL_ERROR: 'エラーが発生しました',
-    },
-    GAME: {
-      FETCH_FAILED: 'ゲーム一覧の取得に失敗しました',
-    },
-    STREAMER: {
-      FETCH_FAILED: 'おすすめ配信者の取得に失敗しました',
     },
   },
 } as const;
