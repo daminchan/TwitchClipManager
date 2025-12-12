@@ -43,6 +43,7 @@ export function useFolderContext() {
 interface DragContextType {
   isDragging: boolean;
   activeStreamer: FavoriteStreamer | null;
+  pendingAdditions: Set<string>; // "folderId:streamerId" 形式で追加中の配信者を追跡
 }
 
 const DragContext = createContext<DragContextType | undefined>(undefined);
@@ -73,6 +74,7 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
   // ドラッグ&ドロップ状態
   const [isDragging, setIsDragging] = useState(false);
   const [activeStreamer, setActiveStreamer] = useState<FavoriteStreamer | null>(null);
+  const [pendingAdditions, setPendingAdditions] = useState<Set<string>>(new Set());
 
   // お気に入り配信者のIDリストを抽出（キャッシュを監視）
   // FavoriteListコンポーネントがqueryFnを定義・実行するので、ここでは同じqueryFnを使用
@@ -141,6 +143,32 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
     if (over && over.data.current?.type === 'folder') {
       const streamer = active.data.current?.streamer as FavoriteStreamer;
       const folderId = over.id as string;
+      const pendingKey = `${folderId}:${streamer.streamerId}`;
+
+      // 作成中フォルダには追加不可
+      if (folderId.startsWith('temp-')) {
+        showToast('フォルダ作成中は追加できません', 'error');
+        return;
+      }
+
+      // 追加中かチェック
+      if (pendingAdditions.has(pendingKey)) {
+        showToast('この配信者は追加処理中です', 'error');
+        return;
+      }
+
+      // 既に存在するかチェック（キャッシュから）
+      const foldersData = queryClient.getQueryData(['folders']) as any;
+      if (foldersData?.data) {
+        const targetFolder = foldersData.data.find((f: any) => f.id === folderId);
+        if (targetFolder?.folderStreamers?.some((fs: any) => fs.streamerId === streamer.streamerId)) {
+          showToast('この配信者は既にこのフォルダに追加されています', 'error');
+          return;
+        }
+      }
+
+      // 追加中としてマーク
+      setPendingAdditions(prev => new Set(prev).add(pendingKey));
 
       // 楽観的UI: 即座にキャッシュを更新
       queryClient.setQueryData(['folders'], (oldData: any) => {
@@ -193,6 +221,13 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
         // エラー時はロールバック
         await queryClient.invalidateQueries({ queryKey: ['folders'] });
         showToast('フォルダへの追加に失敗しました', 'error');
+      } finally {
+        // 追加中フラグを解除
+        setPendingAdditions(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(pendingKey);
+          return newSet;
+        });
       }
     }
   };
@@ -200,7 +235,7 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <FolderContext.Provider value={{ selectedFolderId, setSelectedFolderId }}>
-        <DragContext.Provider value={{ isDragging, activeStreamer }}>
+        <DragContext.Provider value={{ isDragging, activeStreamer, pendingAdditions }}>
           <div className="min-h-screen bg-[#0f0f0f] flex flex-col">
             {/* 固定ヘッダー */}
             <Header onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />

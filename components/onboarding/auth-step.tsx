@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { LABELS, VALIDATION } from '@/lib/constants';
 
 const AUTH = LABELS.ONBOARDING.AUTH;
-const ERRORS = LABELS.ERRORS.AUTH;
+const ERRORS = LABELS.ERRORS;
 
 interface AuthStepProps {
   onSuccess: () => void;
@@ -43,17 +43,13 @@ export function AuthStep({ onSuccess }: AuthStepProps) {
       }
 
       if (password.length < VALIDATION.PASSWORD_MIN_LENGTH) {
-        setError(
-          ERRORS.PASSWORD_TOO_SHORT.replace('{{min}}', VALIDATION.PASSWORD_MIN_LENGTH.toString())
-        );
+        setError(ERRORS.PASSWORD_TOO_SHORT);
         setIsLoading(false);
         return;
       }
 
       if (isSignUp && name.trim().length > VALIDATION.NAME_MAX_LENGTH) {
-        setError(
-          ERRORS.NAME_TOO_LONG.replace('{{max}}', VALIDATION.NAME_MAX_LENGTH.toString())
-        );
+        setError(ERRORS.NAME_TOO_LONG);
         setIsLoading(false);
         return;
       }
@@ -77,7 +73,7 @@ export function AuthStep({ onSuccess }: AuthStepProps) {
       }
     } catch (err) {
       console.error('Auth error:', err);
-      setError(ERRORS.GENERAL_ERROR);
+      setError(ERRORS.UNKNOWN_ERROR);
       setIsLoading(false);
     }
   };

@@ -5,7 +5,8 @@
 
 'use client';
 
-import { useState, useTransition, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,10 +22,10 @@ interface FolderEditModalProps {
 }
 
 export function FolderEditModal({ isOpen, folder, onClose, onSuccess }: FolderEditModalProps) {
+  const queryClient = useQueryClient();
   const [name, setName] = useState('');
   const [selectedColor, setSelectedColor] = useState<string>(FOLDER_COLORS[0].value);
   const [error, setError] = useState('');
-  const [isPending, startTransition] = useTransition();
 
   // フォルダ情報をフォームに反映
   useEffect(() => {
@@ -45,26 +46,43 @@ export function FolderEditModal({ isOpen, folder, onClose, onSuccess }: FolderEd
       return;
     }
 
-    startTransition(async () => {
-      const result = await updateFolder(folder.id, {
-        name: name.trim(),
-        color: selectedColor,
-      });
+    const updatedName = name.trim();
+    const updatedColor = selectedColor;
 
-      if (result.success) {
-        onSuccess();
-        onClose();
-      } else {
-        setError(result.message);
-      }
+    // 楽観的UI: 即座にキャッシュを更新
+    queryClient.setQueryData(['folders'], (oldData: any) => {
+      if (!oldData?.data) return oldData;
+      return {
+        ...oldData,
+        data: oldData.data.map((f: Folder) =>
+          f.id === folder.id
+            ? { ...f, name: updatedName, color: updatedColor }
+            : f
+        ),
+      };
     });
+
+    // モーダルを即座に閉じる
+    onClose();
+
+    // バックグラウンドでサーバーアクション実行
+    const result = await updateFolder(folder.id, {
+      name: updatedName,
+      color: updatedColor,
+    });
+
+    if (result.success) {
+      onSuccess();
+    } else {
+      // エラー時はロールバック
+      await queryClient.invalidateQueries({ queryKey: ['folders'] });
+      setError(result.message);
+    }
   };
 
   const handleClose = () => {
-    if (!isPending) {
-      setError('');
-      onClose();
-    }
+    setError('');
+    onClose();
   };
 
   return (
@@ -75,7 +93,6 @@ export function FolderEditModal({ isOpen, folder, onClose, onSuccess }: FolderEd
           <h2 className="text-xl font-bold text-gray-100">フォルダを編集</h2>
           <button
             onClick={handleClose}
-            disabled={isPending}
             className="p-2 hover:bg-[#1a1a1a] rounded-full transition-colors button-press-feedback"
             aria-label="閉じる"
           >
@@ -96,7 +113,6 @@ export function FolderEditModal({ isOpen, folder, onClose, onSuccess }: FolderEd
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="例: ぶいすぽ"
-              disabled={isPending}
               className="bg-[#1a1a1a] border-gray-700 text-gray-100 placeholder-gray-500"
               maxLength={50}
             />
@@ -116,7 +132,6 @@ export function FolderEditModal({ isOpen, folder, onClose, onSuccess }: FolderEd
                   key={color.value}
                   type="button"
                   onClick={() => setSelectedColor(color.value)}
-                  disabled={isPending}
                   className={`
                     relative h-12 rounded-lg transition-all duration-200 button-press-feedback
                     ${selectedColor === color.value
@@ -145,24 +160,16 @@ export function FolderEditModal({ isOpen, folder, onClose, onSuccess }: FolderEd
               type="button"
               variant="outline"
               onClick={handleClose}
-              disabled={isPending}
               className="flex-1 border-gray-700 text-gray-300 hover:bg-[#1a1a1a] button-press-feedback"
             >
               キャンセル
             </Button>
             <Button
               type="submit"
-              disabled={isPending || !name.trim()}
+              disabled={!name.trim()}
               className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white button-press-feedback"
             >
-              {isPending ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  更新中...
-                </div>
-              ) : (
-                '更新'
-              )}
+              更新
             </Button>
           </div>
         </form>

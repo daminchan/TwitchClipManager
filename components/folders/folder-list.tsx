@@ -82,16 +82,20 @@ interface FolderItemProps {
 function FolderItem({ folder, isDragging, isSelected, onFolderClick, onFolderEdit, onFolderDelete, onViewStreamers }: FolderItemProps) {
   const [showMenu, setShowMenu] = useState(false);
 
+  // 作成中フォルダ（temp-で始まるID）はD&D不可
+  const isPending = folder.id.startsWith('temp-');
+
   const { setNodeRef, isOver } = useDroppable({
     id: folder.id,
     data: {
       type: 'folder',
       folder,
     },
+    disabled: isPending, // 作成中はドロップ不可
   });
 
   const handleClick = () => {
-    if (!isDragging && onFolderClick) {
+    if (!isDragging && !isPending && onFolderClick) {
       onFolderClick(folder.id);
     }
   };
@@ -126,37 +130,45 @@ function FolderItem({ folder, isDragging, isSelected, onFolderClick, onFolderEdi
       onMouseEnter={() => setShowMenu(true)}
       onMouseLeave={() => setShowMenu(false)}
       className={`
-        group relative flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all duration-200
-        ${isSelected ? 'bg-purple-600/20 ring-1 ring-purple-500' : ''}
-        ${isDragging
+        group relative flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200
+        ${isPending ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+        ${isSelected && !isPending ? 'bg-purple-600/20 ring-1 ring-purple-500' : ''}
+        ${isDragging && !isPending
           ? 'ring-2 ring-blue-500 ring-opacity-50 animate-pulse'
-          : 'hover:bg-[#2a2a2a]'
+          : !isPending ? 'hover:bg-[#2a2a2a]' : ''
         }
-        ${isOver ? 'bg-[#2a2a2a] ring-2 ring-blue-400' : ''}
+        ${isOver && !isPending ? 'bg-[#2a2a2a] ring-2 ring-blue-400' : ''}
       `}
     >
-      <FolderIcon
-        className="w-4 h-4 flex-shrink-0"
-        style={{ color: folder.color }}
-      />
+      {/* 作成中インジケーター */}
+      {isPending ? (
+        <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+      ) : (
+        <FolderIcon
+          className="w-4 h-4 flex-shrink-0"
+          style={{ color: folder.color }}
+        />
+      )}
       <span className="text-sm text-gray-300 truncate flex-1">
         {folder.name}
       </span>
 
-      {/* 配信者数（クリック可能、ホバー時アイコンのみ） */}
-      <button
-        onClick={handleViewStreamers}
-        className="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-400 px-2 py-1 rounded hover:bg-blue-500/10 transition-all button-press-feedback"
-        aria-label="配信者を表示"
-      >
-        <Users className="w-3 h-3 flex-shrink-0" />
-        <span className={`${showMenu ? 'hidden' : 'block'}`}>
-          {folder.folderStreamers?.length || 0}
-        </span>
-      </button>
+      {/* 配信者数（クリック可能、ホバー時アイコンのみ、作成中は非表示） */}
+      {!isPending && (
+        <button
+          onClick={handleViewStreamers}
+          className="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-400 px-2 py-1 rounded hover:bg-blue-500/10 transition-all button-press-feedback"
+          aria-label="配信者を表示"
+        >
+          <Users className="w-3 h-3 flex-shrink-0" />
+          <span className={`${showMenu ? 'hidden' : 'block'}`}>
+            {folder.folderStreamers?.length || 0}
+          </span>
+        </button>
+      )}
 
-      {/* アクションボタン（ホバー時表示） */}
-      {showMenu && !isDragging && (
+      {/* アクションボタン（ホバー時表示、作成中は非表示） */}
+      {showMenu && !isDragging && !isPending && (
         <div className="flex items-center gap-1">
           <button
             onClick={handleEdit}
