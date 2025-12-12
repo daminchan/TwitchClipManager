@@ -62,7 +62,7 @@ export function GameBasedAddModal({ isOpen, onClose, onAddStreamers }: GameBased
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4">
       <div
         className="relative w-full max-w-5xl max-h-[90vh] bg-[#0f0f0f] rounded-lg overflow-hidden shadow-2xl border border-[#2a2a2a]"
         onClick={(e) => e.stopPropagation()}
