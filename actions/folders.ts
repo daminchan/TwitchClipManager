@@ -86,7 +86,7 @@ export async function createFolder(input: CreateFolderInput): Promise<ActionResu
       },
     });
 
-    revalidatePath('/dashboard');
+    revalidatePath('/');
     revalidatePath('/favorites');
 
     return { success: true, message: 'フォルダを作成しました', data: folder };
@@ -145,7 +145,7 @@ export async function updateFolder(folderId: string, input: UpdateFolderInput): 
       },
     });
 
-    revalidatePath('/dashboard');
+    revalidatePath('/');
     revalidatePath('/favorites');
 
     return { success: true, message: 'フォルダを更新しました', data: updatedFolder };
@@ -182,7 +182,7 @@ export async function deleteFolder(folderId: string): Promise<ActionResult> {
       where: { id: folderId },
     });
 
-    revalidatePath('/dashboard');
+    revalidatePath('/');
     revalidatePath('/favorites');
 
     return { success: true, message: 'フォルダを削除しました' };
@@ -239,7 +239,7 @@ export async function addStreamerToFolder(folderId: string, input: AddStreamerTo
       },
     });
 
-    revalidatePath('/dashboard');
+    revalidatePath('/');
     revalidatePath('/favorites');
 
     return { success: true, message: 'フォルダに配信者を追加しました', data: folderStreamer };
@@ -281,7 +281,7 @@ export async function removeStreamerFromFolder(folderId: string, streamerId: str
       },
     });
 
-    revalidatePath('/dashboard');
+    revalidatePath('/');
     revalidatePath('/favorites');
 
     return { success: true, message: 'フォルダから配信者を削除しました' };
@@ -316,7 +316,7 @@ export async function updateFoldersOrder(folderOrders: { id: string; order: numb
       )
     );
 
-    revalidatePath('/dashboard');
+    revalidatePath('/');
     revalidatePath('/favorites');
 
     return { success: true, message: 'フォルダの並び順を更新しました' };

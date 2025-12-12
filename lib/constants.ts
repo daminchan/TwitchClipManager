@@ -44,7 +44,7 @@ export const APP_CONFIG = {
 export const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
-  DASHBOARD: '/dashboard',
+  DASHBOARD: '/', // レガシー: HOMEと同じ（/dashboardは/にリダイレクトされる）
   FAVORITES: '/favorites',
   FAVORITES_CLIPS: '/favorites-clips',
   SETTINGS: '/settings',

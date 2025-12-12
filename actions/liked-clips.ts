@@ -110,7 +110,7 @@ export async function addLikedClip(clipData: CreateLikedClipInput): Promise<Acti
     });
 
     // キャッシュを再検証
-    revalidatePath('/dashboard');
+    revalidatePath('/');
     revalidatePath('/favorites-clips');
 
     return {
@@ -180,7 +180,7 @@ export async function removeLikedClip(clipId: string): Promise<ActionResult> {
     });
 
     // キャッシュを再検証
-    revalidatePath('/dashboard');
+    revalidatePath('/');
     revalidatePath('/favorites-clips');
 
     return {
