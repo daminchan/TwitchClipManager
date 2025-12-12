@@ -18,8 +18,6 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q');
 
-    console.log('[Game Search] Query:', query);
-
     if (!query || query.trim().length === 0) {
       return NextResponse.json(
         { error: '検索クエリが必要です', code: 'MISSING_QUERY' },
@@ -29,15 +27,9 @@ export async function GET(request: Request) {
 
     const games = await searchGames(query.trim(), 20);
 
-    console.log('[Game Search] Results count:', games?.length ?? 0);
-
     return NextResponse.json({ data: games });
   } catch (error) {
-    console.error('[Game Search] Error:', error);
-
-    if (error instanceof Error) {
-      console.error('[Game Search] Error details:', error.message, error.stack);
-    }
+    console.error('Search games error:', error);
 
     return NextResponse.json(
       {
