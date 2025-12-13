@@ -316,6 +316,16 @@ export const CACHE_TIME = {
 } as const;
 
 /**
+ * ページネーション設定
+ */
+export const PAGINATION = {
+  // クリップ一覧（ダッシュボード）
+  CLIPS_PER_PAGE: 20,
+  // お気に入りクリップ
+  LIKED_CLIPS_PER_PAGE: 20,
+} as const;
+
+/**
  * フォルダカラーパレット
  */
 export const FOLDER_COLORS = [
