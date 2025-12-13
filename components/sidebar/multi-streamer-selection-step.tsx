@@ -69,6 +69,28 @@ export function MultiStreamerSelectionStep({
   // ゲーム名をカンマ区切りで表示
   const gameNames = selectedGames.map(g => g.name).join('、');
 
+  // 追加中はローディングオーバーレイを表示
+  if (isAdding) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <div className="relative mb-6">
+          {/* 回転するリング */}
+          <div className="w-20 h-20 border-4 border-purple-600/30 rounded-full" />
+          <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-purple-600 rounded-full animate-spin" />
+        </div>
+        <h2 className="text-xl font-bold text-gray-100 mb-2">
+          お気に入りに追加中...
+        </h2>
+        <p className="text-sm text-gray-400 text-center">
+          {selectedStreamerIds.size}人の配信者を追加しています
+        </p>
+        <p className="text-xs text-gray-500 mt-4">
+          しばらくお待ちください
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full">
       {/* ヘッダー */}

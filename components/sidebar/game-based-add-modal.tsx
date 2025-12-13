@@ -67,14 +67,16 @@ export function GameBasedAddModal({ isOpen, onClose, onAddStreamers }: GameBased
         className="relative w-full max-w-5xl max-h-[90vh] bg-[#0f0f0f] rounded-lg overflow-hidden shadow-2xl border border-[#2a2a2a]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 閉じるボタン */}
-        <button
-          onClick={handleClose}
-          className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
-          aria-label="閉じる"
-        >
-          <X className="w-6 h-6" />
-        </button>
+        {/* 閉じるボタン（追加中は非表示） */}
+        {!isAdding && (
+          <button
+            onClick={handleClose}
+            className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
+            aria-label="閉じる"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        )}
 
         {/* コンテンツ */}
         <div className="p-8 h-[80vh] overflow-y-auto">
