@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Search } from 'lucide-react';
 
@@ -21,7 +21,7 @@ import { useFolderContext } from '@/components/layout/authenticated-layout';
 import { getFolders } from '@/actions/folders';
 
 import { useDashboardClips } from '@/hooks/use-dashboard-clips';
-import { LABELS } from '@/lib/constants';
+import { LABELS, PAGINATION } from '@/lib/constants';
 
 import type { Folder } from '@/types/database';
 
@@ -81,12 +81,38 @@ export function DashboardContent({ userId, userEmail, isAuthenticated, skipAuth 
   }, [selectedFolderId, folders]);
 
   // フォルダフィルタリング適用
-  const displayClips = useMemo(() => {
+  const allDisplayClips = useMemo(() => {
     if (!selectedFolderStreamerIds) return filteredClips;
     return filteredClips.filter(clip =>
       selectedFolderStreamerIds.includes(clip.broadcaster_id)
     );
   }, [filteredClips, selectedFolderStreamerIds]);
+
+  // 無限スクロール用ページネーション
+  const [displayedCount, setDisplayedCount] = useState<number>(PAGINATION.CLIPS_PER_PAGE);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // フィルター変更時にページネーションをリセット
+  useEffect(() => {
+    setDisplayedCount(PAGINATION.CLIPS_PER_PAGE);
+  }, [searchQuery, sortType, selectedFolderId]);
+
+  // 表示するクリップ（ページネーション適用）
+  const displayClips = useMemo(() => {
+    return allDisplayClips.slice(0, displayedCount);
+  }, [allDisplayClips, displayedCount]);
+
+  // もっと読み込む
+  const handleLoadMore = useCallback(() => {
+    setIsLoadingMore(true);
+    // 少し遅延を入れてスムーズな体験に
+    setTimeout(() => {
+      setDisplayedCount(prev => prev + PAGINATION.CLIPS_PER_PAGE);
+      setIsLoadingMore(false);
+    }, 300);
+  }, []);
+
+  const hasMore = displayedCount < allDisplayClips.length;
 
   // いいね/解除（楽観的UI、即座に実行）
   const handleLikeToggle = (clipId: string, isCurrentlyLiked: boolean) => {
@@ -114,19 +140,22 @@ export function DashboardContent({ userId, userEmail, isAuthenticated, skipAuth 
         <ClipSortTabs
           sortType={sortType}
           onSortChange={setSortType}
-          clipCount={filteredClips.length}
+          clipCount={allDisplayClips.length}
           folders={folders}
           selectedFolderId={selectedFolderId}
           onFolderClick={setSelectedFolderId}
         />
       </div>
 
-      {/* クリップグリッド */}
+      {/* クリップグリッド（無限スクロール対応） */}
       <ClipGrid
         clips={displayClips}
         isLoading={isLoadingClips}
         likedClipIds={likedClipIds}
         onLikeToggle={handleLikeToggle}
+        hasMore={hasMore}
+        onLoadMore={handleLoadMore}
+        isLoadingMore={isLoadingMore}
       />
 
       {/* トースト通知 */}

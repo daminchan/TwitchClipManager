@@ -3,10 +3,12 @@
 // - セクション4.6: コンポーネント構造
 // - セクション8.2: Props型定義
 // - セクション5.3: レスポンシブデザイン（モバイルファースト）
+// - 無限スクロール対応（Intersection Observer使用）
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Loader2 } from 'lucide-react';
 import { ClipCard } from './clip-card';
 import type { TwitchClip } from '@/types/twitch';
 
@@ -15,10 +17,23 @@ interface ClipGridProps {
   isLoading?: boolean;
   likedClipIds?: Set<string>;
   onLikeToggle?: (clipId: string, isCurrentlyLiked: boolean) => void;
+  // 無限スクロール用
+  hasMore?: boolean;
+  onLoadMore?: () => void;
+  isLoadingMore?: boolean;
 }
 
-export function ClipGrid({ clips, isLoading, likedClipIds, onLikeToggle }: ClipGridProps) {
+export function ClipGrid({
+  clips,
+  isLoading,
+  likedClipIds,
+  onLikeToggle,
+  hasMore = false,
+  onLoadMore,
+  isLoadingMore = false,
+}: ClipGridProps) {
   const [showCards, setShowCards] = useState(false);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // マウント後、カード表示アニメーション開始
   useEffect(() => {
@@ -26,12 +41,43 @@ export function ClipGrid({ clips, isLoading, likedClipIds, onLikeToggle }: ClipG
     return () => clearTimeout(timer);
   }, []);
 
-  // クリップが更新されたらアニメーションをリセット
+  // クリップが更新されたらアニメーションをリセット（初回ロード時のみ）
+  const prevClipsLengthRef = useRef(clips.length);
   useEffect(() => {
-    setShowCards(false);
-    const timer = setTimeout(() => setShowCards(true), 50);
-    return () => clearTimeout(timer);
-  }, [clips]);
+    // クリップが増えた場合（無限スクロール）はアニメーションリセットしない
+    if (prevClipsLengthRef.current === 0 && clips.length > 0) {
+      setShowCards(false);
+      const timer = setTimeout(() => setShowCards(true), 50);
+      return () => clearTimeout(timer);
+    }
+    prevClipsLengthRef.current = clips.length;
+  }, [clips.length]);
+
+  // Intersection Observer で無限スクロール
+  const handleObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [entry] = entries;
+      if (entry.isIntersecting && hasMore && !isLoadingMore && onLoadMore) {
+        onLoadMore();
+      }
+    },
+    [hasMore, isLoadingMore, onLoadMore]
+  );
+
+  useEffect(() => {
+    const element = loadMoreRef.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(handleObserver, {
+      root: null,
+      rootMargin: '100px', // 100px手前で発火
+      threshold: 0,
+    });
+
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, [handleObserver]);
 
   if (isLoading) {
     return (
@@ -56,19 +102,38 @@ export function ClipGrid({ clips, isLoading, likedClipIds, onLikeToggle }: ClipG
   }
 
   return (
-    <div className="grid-clips">
-      {clips.map((clip) => (
+    <div>
+      <div className="grid-clips">
+        {clips.map((clip) => (
+          <div
+            key={clip.id}
+            className={showCards ? 'animate-card' : 'opacity-0'}
+          >
+            <ClipCard
+              clip={clip}
+              isLiked={likedClipIds?.has(clip.id)}
+              onLikeToggle={onLikeToggle}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* 無限スクロール: ローディング & トリガー */}
+      {hasMore && (
         <div
-          key={clip.id}
-          className={showCards ? 'animate-card' : 'opacity-0'}
+          ref={loadMoreRef}
+          className="flex justify-center py-8"
         >
-          <ClipCard
-            clip={clip}
-            isLiked={likedClipIds?.has(clip.id)}
-            onLikeToggle={onLikeToggle}
-          />
+          {isLoadingMore ? (
+            <div className="flex items-center gap-2 text-gray-400">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span>読み込み中...</span>
+            </div>
+          ) : (
+            <div className="h-8" /> // トリガー用の空要素
+          )}
         </div>
-      ))}
+      )}
     </div>
   );
 }

@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useMemo, useTransition } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 
 import { PlaylistCard } from '@/components/clips/playlist-card';
@@ -15,7 +15,7 @@ import { ClipList } from '@/components/clips/clip-list';
 import { ClipPlayerModal } from '@/components/clips/clip-player-modal';
 import { Toast } from '@/components/ui/toast';
 import { useToast } from '@/hooks/use-toast';
-import { CACHE_TIME } from '@/lib/constants';
+import { CACHE_TIME, PAGINATION } from '@/lib/constants';
 
 import type { LikedClip } from '@/types/database';
 import type { TwitchClip } from '@/types/twitch';
@@ -31,6 +31,10 @@ export function FavoritesClipsContent() {
 
   // モバイル用モーダル制御
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // 無限スクロール用ページネーション
+  const [displayedCount, setDisplayedCount] = useState<number>(PAGINATION.LIKED_CLIPS_PER_PAGE);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // React Queryでいいねクリップを取得（キャッシュ有効）
   const { data: likedClipsData, isLoading } = useQuery({
@@ -73,6 +77,22 @@ export function FavoritesClipsContent() {
     if (!likedClipsData) return new Set<string>();
     return new Set(likedClipsData.map((clip: LikedClip) => clip.clipId));
   }, [likedClipsData]);
+
+  // 表示するクリップ（ページネーション適用）
+  const displayedClips = useMemo(() => {
+    return likedClips.slice(0, displayedCount);
+  }, [likedClips, displayedCount]);
+
+  // もっと読み込む
+  const handleLoadMore = useCallback(() => {
+    setIsLoadingMore(true);
+    setTimeout(() => {
+      setDisplayedCount(prev => prev + PAGINATION.LIKED_CLIPS_PER_PAGE);
+      setIsLoadingMore(false);
+    }, 300);
+  }, []);
+
+  const hasMore = displayedCount < likedClips.length;
 
   // いいね削除のミューテーション
   // フロー: 削除中バッジ表示 → DB削除 → キャッシュ更新で消える
@@ -158,15 +178,18 @@ export function FavoritesClipsContent() {
           />
         </div>
 
-        {/* 右側：クリップリスト */}
+        {/* 右側：クリップリスト（無限スクロール対応） */}
         <div className="flex-1">
           <ClipList
-            clips={likedClips}
+            clips={displayedClips}
             onDelete={handleDelete}
             onSelectClip={handleSelectClip}
             deletingClipId={deletingClipId}
             currentClipId={currentClip?.id}
             isLoading={isLoading}
+            hasMore={hasMore}
+            onLoadMore={handleLoadMore}
+            isLoadingMore={isLoadingMore}
           />
         </div>
       </div>
@@ -181,12 +204,15 @@ export function FavoritesClipsContent() {
         </div>
 
         <ClipList
-          clips={likedClips}
+          clips={displayedClips}
           onDelete={handleDelete}
           onSelectClip={handleSelectClipMobile}
           deletingClipId={deletingClipId}
           currentClipId={currentClip?.id}
           isLoading={isLoading}
+          hasMore={hasMore}
+          onLoadMore={handleLoadMore}
+          isLoadingMore={isLoadingMore}
         />
       </div>
 
