@@ -8,6 +8,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -170,8 +171,8 @@ export function ClipCard({ clip, isLiked = false, onLikeToggle }: ClipCardProps)
 
       </Card>
 
-      {/* モーダル: サイト内でクリップを再生 */}
-      {isModalOpen && (
+      {/* モーダル: サイト内でクリップを再生 (React Portal使用でtransform問題を回避) */}
+      {isModalOpen && isMounted && createPortal(
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
           onClick={closeModal}
@@ -261,7 +262,8 @@ export function ClipCard({ clip, isLiked = false, onLikeToggle }: ClipCardProps)
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
