@@ -75,13 +75,14 @@ export function FavoritesClipsContent() {
   }, [likedClipsData]);
 
   // いいね削除のミューテーション
+  // フロー: 削除中バッジ表示 → DB削除 → キャッシュ更新で消える
   const deleteMutation = useMutation({
     mutationFn: async (clipId: string) => {
       return await removeLikedClip(clipId);
     },
     onSuccess: (result) => {
       if (result.success) {
-        // キャッシュを無効化して最新データを取得
+        // DB削除成功後にキャッシュを更新（ここでリストから消える）
         queryClient.invalidateQueries({ queryKey: ['clips', 'liked'] });
         showToast(result.message, 'info');
       } else {
@@ -95,9 +96,13 @@ export function FavoritesClipsContent() {
   });
 
   const handleDelete = async (clipId: string) => {
+    // 即座に「削除中」状態を表示
     setDeletingClipId(clipId);
-    await deleteMutation.mutateAsync(clipId);
-    setDeletingClipId(undefined);
+    try {
+      await deleteMutation.mutateAsync(clipId);
+    } finally {
+      setDeletingClipId(undefined);
+    }
   };
 
   // 現在のクリップを取得

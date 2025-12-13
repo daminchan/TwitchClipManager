@@ -7,8 +7,9 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { MoreVertical, Trash2 } from 'lucide-react';
+import { MoreVertical, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -62,12 +63,14 @@ export function ClipListItem({ clip, onDelete, onSelectClip, isDeleting, isSelec
 
   return (
     <div
-      className={`flex gap-3 lg:gap-4 p-2 rounded-lg transition-colors group cursor-pointer ${
-        isSelected
-          ? 'bg-gray-800 border-2 border-purple-600'
-          : 'hover:bg-gray-900 border-2 border-transparent'
+      className={`flex gap-3 lg:gap-4 p-2 rounded-lg transition-all duration-300 group ${
+        isDeleting
+          ? 'opacity-50 pointer-events-none bg-gray-900/50'
+          : isSelected
+            ? 'bg-gray-800 border-2 border-purple-600 cursor-pointer'
+            : 'hover:bg-gray-900 border-2 border-transparent cursor-pointer'
       }`}
-      onClick={handleClick}
+      onClick={isDeleting ? undefined : handleClick}
     >
       {/* サムネイル（左側） - モバイルで小さく、PCで大きく */}
       <div className="relative flex-shrink-0">
@@ -76,26 +79,49 @@ export function ClipListItem({ clip, onDelete, onSelectClip, isDeleting, isSelec
           alt={clip.title}
           width={246}
           height={138}
-          className="rounded-lg object-cover w-[160px] h-[90px] lg:w-[246px] lg:h-[138px]"
+          className={`rounded-lg object-cover w-[160px] h-[90px] lg:w-[246px] lg:h-[138px] transition-all duration-300 ${
+            isDeleting ? 'grayscale' : ''
+          }`}
         />
         <div className="absolute bottom-1 right-1 bg-black bg-opacity-80 text-white text-xs px-1 rounded">
           {Math.floor(clip.duration)}s
         </div>
+        {/* 削除中オーバーレイ */}
+        {isDeleting && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-lg">
+            <Loader2 className="w-6 h-6 text-white animate-spin" />
+          </div>
+        )}
       </div>
 
       {/* 情報（右側） */}
       <div className="flex-1 min-w-0">
-        <h3 className="text-sm font-medium text-gray-100 line-clamp-2 mb-1">
-          {clip.title}
-        </h3>
-        <p className="text-xs text-gray-400 mb-1">{clip.broadcaster_name}</p>
-        <div className="text-xs text-gray-500">
+        <div className="flex items-start gap-2 mb-1">
+          <h3 className={`text-sm font-medium line-clamp-2 flex-1 ${
+            isDeleting ? 'text-gray-500' : 'text-gray-100'
+          }`}>
+            {clip.title}
+          </h3>
+          {/* 削除中バッジ */}
+          {isDeleting && (
+            <Badge variant="secondary" className="bg-red-600/20 text-red-400 border-red-600/50 flex-shrink-0 text-xs">
+              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+              削除中
+            </Badge>
+          )}
+        </div>
+        <p className={`text-xs mb-1 ${isDeleting ? 'text-gray-600' : 'text-gray-400'}`}>
+          {clip.broadcaster_name}
+        </p>
+        <div className={`text-xs ${isDeleting ? 'text-gray-600' : 'text-gray-500'}`}>
           {formatViewCount(clip.view_count)} • {relativeDate}
         </div>
       </div>
 
       {/* 3点メニュー - モバイルで常に表示、PCでホバー時表示 */}
-      <div className="flex-shrink-0 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+      <div className={`flex-shrink-0 transition-opacity ${
+        isDeleting ? 'opacity-30' : 'lg:opacity-0 lg:group-hover:opacity-100'
+      }`}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button

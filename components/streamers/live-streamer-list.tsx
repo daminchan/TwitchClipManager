@@ -4,10 +4,11 @@
 // - セクション4.6: コンポーネント構造
 // - セクション7: 状態管理（useQuery でサーバー状態管理）
 // - サイドバー用LIVE配信者表示コンポーネント
+// - LIVE状態は別クエリに分離（キャッシュ競合回避）
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Radio, Twitch } from 'lucide-react';
 
@@ -16,10 +17,6 @@ import { InlineLoadingSpinner } from '@/components/ui/loading-spinner';
 import { API_ENDPOINTS, ANIMATION, CACHE_TIME } from '@/lib/constants';
 
 import type { FavoriteStreamer } from '@/types';
-
-interface FavoriteWithLive extends FavoriteStreamer {
-  isLive?: boolean;
-}
 
 export function LiveStreamerList() {
   const [showCards, setShowCards] = useState(false);
@@ -30,8 +27,8 @@ export function LiveStreamerList() {
     return () => clearTimeout(timer);
   }, []);
 
-  // お気に入り配信者を取得（React Query）
-  const { data: favorites = [], isLoading, error } = useQuery({
+  // お気に入り配信者を取得（他コンポーネントと共有キャッシュ）
+  const { data: favorites = [], isLoading: isFavoritesLoading, error: favoritesError } = useQuery({
     queryKey: ['favorites'],
     queryFn: async () => {
       const response = await fetch(API_ENDPOINTS.FAVORITES, {
@@ -53,44 +50,52 @@ export function LiveStreamerList() {
         throw new Error('データが取得できませんでした');
       }
 
-      const favoritesData = result.data as FavoriteStreamer[];
-
-      // Fetch live status for all favorites
-      if (favoritesData.length > 0) {
-        const broadcasterIds = favoritesData.map((f) => f.streamerId);
-
-        try {
-          const response = await fetch(
-            `${API_ENDPOINTS.TWITCH.LIVE_STATUS}?ids=${broadcasterIds.join(',')}`,
-            { method: 'GET' }
-          );
-
-          if (response.ok) {
-            const liveStatusResult = await response.json();
-
-            if (liveStatusResult.data) {
-              const liveStreamerIds = new Set(liveStatusResult.data.map((stream: any) => stream.user_id));
-
-              const favoritesWithLive: FavoriteWithLive[] = favoritesData.map((favorite) => ({
-                ...favorite,
-                isLive: liveStreamerIds.has(favorite.streamerId),
-              }));
-
-              return favoritesWithLive;
-            }
-          }
-        } catch (error) {
-          console.error('Fetch live status error:', error);
-        }
-      }
-
-      return favoritesData as FavoriteWithLive[];
+      return result.data as FavoriteStreamer[];
     },
-    staleTime: CACHE_TIME.LIVE_STATUS,
+    staleTime: CACHE_TIME.DEFAULT_STALE_TIME, // 5分（他コンポーネントと同じ）
   });
 
-  // LIVE中の配信者のみをフィルタリング
-  const liveStreamers = favorites.filter((f) => f.isLive);
+  // LIVE状態を別クエリで取得（頻繁に更新、キャッシュ競合を回避）
+  const broadcasterIds = useMemo(() => favorites.map((f) => f.streamerId), [favorites]);
+
+  const { data: liveStreamerIds = new Set<string>(), isLoading: isLiveLoading } = useQuery({
+    queryKey: ['live-status', broadcasterIds],
+    queryFn: async () => {
+      if (broadcasterIds.length === 0) {
+        return new Set<string>();
+      }
+
+      try {
+        const response = await fetch(
+          `${API_ENDPOINTS.TWITCH.LIVE_STATUS}?ids=${broadcasterIds.join(',')}`,
+          { method: 'GET' }
+        );
+
+        if (response.ok) {
+          const liveStatusResult = await response.json();
+
+          if (liveStatusResult.data) {
+            return new Set<string>(liveStatusResult.data.map((stream: any) => stream.user_id));
+          }
+        }
+      } catch (error) {
+        console.error('Fetch live status error:', error);
+      }
+
+      return new Set<string>();
+    },
+    enabled: broadcasterIds.length > 0, // お気に入りがある場合のみ実行
+    staleTime: CACHE_TIME.LIVE_STATUS, // 2分間隔で更新
+    refetchInterval: CACHE_TIME.LIVE_STATUS, // バックグラウンドで定期的に更新
+  });
+
+  // LIVE中の配信者のみをフィルタリング（メモ化）
+  const liveStreamers = useMemo(() => {
+    return favorites.filter((f) => liveStreamerIds.has(f.streamerId));
+  }, [favorites, liveStreamerIds]);
+
+  const isLoading = isFavoritesLoading || (broadcasterIds.length > 0 && isLiveLoading);
+  const error = favoritesError;
 
   // Twitchページを開く
   const handleClickStreamer = (streamerLogin: string) => {
