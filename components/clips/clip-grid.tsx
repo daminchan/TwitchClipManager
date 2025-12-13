@@ -32,26 +32,15 @@ export function ClipGrid({
   onLoadMore,
   isLoadingMore = false,
 }: ClipGridProps) {
-  const [showCards, setShowCards] = useState(false);
+  // 初回表示アニメーション用（追加読み込み時はアニメーションしない）
+  const [initialAnimationDone, setInitialAnimationDone] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  // マウント後、カード表示アニメーション開始
+  // 初回マウント後、アニメーション開始→完了
   useEffect(() => {
-    const timer = setTimeout(() => setShowCards(true), 50);
+    const timer = setTimeout(() => setInitialAnimationDone(true), 350); // アニメーション完了後
     return () => clearTimeout(timer);
   }, []);
-
-  // クリップが更新されたらアニメーションをリセット（初回ロード時のみ）
-  const prevClipsLengthRef = useRef(clips.length);
-  useEffect(() => {
-    // クリップが増えた場合（無限スクロール）はアニメーションリセットしない
-    if (prevClipsLengthRef.current === 0 && clips.length > 0) {
-      setShowCards(false);
-      const timer = setTimeout(() => setShowCards(true), 50);
-      return () => clearTimeout(timer);
-    }
-    prevClipsLengthRef.current = clips.length;
-  }, [clips.length]);
 
   // Intersection Observer で無限スクロール
   const handleObserver = useCallback(
@@ -107,7 +96,7 @@ export function ClipGrid({
         {clips.map((clip) => (
           <div
             key={clip.id}
-            className={showCards ? 'animate-card' : 'opacity-0'}
+            className={initialAnimationDone ? '' : 'animate-card'}
           >
             <ClipCard
               clip={clip}

@@ -35,12 +35,13 @@ export function ClipList({
   onLoadMore,
   isLoadingMore = false,
 }: ClipListProps) {
-  const [showCards, setShowCards] = useState(false);
+  // 初回表示アニメーション用（追加読み込み時はアニメーションしない）
+  const [initialAnimationDone, setInitialAnimationDone] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  // マウント後、アニメーション開始
+  // 初回マウント後、アニメーション開始→完了
   useEffect(() => {
-    const timer = setTimeout(() => setShowCards(true), 50);
+    const timer = setTimeout(() => setInitialAnimationDone(true), 350);
     return () => clearTimeout(timer);
   }, []);
 
@@ -103,7 +104,7 @@ export function ClipList({
         {clips.map((clip) => (
           <div
             key={clip.id}
-            className={showCards ? 'animate-card' : 'opacity-0'}
+            className={initialAnimationDone ? '' : 'animate-card'}
           >
             <ClipListItem
               clip={clip}
