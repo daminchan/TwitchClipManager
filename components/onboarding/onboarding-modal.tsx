@@ -107,7 +107,7 @@ export function OnboardingModal({ isOpen, onClose, skipAuth = false }: Onboardin
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 animate-in fade-in duration-300">
       {/* 背景オーバーレイ */}
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300" />
+      <div className="absolute inset-0 bg-black/90 animate-in fade-in duration-300" />
 
       {/* モーダルコンテンツ */}
       <div className="relative w-full max-w-4xl h-[95vh] sm:h-[90vh] bg-[#0f0f0f] rounded-lg shadow-2xl border border-gray-800 flex flex-col animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">

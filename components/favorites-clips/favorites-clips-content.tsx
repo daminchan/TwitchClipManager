@@ -95,28 +95,47 @@ export function FavoritesClipsContent() {
   const hasMore = displayedCount < likedClips.length;
 
   // いいね削除のミューテーション
-  // フロー: 削除中バッジ表示 → DB削除 → キャッシュ更新で消える
+  // 楽観的UI: 即座にリストから削除 → バックグラウンドでDB削除
   const deleteMutation = useMutation({
     mutationFn: async (clipId: string) => {
       return await removeLikedClip(clipId);
     },
+    onMutate: async (clipId: string) => {
+      // 楽観的UI: 即座にキャッシュから削除
+      await queryClient.cancelQueries({ queryKey: ['clips', 'liked'] });
+
+      // 以前のデータを保存（ロールバック用）
+      const previousData = queryClient.getQueryData(['clips', 'liked']);
+
+      // キャッシュを楽観的に更新（即座にリストから消える）
+      queryClient.setQueryData(['clips', 'liked'], (old: LikedClip[] | undefined) => {
+        if (!old) return old;
+        return old.filter((clip) => clip.clipId !== clipId);
+      });
+
+      return { previousData };
+    },
     onSuccess: (result) => {
       if (result.success) {
-        // DB削除成功後にキャッシュを更新（ここでリストから消える）
-        queryClient.invalidateQueries({ queryKey: ['clips', 'liked'] });
         showToast(result.message, 'info');
       } else {
+        // 失敗時はキャッシュを再取得してロールバック
+        queryClient.invalidateQueries({ queryKey: ['clips', 'liked'] });
         showToast(result.message, 'error');
       }
     },
-    onError: (error) => {
+    onError: (error, clipId, context) => {
       console.error('Delete liked clip error:', error);
+      // エラー時はロールバック
+      if (context?.previousData) {
+        queryClient.setQueryData(['clips', 'liked'], context.previousData);
+      }
       showToast('いいねの削除に失敗しました', 'error');
     },
   });
 
   const handleDelete = async (clipId: string) => {
-    // 即座に「削除中」状態を表示
+    // 楽観的UIなので削除中表示は不要、即座に削除
     setDeletingClipId(clipId);
     try {
       await deleteMutation.mutateAsync(clipId);

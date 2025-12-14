@@ -23,21 +23,23 @@ export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: Fol
   const [localStreamers, setLocalStreamers] = useState<FolderStreamer[]>([]);
   const [pendingCount, setPendingCount] = useState(0);
   const pendingCountRef = useRef(0); // 非同期処理中のカウント追跡用
+  const prevFolderIdRef = useRef<string | null>(null);
 
-  // folderが変更されたらローカルステートを更新（楽観的更新用）
+  // フォルダIDが変更されたら即座にステートをリセット（前のフォルダの内容が表示される問題を防止）
   useEffect(() => {
-    if (folder?.folderStreamers) {
+    const currentFolderId = folder?.id || null;
+
+    if (currentFolderId !== prevFolderIdRef.current) {
+      // フォルダが変わったので即座にリセット
+      setLocalStreamers(folder?.folderStreamers || []);
+      setPendingCount(0);
+      pendingCountRef.current = 0;
+      prevFolderIdRef.current = currentFolderId;
+    } else if (folder?.folderStreamers) {
+      // 同じフォルダのデータ更新
       setLocalStreamers(folder.folderStreamers);
     }
   }, [folder]);
-
-  // モーダルが開いたときにpendingCountをリセット
-  useEffect(() => {
-    if (isOpen) {
-      setPendingCount(0);
-      pendingCountRef.current = 0;
-    }
-  }, [isOpen]);
 
   if (!isOpen || !folder) return null;
 
@@ -74,8 +76,8 @@ export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: Fol
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="relative w-full max-w-2xl bg-[#0f0f0f] rounded-lg shadow-2xl border border-[#2a2a2a] overflow-hidden max-h-[80vh] flex flex-col">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-2 sm:p-4">
+      <div className="relative w-full max-w-2xl bg-[#0f0f0f] rounded-lg shadow-2xl border border-[#2a2a2a] overflow-hidden max-h-[95vh] sm:max-h-[80vh] flex flex-col">
         {/* ヘッダー */}
         <div className="flex items-center justify-between p-6 border-b border-[#2a2a2a]">
           <div className="flex items-center gap-3">

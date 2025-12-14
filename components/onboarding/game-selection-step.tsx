@@ -146,8 +146,8 @@ export function GameSelectionStep({ onNext, onBack }: GameSelectionStepProps) {
         )}
       </div>
 
-      {/* フッターボタン */}
-      <div className="flex gap-3">
+      {/* フッターボタン（モバイルフッターに隠れないようにpb追加） */}
+      <div className="flex gap-3 pb-20 lg:pb-0">
         {onBack && (
           <Button
             variant="outline"
