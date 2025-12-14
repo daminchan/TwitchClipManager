@@ -327,12 +327,15 @@ function DraggableStreamerCard({ favorite, onDelete }: DraggableStreamerCardProp
         )}
 
         {/* ドラッグハンドル（アイコン部分のみ） */}
+        {/* touch-none: モバイルのネイティブ動作を無効化 */}
+        {/* -webkit-touch-callout: none: iOSのコンテキストメニューを無効化 */}
         <div
           {...(isSyncing ? {} : listeners)}
           {...(isSyncing ? {} : attributes)}
-          className={`relative w-24 h-24 mx-auto mb-3 ${
+          className={`relative w-24 h-24 mx-auto mb-3 touch-none select-none ${
             isSyncing ? 'cursor-not-allowed opacity-50' : 'cursor-grab active:cursor-grabbing'
           }`}
+          style={{ WebkitTouchCallout: 'none' }}
         >
           {/* ドラッグインジケーター（ホバー時表示、同期中は非表示） */}
           {!isSyncing && (
@@ -347,11 +350,12 @@ function DraggableStreamerCard({ favorite, onDelete }: DraggableStreamerCardProp
               src={favorite.streamerImage}
               alt={favorite.streamerName}
               fill
-              className="rounded-full object-cover"
+              className="rounded-full object-cover pointer-events-none"
               sizes="96px"
+              draggable={false}
             />
           ) : (
-            <div className="w-full h-full rounded-full bg-purple-600 flex items-center justify-center">
+            <div className="w-full h-full rounded-full bg-purple-600 flex items-center justify-center pointer-events-none">
               <span className="text-2xl text-white font-bold">
                 {favorite.streamerName.charAt(0).toUpperCase()}
               </span>
