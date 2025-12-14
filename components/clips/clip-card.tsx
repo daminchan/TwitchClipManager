@@ -174,7 +174,7 @@ export function ClipCard({ clip, isLiked = false, onLikeToggle }: ClipCardProps)
       {/* モーダル: サイト内でクリップを再生 (React Portal使用でtransform問題を回避) */}
       {isModalOpen && isMounted && createPortal(
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"
           onClick={closeModal}
         >
           <div
