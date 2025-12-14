@@ -7,7 +7,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Heart, ThumbsUp, User } from 'lucide-react';
+import { Home, Users, Heart, User } from 'lucide-react';
 
 import { ROUTES } from '@/lib/constants';
 
@@ -16,8 +16,8 @@ export function MobileNav() {
 
   const navItems = [
     { href: ROUTES.HOME, icon: Home, label: 'ホーム' },
-    { href: ROUTES.FAVORITES, icon: Heart, label: 'お気に入り' },
-    { href: ROUTES.FAVORITES_CLIPS, icon: ThumbsUp, label: 'クリップ' },
+    { href: ROUTES.FAVORITES, icon: Users, label: '配信者' },
+    { href: ROUTES.FAVORITES_CLIPS, icon: Heart, label: 'クリップ', isYellowHeart: true },
     { href: ROUTES.SETTINGS, icon: User, label: 'マイページ' },
   ];
 
@@ -27,16 +27,19 @@ export function MobileNav() {
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
+          const isYellowHeart = 'isYellowHeart' in item && item.isYellowHeart;
 
           return (
             <Link
               key={item.href}
               href={item.href}
               className={`flex flex-col items-center justify-center flex-1 h-full space-y-1 transition-colors ${
-                isActive ? 'text-purple-500' : 'text-gray-400 hover:text-gray-300'
+                isActive
+                  ? isYellowHeart ? 'text-yellow-400' : 'text-purple-500'
+                  : 'text-gray-400 hover:text-gray-300'
               }`}
             >
-              <Icon className="w-6 h-6" />
+              <Icon className={`w-6 h-6 ${isYellowHeart && isActive ? 'fill-current' : ''}`} />
               <span className="text-xs">{item.label}</span>
             </Link>
           );

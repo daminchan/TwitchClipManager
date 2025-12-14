@@ -62,9 +62,9 @@ export function GameBasedAddModal({ isOpen, onClose, onAddStreamers }: GameBased
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-2 sm:p-4">
       <div
-        className="relative w-full max-w-5xl max-h-[90vh] bg-[#0f0f0f] rounded-lg overflow-hidden shadow-2xl border border-[#2a2a2a]"
+        className="relative w-full max-w-5xl max-h-[95vh] sm:max-h-[90vh] bg-[#0f0f0f] rounded-lg overflow-hidden shadow-2xl border border-[#2a2a2a]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 閉じるボタン（追加中は非表示） */}
@@ -79,7 +79,7 @@ export function GameBasedAddModal({ isOpen, onClose, onAddStreamers }: GameBased
         )}
 
         {/* コンテンツ */}
-        <div className="p-8 h-[80vh] overflow-y-auto">
+        <div className="p-4 sm:p-8 h-[85vh] sm:h-[80vh] overflow-y-auto">
           {step === 'game' ? (
             <MultiGameSelectionStep onNext={handleGameNext} onCancel={handleClose} />
           ) : (

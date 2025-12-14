@@ -119,8 +119,8 @@ export function StreamerSearchModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-[#1a1a1a] rounded-lg w-full max-w-2xl max-h-[80vh] flex flex-col border border-gray-800 shadow-2xl">
+    <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-2 sm:p-4">
+      <div className="bg-[#1a1a1a] rounded-lg w-full max-w-2xl max-h-[95vh] sm:max-h-[80vh] flex flex-col border border-gray-800 shadow-2xl">
         {/* ヘッダー */}
         <div className="flex items-center justify-between p-6 border-b border-gray-800">
           <h2 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">

@@ -51,7 +51,7 @@ export function FolderDeleteConfirm({ isOpen, folder, onClose, onSuccess }: Fold
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-2 sm:p-4">
       <div className="relative w-full max-w-md bg-[#0f0f0f] rounded-lg shadow-2xl border border-red-900/50 overflow-hidden">
         {/* ヘッダー */}
         <div className="flex items-center justify-between p-6 border-b border-[#2a2a2a]">

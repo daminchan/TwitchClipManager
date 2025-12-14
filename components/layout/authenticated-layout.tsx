@@ -9,7 +9,16 @@
 
 import { useState, createContext, useContext, useMemo } from 'react';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
-import { DndContext, DragOverlay, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
+import {
+  DndContext,
+  DragOverlay,
+  TouchSensor,
+  MouseSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent
+} from '@dnd-kit/core';
 import Image from 'next/image';
 import { Header } from '@/components/layout/header';
 import { MobileNav } from '@/components/layout/mobile-nav';
@@ -64,6 +73,23 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
   const queryClient = useQueryClient();
   const { toast, showToast, hideToast } = useToast();
   const { handleAddFavorite: addFavorite } = useFavoriteActions();
+
+  // ドラッグ&ドロップセンサー設定
+  // タッチデバイスでは長押し（250ms）でドラッグ開始、スワイプと区別
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint: {
+      distance: 10, // 10px移動でドラッグ開始
+    },
+  });
+
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint: {
+      delay: 250,      // 250ms長押しでドラッグ開始
+      tolerance: 5,    // 5px以内の移動は許容
+    },
+  });
+
+  const sensors = useSensors(mouseSensor, touchSensor);
 
   // サイドバー制御
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -233,7 +259,7 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
   };
 
   return (
-    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <FolderContext.Provider value={{ selectedFolderId, setSelectedFolderId }}>
         <DragContext.Provider value={{ isDragging, activeStreamer, pendingAdditions }}>
           <div className="h-screen bg-[#0f0f0f] flex flex-col overflow-hidden">
