@@ -105,12 +105,15 @@ export function ClipDetailModal({
           exit="exit"
         >
           <motion.div
-            className="relative w-full max-w-5xl bg-gray-900 rounded-lg overflow-hidden shadow-2xl"
+            className="relative w-full max-w-5xl bg-white rounded-lg overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
             variants={modalContent}
             initial="hidden"
             animate="visible"
             exit="exit"
+            role="dialog"
+            aria-modal="true"
+            aria-label={clip.title}
           >
         {/* 閉じるボタン */}
         <button
@@ -132,9 +135,9 @@ export function ClipDetailModal({
         </div>
 
         {/* クリップ情報 */}
-        <div className="p-6 bg-gray-800">
+        <div className="p-6 bg-gray-50">
           <div className="flex items-start gap-3 mb-2">
-            <h2 className="text-xl font-semibold text-gray-100 flex-1">
+            <h2 className="text-xl font-semibold text-gray-900 flex-1">
               {clip.title}
             </h2>
 
@@ -148,7 +151,7 @@ export function ClipDetailModal({
                   className={`flex items-center gap-2 transition-all ${
                     isLiked
                       ? 'bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/50'
-                      : 'bg-gray-700/50 hover:bg-gray-700 text-gray-300 border border-gray-600'
+                      : 'bg-gray-700/50 hover:bg-gray-700 text-gray-600 border border-gray-300'
                   }`}
                 >
                   <Heart
@@ -178,7 +181,7 @@ export function ClipDetailModal({
             )}
           </div>
 
-          <div className="flex items-center gap-4 text-sm text-gray-400">
+          <div className="flex items-center gap-4 text-sm text-gray-500">
             <span className="font-medium text-purple-400">
               {clip.broadcaster_name}
             </span>
@@ -202,10 +205,10 @@ export function ClipDetailModal({
             </a>
             <button
               onClick={handleCopyLink}
-              className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-gray-200 transition-colors button-press-feedback"
+              className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 transition-colors button-press-feedback"
             >
               <Copy className="w-4 h-4" />
-              {isCopied ? LABELS.REGISTRATION.LINK_COPIED : 'リンクをコピー'}
+              {isCopied ? LABELS.REGISTRATION.LINK_COPIED : LABELS.BUTTONS.COPY_LINK}
             </button>
           </div>
         </div>

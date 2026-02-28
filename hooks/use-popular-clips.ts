@@ -4,6 +4,8 @@ import type { TwitchClip } from '@/types/twitch';
 import type { SortType } from '@/components/dashboard/clip-sort-tabs';
 import { API_ENDPOINTS, LABELS, CACHE_TIME } from '@/lib/constants';
 
+const EMPTY_SET = new Set<string>();
+
 export function usePopularClips() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortType, setSortType] = useState<SortType>('views');
@@ -30,8 +32,8 @@ export function usePopularClips() {
     staleTime: CACHE_TIME.POPULAR_CLIPS,
   });
 
-  // 未認証なのでlikedClipIdsは空
-  const likedClipIds = useMemo(() => new Set<string>(), []);
+  // 未認証なのでlikedClipIdsは空（モジュールレベル定数を参照）
+  const likedClipIds = EMPTY_SET;
 
   // フィルターとソート
   const filteredClips = useMemo(() => {

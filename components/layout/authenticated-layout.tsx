@@ -4,6 +4,7 @@
 'use client';
 
 import { useState, useRef, useCallback, createContext, useContext, useMemo } from 'react';
+import Image from 'next/image';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
 import {
@@ -17,8 +18,6 @@ import {
   type DragStartEvent
 } from '@dnd-kit/core';
 import { motion, AnimatePresence } from 'framer-motion';
-import { scaleIn } from '@/lib/animations';
-import Image from 'next/image';
 import { Header } from '@/components/layout/header';
 import { MobileNav } from '@/components/layout/mobile-nav';
 import { DashboardSidebar } from '@/components/dashboard/dashboard-sidebar';
@@ -26,11 +25,10 @@ import { Toast } from '@/components/ui/toast';
 import { useToast } from '@/hooks/use-toast';
 import { useFavoriteActions } from '@/hooks/use-favorite-actions';
 import { addStreamerToFolder } from '@/actions/folders';
-import type { Folder } from '@/types/database';
+import { scaleIn } from '@/lib/animations';
 import { API_ENDPOINTS, CACHE_TIME } from '@/lib/constants';
-
+import type { Folder, FavoriteStreamer } from '@/types/database';
 import type { TwitchChannel } from '@/types/twitch';
-import type { FavoriteStreamer } from '@/types/database';
 
 // フォルダ選択状態を共有するためのContext
 interface FolderContextType {
@@ -333,11 +331,22 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
     }
   };
 
+  // Context値をメモ化してConsumerの不要な再レンダリングを防止
+  const folderContextValue = useMemo(
+    () => ({ selectedFolderId, setSelectedFolderId, onFolderIdResolved: handleFolderIdResolved }),
+    [selectedFolderId, setSelectedFolderId, handleFolderIdResolved]
+  );
+
+  const dragContextValue = useMemo(
+    () => ({ isDragging, activeStreamer, pendingAdditions }),
+    [isDragging, activeStreamer, pendingAdditions]
+  );
+
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <FolderContext.Provider value={{ selectedFolderId, setSelectedFolderId, onFolderIdResolved: handleFolderIdResolved }}>
-        <DragContext.Provider value={{ isDragging, activeStreamer, pendingAdditions }}>
-          <div className="h-screen bg-[#0f0f0f] flex flex-col overflow-hidden">
+      <FolderContext.Provider value={folderContextValue}>
+        <DragContext.Provider value={dragContextValue}>
+          <div className="h-screen bg-[#f2ede6] flex flex-col overflow-hidden">
             {/* 固定ヘッダー */}
             <Header onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
@@ -352,7 +361,7 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
               />
 
               {/* メインコンテンツ（ページごとに切り替わる） */}
-              <main className="flex-1 overflow-y-auto bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a]">
+              <main className="flex-1 overflow-y-auto bg-gradient-to-b from-[#ece6dd] to-[#f2ede6]">
                 {children}
               </main>
             </div>
@@ -361,19 +370,19 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
             <MobileNav />
 
             {/* トースト通知 */}
-            {toast && (
+            {toast ? (
               <Toast
                 message={toast.message}
                 type={toast.type}
                 onClose={hideToast}
               />
-            )}
+            ) : null}
 
             {/* ドラッグオーバーレイ */}
             <DragOverlay>
-              {activeStreamer && (
+              {activeStreamer ? (
                 <motion.div
-                  className="group bg-[#1a1a1a] hover:bg-[#222222] rounded-lg p-2 cursor-move transition-all duration-200 shadow-2xl scale-50 rotate-3"
+                  className="group bg-[#faf8f5] hover:bg-[#ebe5dc] rounded-lg p-2 cursor-move transition-all duration-200 shadow-2xl scale-50 rotate-3"
                   variants={scaleIn}
                   initial="hidden"
                   animate="visible"
@@ -389,7 +398,7 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
                         sizes="48px"
                       />
                     ) : (
-                      <div className="w-full h-full rounded-full bg-purple-600 flex items-center justify-center">
+                      <div className="w-full h-full rounded-full bg-[#a09890] flex items-center justify-center">
                         <span className="text-sm text-white font-bold">
                           {activeStreamer.streamerName.charAt(0).toUpperCase()}
                         </span>
@@ -398,14 +407,14 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
                   </div>
 
                   {/* 配信者名 */}
-                  <p className="text-center text-xs font-semibold text-gray-100 line-clamp-1 mb-0.5">
+                  <p className="text-center text-xs font-semibold text-[#44403c] line-clamp-1 mb-0.5">
                     {activeStreamer.streamerName}
                   </p>
-                  <p className="text-center text-[10px] text-gray-400 line-clamp-1">
+                  <p className="text-center text-[10px] text-[#a09890] line-clamp-1">
                     @{activeStreamer.streamerLogin}
                   </p>
                 </motion.div>
-              )}
+              ) : null}
             </DragOverlay>
           </div>
         </DragContext.Provider>

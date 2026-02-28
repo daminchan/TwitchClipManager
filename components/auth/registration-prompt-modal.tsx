@@ -1,13 +1,13 @@
 'use client';
 
 import { createPortal } from 'react-dom';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Heart, Star, Sparkles } from 'lucide-react';
-import { modalOverlay, modalContent } from '@/lib/animations';
-import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 import { useIsMounted } from '@/hooks/use-is-mounted';
+import { modalOverlay, modalContent } from '@/lib/animations';
 import { LABELS, ROUTES } from '@/lib/constants';
 
 interface RegistrationPromptModalProps {
@@ -24,7 +24,7 @@ export function RegistrationPromptModal({ isOpen, onClose }: RegistrationPromptM
     <AnimatePresence>
       {isOpen && (
         <motion.div className="modal-overlay" onClick={onClose} variants={modalOverlay} initial="hidden" animate="visible" exit="exit">
-          <motion.div className="modal-container-sm" onClick={(e) => e.stopPropagation()} variants={modalContent} initial="hidden" animate="visible" exit="exit">
+          <motion.div className="modal-container-sm" onClick={(e) => e.stopPropagation()} variants={modalContent} initial="hidden" animate="visible" exit="exit" role="dialog" aria-modal="true" aria-label={LABELS.REGISTRATION.TITLE}>
         {/* 閉じるボタン */}
         <button
           onClick={onClose}
@@ -46,12 +46,12 @@ export function RegistrationPromptModal({ isOpen, onClose }: RegistrationPromptM
           </div>
 
           {/* タイトル */}
-          <h2 className="text-2xl font-bold text-gray-100 mb-3">
+          <h2 className="text-2xl font-bold text-gray-900 mb-3">
             {LABELS.REGISTRATION.TITLE}
           </h2>
 
           {/* 説明 */}
-          <p className="text-gray-400 text-sm mb-8 leading-relaxed">
+          <p className="text-gray-500 text-sm mb-8 leading-relaxed">
             {LABELS.REGISTRATION.DESCRIPTION}
           </p>
 
@@ -65,7 +65,7 @@ export function RegistrationPromptModal({ isOpen, onClose }: RegistrationPromptM
           {/* キャンセル */}
           <button
             onClick={onClose}
-            className="mt-4 text-sm text-gray-500 hover:text-gray-300 transition-colors"
+            className="mt-4 text-sm text-gray-500 hover:text-gray-600 transition-colors"
           >
             あとで
           </button>

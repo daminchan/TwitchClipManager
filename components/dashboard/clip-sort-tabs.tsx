@@ -42,7 +42,7 @@ export function ClipSortTabs({
   return (
     <div className="space-y-3">
       {/* ソートタブ */}
-      <div className="flex items-center gap-2 border-b border-[#2a2a2a] pb-3 overflow-x-auto">
+      <div className="flex items-center gap-2 border-b border-[#e6e0d6] pb-3 overflow-x-auto">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = sortType === tab.value;
@@ -50,13 +50,13 @@ export function ClipSortTabs({
           return (
             <Button
               key={tab.value}
-              variant={isActive ? 'default' : 'ghost'}
+              variant="ghost"
               size="sm"
               onClick={() => onSortChange(tab.value)}
               className={
                 isActive
-                  ? 'bg-gray-800 text-white border-b-2 border-purple-500 rounded-none'
-                  : 'text-gray-400 hover:text-gray-200 rounded-none'
+                  ? 'bg-[#e6e0d6] text-[#44403c] border-b-2 border-[#b8b0a6] rounded-none hover:bg-[#e6e0d6] hover:text-[#44403c]'
+                  : 'text-[#b8b0a6] hover:text-[#6b655c] hover:bg-[#ebe5dc] rounded-none'
               }
             >
               <Icon className="w-4 h-4 mr-2" />
@@ -66,20 +66,20 @@ export function ClipSortTabs({
         })}
 
         {/* クリップ数バッジ */}
-        {clipCount > 0 && (
+        {clipCount > 0 ? (
           <Badge
             variant="secondary"
-            className="ml-auto bg-purple-600/20 text-purple-300 border-purple-500/30"
+            className="ml-auto bg-[#ebe5dc] text-[#6b655c] border border-[#e0d9cf]"
           >
             {clipCount} {LABELS.CLIPS.CLIP_UNIT}
           </Badge>
-        )}
+        ) : null}
       </div>
 
       {/* フォルダタグ */}
-      {folders.length > 0 && onFolderClick && (
+      {folders.length > 0 && onFolderClick ? (
         <div className="flex items-center gap-2 overflow-x-auto pb-2">
-          <span className="text-xs text-gray-500 whitespace-nowrap">
+          <span className="text-xs text-[#a09890] whitespace-nowrap">
             {LABELS.CLIPS.FOLDER_LABEL}
           </span>
 
@@ -96,22 +96,22 @@ export function ClipSortTabs({
                 onClick={() => onFolderClick(isSelected ? null : folder.id)}
                 className={
                   isSelected
-                    ? 'bg-purple-600/20 text-purple-300 border border-purple-500/50 rounded-full px-3 py-1 h-auto text-xs hover:bg-purple-600/30 whitespace-nowrap'
-                    : 'text-gray-400 hover:text-gray-200 border border-gray-700 rounded-full px-3 py-1 h-auto text-xs hover:bg-[#1a1a1a] whitespace-nowrap'
+                    ? 'bg-[#e6e0d6] text-[#44403c] border border-[#d0c8bc] rounded-full px-3 py-1 h-auto text-xs hover:bg-[#e6e0d6] whitespace-nowrap'
+                    : 'text-[#a09890] hover:text-[#6b655c] border border-[#e6e0d6] rounded-full px-3 py-1 h-auto text-xs hover:bg-[#ebe5dc] whitespace-nowrap'
                 }
               >
                 <Folder className="w-3 h-3 mr-1" />
                 {folder.name}
-                {streamerCount > 0 && (
+                {streamerCount > 0 ? (
                   <span className="ml-1 text-[10px] opacity-70">
                     ({streamerCount})
                   </span>
-                )}
+                ) : null}
               </Button>
             );
           })}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

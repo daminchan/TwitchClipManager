@@ -2,10 +2,10 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
 import { Search } from 'lucide-react';
-import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,9 +34,12 @@ export function GameSelectionStep({ onNext, onBack }: GameSelectionStepProps) {
 
   const games: TwitchGame[] = gamesData?.data || [];
 
-  // 検索フィルター
-  const filteredGames = games.filter((game) =>
-    game.name.toLowerCase().includes(searchQuery.toLowerCase())
+  // 検索フィルター（useMemoで派生データをメモ化）
+  const filteredGames = useMemo(
+    () => games.filter((game) =>
+      game.name.toLowerCase().includes(searchQuery.toLowerCase())
+    ),
+    [games, searchQuery]
   );
 
   const handleNext = () => {
@@ -49,10 +52,10 @@ export function GameSelectionStep({ onNext, onBack }: GameSelectionStepProps) {
     <div className="flex flex-col h-full">
       {/* ヘッダー */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-100 mb-2">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
           好きなゲームを選択してください
         </h2>
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-gray-500">
           選択したゲームのおすすめ配信者を表示します
         </p>
       </div>
@@ -60,13 +63,13 @@ export function GameSelectionStep({ onNext, onBack }: GameSelectionStepProps) {
       {/* 検索バー */}
       <div className="mb-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
           <Input
             type="text"
             placeholder="ゲームを検索..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-[#1a1a1a] border-0 text-gray-100 placeholder-gray-400"
+            className="pl-10 bg-white border-0 text-gray-900 placeholder-gray-500"
           />
         </div>
       </div>
@@ -78,7 +81,7 @@ export function GameSelectionStep({ onNext, onBack }: GameSelectionStepProps) {
             {[...Array(12)].map((_, i) => (
               <div
                 key={i}
-                className="aspect-[3/4] bg-[#1a1a1a] rounded-lg animate-pulse"
+                className="aspect-[3/4] bg-white rounded-lg animate-pulse"
               />
             ))}
           </div>
@@ -97,7 +100,7 @@ export function GameSelectionStep({ onNext, onBack }: GameSelectionStepProps) {
                   className={`group relative aspect-[3/4] rounded-lg overflow-hidden transition-all duration-300 ${
                     isSelected
                       ? 'ring-4 ring-purple-600 scale-105 shadow-xl shadow-purple-500/50'
-                      : 'hover:ring-2 hover:ring-gray-600 hover:scale-105 hover:shadow-lg'
+                      : 'hover:ring-2 hover:ring-gray-300 hover:scale-105 hover:shadow-lg'
                   }`}
                 >
                   <Image
@@ -118,7 +121,7 @@ export function GameSelectionStep({ onNext, onBack }: GameSelectionStepProps) {
                       </p>
                     </div>
                   </div>
-                  {isSelected && (
+                  {isSelected ? (
                     <div className="absolute top-2 right-2 w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center animate-in zoom-in-0 duration-200">
                       <svg
                         className="w-4 h-4 text-white"
@@ -134,7 +137,7 @@ export function GameSelectionStep({ onNext, onBack }: GameSelectionStepProps) {
                         />
                       </svg>
                     </div>
-                  )}
+                  ) : null}
                 </button>
               );
             })}
@@ -144,15 +147,15 @@ export function GameSelectionStep({ onNext, onBack }: GameSelectionStepProps) {
 
       {/* フッターボタン（モバイルフッターに隠れないようにpb追加） */}
       <div className="flex gap-3 pb-20 lg:pb-0">
-        {onBack && (
+        {onBack ? (
           <Button
             variant="outline"
             onClick={onBack}
-            className="flex-1 bg-[#1a1a1a] border-gray-700 text-gray-100 hover:bg-[#2a2a2a]"
+            className="flex-1 bg-white border-gray-200 text-gray-900 hover:bg-gray-200"
           >
             戻る
           </Button>
-        )}
+        ) : null}
         <Button
           onClick={handleNext}
           disabled={!selectedGame}

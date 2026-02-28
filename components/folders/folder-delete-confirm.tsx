@@ -6,6 +6,7 @@ import { AlertTriangle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { deleteFolder } from '@/actions/folders';
 import { modalOverlay, modalContent } from '@/lib/animations';
+import { LABELS } from '@/lib/constants';
 import type { Folder } from '@/types/database';
 
 interface FolderDeleteConfirmProps {
@@ -62,6 +63,8 @@ export function FolderDeleteConfirm({ isOpen, folder, onClose, onSuccess }: Fold
             initial="hidden"
             animate="visible"
             exit="exit"
+            role="alertdialog"
+            aria-modal="true"
           >
             <div className="modal-header">
               <div className="flex items-center gap-3">
@@ -81,7 +84,7 @@ export function FolderDeleteConfirm({ isOpen, folder, onClose, onSuccess }: Fold
             </div>
 
             <div className="p-6 space-y-4">
-              <p className="text-gray-300">
+              <p className="text-gray-600">
                 フォルダ <span className="font-semibold text-white">「{folder.name}」</span> を削除しますか？
               </p>
               <p className="text-description">
@@ -101,9 +104,9 @@ export function FolderDeleteConfirm({ isOpen, folder, onClose, onSuccess }: Fold
                   variant="outline"
                   onClick={handleClose}
                   disabled={isPending}
-                  className="flex-1 border-gray-700 text-gray-300 hover:bg-[#1a1a1a] button-press-feedback"
+                  className="flex-1 border-gray-200 text-gray-600 hover:bg-gray-100 button-press-feedback"
                 >
-                  キャンセル
+                  {LABELS.BUTTONS.CANCEL}
                 </Button>
                 <Button
                   type="button"
@@ -114,10 +117,10 @@ export function FolderDeleteConfirm({ isOpen, folder, onClose, onSuccess }: Fold
                   {isPending ? (
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      削除中...
+                      {LABELS.BUTTONS.DELETING}
                     </div>
                   ) : (
-                    '削除'
+                    LABELS.BUTTONS.DELETE
                   )}
                 </Button>
               </div>

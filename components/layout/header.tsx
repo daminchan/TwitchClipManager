@@ -2,10 +2,10 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
-import Link from 'next/link';
 import { Settings, Menu, LogOut, Search, Gamepad2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -49,7 +49,10 @@ export function Header({ onToggleSidebar }: HeaderProps) {
     staleTime: CACHE_TIME.DEFAULT_STALE_TIME,
   });
 
-  const favoriteStreamerIds = favoritesData?.map((f) => f.streamerId) || [];
+  const favoriteStreamerIds = useMemo(
+    () => favoritesData?.map((f) => f.streamerId) ?? [],
+    [favoritesData]
+  );
 
   const handleSignOut = async () => {
     await signOut({ callbackUrl: '/' });
@@ -90,25 +93,25 @@ export function Header({ onToggleSidebar }: HeaderProps) {
 
   return (
     <>
-    <header className="sticky top-0 z-50 w-full border-b border-[#2a2a2a] bg-[#0f0f0f]/95 backdrop-blur">
+    <header className="sticky top-0 z-50 w-full border-b border-[#e6e0d6] bg-[#f2ede6]">
       <div className="flex h-16 items-center px-4 md:px-6 w-full gap-4 justify-between">
         {/* 左側: ハンバーガー + タイトル */}
         <div className="flex items-center gap-3">
           {/* ハンバーガーメニュー（デスクトップのみ） */}
-          {onToggleSidebar && (
+          {onToggleSidebar ? (
             <Button
               variant="ghost"
               size="sm"
               onClick={onToggleSidebar}
-              className="hidden lg:flex p-2 hover:bg-[#1a1a1a]"
+              className="hidden lg:flex p-2 hover:bg-[#ebe5dc]"
               aria-label="サイドバーを切り替え"
             >
-              <Menu className="w-6 h-6 text-gray-100" />
+              <Menu className="w-6 h-6 text-[#44403c]" />
             </Button>
-          )}
+          ) : null}
 
           <Link href="/" className="flex items-center flex-shrink-0">
-            <div className="text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
+            <div className="text-xl md:text-2xl font-bold text-[#5a524a]">
               {APP_CONFIG.name}
             </div>
           </Link>
@@ -121,7 +124,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="text-sm bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 button-press-feedback"
+                className="text-sm bg-[#8a8078] hover:bg-[#7a706a] text-white border-0 button-press-feedback"
               >
                 ログイン / 登録
               </Button>
@@ -135,7 +138,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsSearchModalOpen(true)}
-                className="p-2 text-purple-400 hover:text-purple-300 hover:bg-purple-500/10"
+                className="p-2 text-[#9e92a8] hover:text-[#7e7289] hover:bg-[#ebe5dc]"
                 aria-label="配信者を検索"
               >
                 <Search className="w-5 h-5" />
@@ -144,7 +147,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsGameModalOpen(true)}
-                className="p-2 text-green-400 hover:text-green-300 hover:bg-green-500/10"
+                className="p-2 text-[#88a090] hover:text-[#6a806f] hover:bg-[#ebe5dc]"
                 aria-label="ゲームから配信者を追加"
               >
                 <Gamepad2 className="w-5 h-5" />
@@ -153,7 +156,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                 variant="ghost"
                 size="sm"
                 onClick={handleSignOut}
-                className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-500/10"
+                className="p-2 text-[#a09890] hover:text-[#6b655c] hover:bg-[#ebe5dc]"
                 aria-label="ログアウト"
               >
                 <LogOut className="w-5 h-5" />
@@ -163,11 +166,11 @@ export function Header({ onToggleSidebar }: HeaderProps) {
             {/* デスクトップ表示 */}
             <div className="hidden lg:flex items-center gap-2">
               <Avatar className="h-9 w-9">
-                <AvatarFallback className="bg-purple-600 text-white text-sm">
+                <AvatarFallback className="bg-[#a09890] text-white text-sm">
                   {session.user.name?.[0]?.toUpperCase() || session.user.email[0].toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-sm font-medium text-gray-100">
+              <span className="text-sm font-medium text-[#44403c]">
                 {session.user.name || session.user.email}
               </span>
             </div>
@@ -175,7 +178,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="text-xs md:text-sm bg-[#1a1a1a] border-0 text-gray-100 hover:bg-[#222222] transition-all button-press-feedback active:scale-95"
+                className="text-xs md:text-sm bg-transparent border-0 text-[#6b655c] hover:bg-[#ebe5dc] transition-all button-press-feedback active:scale-95"
               >
                 <Settings className="w-4 h-4 md:mr-1" />
                 <span className="hidden md:inline">設定</span>
@@ -185,7 +188,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
               variant="outline"
               size="sm"
               onClick={handleSignOut}
-              className="hidden lg:flex text-xs md:text-sm bg-[#1a1a1a] border-0 text-gray-100 hover:bg-[#222222] transition-all button-press-feedback active:scale-95"
+              className="hidden lg:flex text-xs md:text-sm bg-transparent border-0 text-[#6b655c] hover:bg-[#ebe5dc] transition-all button-press-feedback active:scale-95"
             >
               ログアウト
             </Button>
@@ -210,13 +213,13 @@ export function Header({ onToggleSidebar }: HeaderProps) {
     />
 
     {/* トースト通知 */}
-    {toast && (
+    {toast ? (
       <Toast
         message={toast.message}
         type={toast.type}
         onClose={hideToast}
       />
-    )}
+    ) : null}
     </>
   );
 }

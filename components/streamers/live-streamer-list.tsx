@@ -113,7 +113,7 @@ export function LiveStreamerList() {
   if (liveStreamers.length === 0) {
     return (
       <div className="text-center py-6">
-        <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-800/50 flex items-center justify-center">
+        <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-200/80 flex items-center justify-center">
           <Radio className="w-6 h-6 text-gray-600" />
         </div>
         <p className="text-gray-500 text-sm">
@@ -130,7 +130,7 @@ export function LiveStreamerList() {
           key={streamer.id}
           onClick={() => handleClickStreamer(streamer.streamerLogin)}
           className={`
-            w-full p-2 rounded-lg bg-gray-900/50 hover:bg-gray-800/70
+            w-full p-2 rounded-lg bg-gray-50 hover:bg-gray-100
             transition-all duration-200 group cursor-pointer
             ${showCards ? 'animate-card' : 'opacity-0'}
           `}
@@ -153,13 +153,13 @@ export function LiveStreamerList() {
                 </div>
               )}
               {/* LIVEインジケーター */}
-              <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-[#1a1a1a] animate-pulse" />
+              <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white animate-pulse" />
             </div>
 
             {/* 配信者情報 */}
             <div className="flex-1 min-w-0 text-left">
               <div className="flex items-center gap-2">
-                <span className="font-medium text-sm text-gray-100 truncate">
+                <span className="font-medium text-sm text-gray-900 truncate">
                   {streamer.streamerName}
                 </span>
                 <Badge className="bg-red-600 text-white text-[10px] px-1.5 py-0 flex-shrink-0">

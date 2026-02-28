@@ -4,11 +4,17 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { Play, Copy } from 'lucide-react';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ClipDetailModal } from './clip-detail-modal';
+
+// 初回表示に不要なモーダルを遅延読み込み
+const ClipDetailModal = dynamic(
+  () => import('./clip-detail-modal').then(m => ({ default: m.ClipDetailModal })),
+  { ssr: false }
+);
 import { useModal } from '@/hooks/use-modal';
 import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
@@ -42,7 +48,7 @@ export function ClipCard({ clip, isLiked = false, onLikeToggle }: ClipCardProps)
   return (
     <>
       <Card
-        className="h-full flex flex-col overflow-hidden cursor-pointer transition-all duration-200 hover:scale-[1.02] bg-[#1a1a1a] border-0 hover:bg-[#222222] hover:shadow-lg hover:shadow-purple-500/10"
+        className="h-full flex flex-col overflow-hidden cursor-pointer transition-all duration-200 hover:scale-[1.02] bg-white border border-[#e6e0d6] hover:bg-[#faf8f5] hover:shadow-lg hover:shadow-[#c4bdb2]/20"
         onMouseEnter={() => !isModalOpen && setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onClick={openModal}
@@ -61,7 +67,7 @@ export function ClipCard({ clip, isLiked = false, onLikeToggle }: ClipCardProps)
           </Badge>
 
           {/* コピーボタン（ホバー時表示） */}
-          {isHovered && (
+          {isHovered ? (
             <button
               onClick={handleCopyLink}
               className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1.5 transition-colors button-press-feedback"
@@ -69,22 +75,22 @@ export function ClipCard({ clip, isLiked = false, onLikeToggle }: ClipCardProps)
             >
               <Copy className="w-4 h-4" />
             </button>
-          )}
+          ) : null}
 
           {/* ホバー時の再生オーバーレイ */}
-          {isHovered && (
+          {isHovered ? (
             <div
               className="absolute inset-0 bg-black/40 flex items-center justify-center"
               aria-hidden="true"
             >
-              <div className="bg-purple-600 rounded-full p-3" role="presentation">
+              <div className="bg-[#8a8078]/80 rounded-full p-3" role="presentation">
                 <Play
                   className="w-6 h-6 text-white fill-white"
                   aria-label={LABELS.CLIPS.PLAY_CLIP}
                 />
               </div>
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* クリップ情報部分 */}
@@ -102,13 +108,13 @@ export function ClipCard({ clip, isLiked = false, onLikeToggle }: ClipCardProps)
 
             {/* テキスト情報 */}
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold line-clamp-2 text-base text-gray-100 mb-2 leading-snug">
+              <h3 className="font-semibold line-clamp-2 text-base text-[#44403c] mb-2 leading-snug">
                 {clip.title}
               </h3>
-              <div className="text-sm text-gray-300 mb-1 font-medium">
+              <div className="text-sm text-[#6b655c] mb-1 font-medium">
                 {clip.broadcaster_name}
               </div>
-              <div className="flex items-center gap-2 text-xs text-gray-500">
+              <div className="flex items-center gap-2 text-xs text-[#a09890]">
                 <span>
                   {clip.view_count.toLocaleString()}再生
                 </span>
@@ -130,9 +136,9 @@ export function ClipCard({ clip, isLiked = false, onLikeToggle }: ClipCardProps)
       />
 
       {/* コピートースト */}
-      {toast && (
+      {toast ? (
         <Toast message={toast.message} type={toast.type} onClose={hideToast} />
-      )}
+      ) : null}
     </>
   );
 }

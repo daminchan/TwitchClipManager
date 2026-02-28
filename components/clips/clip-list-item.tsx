@@ -55,10 +55,10 @@ export function ClipListItem({ clip, onDelete, onSelectClip, isDeleting, isSelec
     <div
       className={`flex gap-3 lg:gap-4 p-2 rounded-lg transition-all duration-300 group ${
         isDeleting
-          ? 'opacity-50 pointer-events-none bg-gray-900/50'
+          ? 'opacity-50 pointer-events-none bg-gray-100/50'
           : isSelected
-            ? 'bg-gray-800 border-2 border-purple-600 cursor-pointer'
-            : 'hover:bg-gray-900 border-2 border-transparent cursor-pointer'
+            ? 'bg-gray-100 border-2 border-purple-600 cursor-pointer'
+            : 'hover:bg-gray-100 border-2 border-transparent cursor-pointer'
       }`}
       onClick={isDeleting ? undefined : () => onSelectClip?.(clip.id)}
     >
@@ -79,7 +79,9 @@ export function ClipListItem({ clip, onDelete, onSelectClip, isDeleting, isSelec
         {/* 削除中オーバーレイ */}
         {isDeleting && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-lg">
-            <Loader2 className="w-6 h-6 text-white animate-spin" />
+            <div className="animate-spin">
+              <Loader2 className="w-6 h-6 text-white" />
+            </div>
           </div>
         )}
       </div>
@@ -88,19 +90,21 @@ export function ClipListItem({ clip, onDelete, onSelectClip, isDeleting, isSelec
       <div className="flex-1 min-w-0">
         <div className="flex items-start gap-2 mb-1">
           <h3 className={`text-sm font-medium line-clamp-2 flex-1 ${
-            isDeleting ? 'text-gray-500' : 'text-gray-100'
+            isDeleting ? 'text-gray-500' : 'text-gray-900'
           }`}>
             {clip.title}
           </h3>
           {/* 削除中バッジ */}
           {isDeleting && (
             <Badge variant="secondary" className="bg-red-600/20 text-red-400 border-red-600/50 flex-shrink-0 text-xs">
-              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+              <div className="animate-spin">
+                <Loader2 className="w-3 h-3" />
+              </div>
               削除中
             </Badge>
           )}
         </div>
-        <p className={`text-xs mb-1 ${isDeleting ? 'text-gray-600' : 'text-gray-400'}`}>
+        <p className={`text-xs mb-1 ${isDeleting ? 'text-gray-600' : 'text-gray-500'}`}>
           {clip.broadcaster_name}
         </p>
         <div className={`text-xs ${isDeleting ? 'text-gray-600' : 'text-gray-500'}`}>
@@ -117,20 +121,20 @@ export function ClipListItem({ clip, onDelete, onSelectClip, isDeleting, isSelec
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 text-gray-400 hover:text-gray-100"
+              className="h-8 w-8 p-0 text-gray-400 hover:text-gray-900"
               disabled={isDeleting}
               onClick={(e) => e.stopPropagation()}
             >
               <MoreVertical className="w-5 h-5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-[#282828] border-gray-700">
+          <DropdownMenuContent align="end" className="bg-white border-gray-200">
             <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete(clip.id);
               }}
-              className="text-gray-100 hover:bg-gray-700 cursor-pointer"
+              className="text-gray-900 hover:bg-gray-100 cursor-pointer"
               disabled={isDeleting}
             >
               <Trash2 className="w-4 h-4 mr-2" />

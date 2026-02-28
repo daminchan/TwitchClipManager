@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { X, SkipBack, SkipForward, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useIsMounted } from '@/hooks/use-is-mounted';
+import { LABELS } from '@/lib/constants';
 import type { TwitchClip } from '@/types/twitch';
 
 interface ClipPlayerModalProps {
@@ -27,10 +28,7 @@ export function ClipPlayerModal({
 }: ClipPlayerModalProps) {
   const isMounted = useIsMounted();
 
-  const embedParent = useMemo(() => {
-    if (!isMounted) return 'localhost';
-    return window.location.hostname;
-  }, [isMounted]);
+  const embedParent = isMounted ? window.location.hostname : 'localhost';
 
   // ESCキーで閉じる
   useEffect(() => {
@@ -57,15 +55,15 @@ export function ClipPlayerModal({
   return (
     <div className="fixed inset-0 z-[70] bg-black/95 flex flex-col">
       {/* ヘッダー */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-800">
-        <div className="text-sm text-gray-400">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="text-sm text-gray-500">
           {currentIndex + 1} / {totalClips}
         </div>
         <Button
           variant="ghost"
           size="sm"
           onClick={onClose}
-          className="text-gray-400 hover:text-gray-100"
+          className="text-gray-500 hover:text-gray-900"
         >
           <X className="w-6 h-6" />
         </Button>
@@ -74,7 +72,7 @@ export function ClipPlayerModal({
       {/* プレーヤー */}
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-3xl">
-          <div className="relative w-full aspect-video bg-gray-900 rounded-lg overflow-hidden">
+          <div className="relative w-full aspect-video bg-white rounded-lg overflow-hidden">
             <iframe
               src={`${clip.embed_url}&parent=${embedParent}`}
               className="absolute inset-0 w-full h-full"
@@ -85,14 +83,14 @@ export function ClipPlayerModal({
       </div>
 
       {/* 情報 + コントロール */}
-      <div className="p-4 border-t border-gray-800">
+      <div className="p-4 border-t border-gray-200">
         {/* クリップ情報 */}
         <div className="mb-4">
-          <h2 className="text-lg font-bold text-gray-100 line-clamp-2 mb-1">
+          <h2 className="text-lg font-bold text-gray-900 line-clamp-2 mb-1">
             {clip.title}
           </h2>
-          <p className="text-sm text-gray-400">
-            {clip.broadcaster_name} • {clip.view_count.toLocaleString()}回視聴
+          <p className="text-sm text-gray-500">
+            {clip.broadcaster_name} • {clip.view_count.toLocaleString()}{LABELS.CLIPS.VIEWS_COUNT_SUFFIX}
           </p>
         </div>
 
@@ -101,11 +99,11 @@ export function ClipPlayerModal({
           <Button
             onClick={onPrevious}
             variant="outline"
-            className="flex-1 border-gray-600 text-gray-100 hover:bg-gray-800"
+            className="flex-1 border-gray-300 text-gray-900 hover:bg-gray-100"
             disabled={currentIndex === 0}
           >
             <SkipBack className="w-4 h-4 mr-2" />
-            前へ
+            {LABELS.BUTTONS.PREVIOUS}
           </Button>
           <Button
             onClick={() => window.open(clip.url, '_blank')}
@@ -117,10 +115,10 @@ export function ClipPlayerModal({
           <Button
             onClick={onNext}
             variant="outline"
-            className="flex-1 border-gray-600 text-gray-100 hover:bg-gray-800"
+            className="flex-1 border-gray-300 text-gray-900 hover:bg-gray-100"
             disabled={currentIndex >= totalClips - 1}
           >
-            次へ
+            {LABELS.BUTTONS.NEXT}
             <SkipForward className="w-4 h-4 ml-2" />
           </Button>
         </div>

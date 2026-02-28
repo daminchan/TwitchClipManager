@@ -25,9 +25,9 @@ export function PlaylistCard({
   isLoading = false,
 }: PlaylistCardProps) {
   return (
-    <Card className="bg-[#1a1a1a] border-gray-700 overflow-hidden sticky top-6">
+    <Card className="bg-white border-gray-200 overflow-hidden sticky top-6">
       {/* Twitchプレーヤー / 現在のクリップ */}
-      <div className="relative w-full aspect-video bg-gray-800">
+      <div className="relative w-full aspect-video bg-gray-50">
         {currentClip ? (
           <div className="relative w-full h-full">
             <iframe
@@ -58,8 +58,8 @@ export function PlaylistCard({
       <div className="p-6">
         {currentClip ? (
           <>
-            <h2 className="text-lg font-bold text-gray-100 mb-2 line-clamp-2">{currentClip.title}</h2>
-            <div className="text-sm text-gray-400 mb-2">
+            <h2 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">{currentClip.title}</h2>
+            <div className="text-sm text-gray-500 mb-2">
               <p>{currentClip.broadcaster_name}</p>
               <p>{currentClip.view_count.toLocaleString()}回視聴</p>
             </div>
@@ -69,8 +69,8 @@ export function PlaylistCard({
           </>
         ) : (
           <>
-            <h2 className="text-2xl font-bold text-gray-100 mb-2">{title}</h2>
-            <div className="text-sm text-gray-400 mb-4">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">{title}</h2>
+            <div className="text-sm text-gray-500 mb-4">
               <p>{clipCount}件のクリップ</p>
             </div>
           </>
@@ -81,7 +81,7 @@ export function PlaylistCard({
           <Button
             onClick={onPrevious}
             variant="outline"
-            className="flex-1 border-gray-600 text-gray-100 hover:bg-gray-800"
+            className="flex-1 border-gray-300 text-gray-900 hover:bg-gray-100"
             disabled={currentIndex === 0 || isLoading || clipCount === 0}
           >
             <SkipBack className="w-4 h-4 mr-2" />
@@ -90,7 +90,7 @@ export function PlaylistCard({
           <Button
             onClick={onNext}
             variant="outline"
-            className="flex-1 border-gray-600 text-gray-100 hover:bg-gray-800"
+            className="flex-1 border-gray-300 text-gray-900 hover:bg-gray-100"
             disabled={currentIndex >= clipCount - 1 || isLoading || clipCount === 0}
           >
             次へ

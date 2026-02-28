@@ -3,10 +3,26 @@
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
+import { Heart, Users, Trophy } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { APP_CONFIG, LABELS, ROUTES } from '@/lib/constants';
+
+interface FeatureItemProps {
+  icon: React.ReactNode;
+  text: string;
+}
+
+function FeatureItem({ icon, text }: FeatureItemProps) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex-shrink-0 w-9 h-9 rounded-full bg-[#f0e8d8] flex items-center justify-center">
+        {icon}
+      </div>
+      <span className="text-sm text-[#6b655c]">{text}</span>
+    </div>
+  );
+}
 
 export function LoginForm() {
   const searchParams = useSearchParams();
@@ -27,19 +43,25 @@ export function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-900 to-gray-800 p-4">
-      <Card className="w-full max-w-md bg-gray-900 border-gray-700">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center text-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-[#f8f5f0] p-4">
+      <div className="w-full max-w-sm space-y-8">
+        {/* ロゴ・タイトル */}
+        <div className="text-center space-y-2">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#d4a017] to-[#b8860b] shadow-lg mb-2">
+            <Trophy className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-3xl font-bold text-[#4a4540]">
             {APP_CONFIG.name}
-          </CardTitle>
-          <CardDescription className="text-center text-gray-400">
+          </h1>
+          <p className="text-[#8a8078]">
             {APP_CONFIG.description}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+          </p>
+        </div>
+
+        {/* カード */}
+        <div className="bg-white rounded-2xl shadow-sm border border-[#e6e0d6] p-6 space-y-6">
           {error && (
-            <div className="bg-red-900/20 border border-red-700/50 text-red-400 text-sm p-3 rounded-md">
+            <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-lg">
               {error}
             </div>
           )}
@@ -47,7 +69,7 @@ export function LoginForm() {
           <Button
             onClick={handleGoogleSignIn}
             disabled={isLoading}
-            className="w-full py-6 bg-white hover:bg-gray-100 text-gray-900 border border-gray-300"
+            className="w-full py-6 bg-white hover:bg-[#faf8f5] text-[#4a4540] border border-[#d8d2c8] rounded-xl shadow-sm transition-all hover:shadow-md"
           >
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
               <path
@@ -69,8 +91,24 @@ export function LoginForm() {
             </svg>
             {isLoading ? LABELS.MESSAGES.LOADING : LABELS.ONBOARDING.AUTH.GOOGLE_SIGNIN}
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* 機能紹介 */}
+        <div className="space-y-4 px-2">
+          <FeatureItem
+            icon={<Trophy className="w-4 h-4 text-[#c4a020]" />}
+            text="人気クリップをランキングで発見"
+          />
+          <FeatureItem
+            icon={<Users className="w-4 h-4 text-[#c4a020]" />}
+            text="お気に入り配信者をフォルダで管理"
+          />
+          <FeatureItem
+            icon={<Heart className="w-4 h-4 text-[#c4a020]" />}
+            text="気になるクリップをいいねして保存"
+          />
+        </div>
+      </div>
     </div>
   );
 }

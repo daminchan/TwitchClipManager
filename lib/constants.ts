@@ -132,6 +132,14 @@ export const LABELS = {
     LIKE: 'いいね',
     LIKED: 'いいね済み',
     CLOSE: '閉じる',
+    PREVIOUS: '前へ',
+    NEXT: '次へ',
+    COPY_LINK: 'リンクをコピー',
+    COPIED: 'コピー済み',
+    CREATE: '作成',
+    UPDATE_LABEL: '更新',
+    NEW_CREATE: '新規作成',
+    ADDED: '追加済み',
     // ローディング状態
     SAVING: '保存中...',
     DELETING: '削除中...',
@@ -140,6 +148,9 @@ export const LABELS = {
     SUBMITTING: '送信中...',
     LOGGING_IN: 'ログイン中...',
     SIGNING_UP: '登録中...',
+    CREATING: '作成中...',
+    SEARCHING: '検索中...',
+    ADDING: '追加中',
   },
 
   // フォーム
@@ -198,6 +209,15 @@ export const LABELS = {
     // クリップ
     CLIPS_FETCH_FAILED: 'クリップの取得に失敗しました',
     CLIPS_DATA_EMPTY: 'データが取得できませんでした',
+    // 検索
+    STREAMER_NAME_REQUIRED: '配信者名を入力してください',
+    SEARCH_FAILED: '検索に失敗しました',
+    SEARCH_ERROR: '検索中にエラーが発生しました',
+    STREAMER_NOT_FOUND: '配信者が見つかりませんでした',
+    // 設定
+    DISPLAY_NAME_UNCHANGED: '変更する名前が現在と同じです',
+    // フォルダ
+    FOLDER_NAME_REQUIRED: 'フォルダ名を入力してください',
     // 汎用
     UNKNOWN_ERROR: '予期しないエラーが発生しました',
     NETWORK_ERROR: '通信エラーが発生しました。接続を確認してください',
@@ -218,6 +238,10 @@ export const LABELS = {
     CLIP_UNIT: 'クリップ',
     FOLDER_LABEL: 'フォルダ:',
     VIEWS_SUFFIX: 'views',
+    VIEWS_COUNT_SUFFIX: '回視聴',
+    NO_LIKED_CLIPS: 'まだいいねしたクリップがありません',
+    LIKED_CLIPS_DESC: 'ダッシュボードのクリップをいいねすると、ここに表示されます',
+    REMOVE_FROM_FAVORITES: 'お気に入りから削除',
   },
 
   // 登録促進
@@ -233,9 +257,35 @@ export const LABELS = {
   PLACEHOLDERS: {
     SEARCH_CLIPS: 'クリップを検索...',
     SEARCH_GAMES: 'ゲームを検索...',
+    SEARCH_STREAMERS: '配信者名を検索...',
+    FOLDER_NAME: '例: ぶいすぽ',
     EMAIL: 'your@email.com',
     PASSWORD: '6文字以上',
     NAME: 'あなたの名前',
+  },
+
+  // フォルダ関連
+  FOLDERS: {
+    NEW_FOLDER: '新しいフォルダ',
+    EDIT_FOLDER: 'フォルダを編集',
+    FOLDER_NAME: 'フォルダ名',
+    FOLDER_COLOR: 'フォルダの色',
+    NO_FOLDERS: 'フォルダがありません',
+    NO_FOLDERS_DESC: 'フォルダを作成して配信者を整理しましょう',
+    NO_STREAMERS: '配信者がいません',
+    NO_STREAMERS_DESC: 'お気に入り配信者ページからドラッグ＆ドロップで追加できます',
+    SYNC_WAIT: '同期完了までお待ちください...',
+    STREAMERS_COUNT_SUFFIX: '人の配信者',
+  },
+
+  // 確認ダイアログ
+  CONFIRM: {
+    DELETE_ACCOUNT_WARNING: 'アカウントを完全に削除します。この操作は取り消せません。',
+    DELETE_CONFIRM: '本当に削除しますか？',
+    DELETE_ALL_DATA: 'すべてのデータが完全に削除されます',
+    DELETE_FAVORITES_WARNING: 'お気に入り配信者のリストも削除されます',
+    OPERATION_IRREVERSIBLE: 'この操作は取り消せません',
+    BACK_TO_CLIPS: 'クリップ一覧に戻る',
   },
 
   // オンボーディング

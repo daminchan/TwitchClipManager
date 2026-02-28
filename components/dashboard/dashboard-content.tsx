@@ -4,8 +4,8 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
+import { useQuery } from '@tanstack/react-query';
 import { Search, Flame, Sparkles } from 'lucide-react';
 
 import { ClipGrid } from '@/components/clips/clip-grid';
@@ -171,13 +171,13 @@ export function DashboardContent({
       {/* 検索バー */}
       <div className="mb-6">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
           <Input
             type="text"
             placeholder={LABELS.PLACEHOLDERS.SEARCH_CLIPS}
             value={activeClips.searchQuery}
             onChange={(e) => activeClips.setSearchQuery(e.target.value)}
-            className="pl-10 bg-[#1a1a1a] border-0 text-gray-100 placeholder-gray-400 w-full"
+            className="pl-10 bg-white border-0 text-gray-900 placeholder-gray-400 w-full"
           />
         </div>
       </div>
@@ -185,7 +185,7 @@ export function DashboardContent({
       {showSections ? (
         <>
           {/* ① 週間ランキング（ヘッダー内蔵） */}
-          {ranking.length > 0 && (
+          {ranking.length > 0 ? (
             <section className="mb-8">
               <RankingSection
                 clips={ranking}
@@ -193,23 +193,35 @@ export function DashboardContent({
                 onLikeToggle={handleLikeToggle}
               />
             </section>
-          )}
+          ) : null}
 
           {/* ② HOT */}
-          {hot.length > 0 && (
+          {hot.length > 0 ? (
             <section className="mb-8">
-              <SectionHeader title={LABELS.SECTIONS.HOT} icon={Flame} />
+              <SectionHeader
+                title={LABELS.SECTIONS.HOT}
+                icon={Flame}
+                pillBg="bg-[#f0e4e0]"
+                iconColor="text-[#c07060]"
+                textColor="text-[#8a5848]"
+              />
               <HotSection
                 clips={hot}
                 likedClipIds={activeClips.likedClipIds}
                 onLikeToggle={handleLikeToggle}
               />
             </section>
-          )}
+          ) : null}
 
           {/* ③ おすすめ */}
           <section>
-            <SectionHeader title={LABELS.SECTIONS.RECOMMENDED} icon={Sparkles} />
+            <SectionHeader
+              title={LABELS.SECTIONS.RECOMMENDED}
+              icon={Sparkles}
+              pillBg="bg-[#e8e2ee]"
+              iconColor="text-[#8868a8]"
+              textColor="text-[#6a4880]"
+            />
 
             {/* ソートタブ + フォルダタグ */}
             <div className="mb-6">
@@ -259,18 +271,18 @@ export function DashboardContent({
       )}
 
       {/* トースト通知 */}
-      {toast && (
+      {toast ? (
         <Toast message={toast.message} type={toast.type} onClose={hideToast} />
-      )}
+      ) : null}
 
       {/* オンボーディングモーダル（認証済み + お気に入り0人のみ） */}
-      {isAuthenticated && (
+      {isAuthenticated ? (
         <OnboardingModal
           isOpen={showOnboarding}
           onClose={() => setShowOnboarding(false)}
           skipAuth={true}
         />
-      )}
+      ) : null}
 
       {/* 登録促進モーダル（未認証時にいいね等をクリック） */}
       <RegistrationPromptModal

@@ -38,7 +38,7 @@ export function DangerZoneSection({ onSuccess, onError }: DangerZoneSectionProps
   };
 
   return (
-    <Card className="bg-[#1a1a1a] border-2 border-red-900/30 hover:border-red-900/50 transition-all duration-300 shadow-lg shadow-red-900/20">
+    <Card className="bg-white border-2 border-red-900/30 hover:border-red-900/50 transition-all duration-300 shadow-lg shadow-red-900/20">
       <CardHeader className="pb-4">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-red-600/10 rounded-lg">
@@ -48,8 +48,8 @@ export function DangerZoneSection({ onSuccess, onError }: DangerZoneSectionProps
             <CardTitle className="text-red-400 flex items-center gap-2">
               {LABELS.SECTIONS.DANGEROUS_ACTIONS}
             </CardTitle>
-            <CardDescription className="text-gray-400 text-sm mt-1">
-              アカウントを完全に削除します。この操作は取り消せません。
+            <CardDescription className="text-gray-500 text-sm mt-1">
+              {LABELS.CONFIRM.DELETE_ACCOUNT_WARNING}
             </CardDescription>
           </div>
         </div>
@@ -70,19 +70,19 @@ export function DangerZoneSection({ onSuccess, onError }: DangerZoneSectionProps
               <div className="flex items-start gap-3 mb-3">
                 <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-bold text-red-400 mb-2">本当に削除しますか？</p>
+                  <p className="font-bold text-red-400 mb-2">{LABELS.CONFIRM.DELETE_CONFIRM}</p>
                   <ul className="space-y-2 text-sm">
                     <li className="flex items-start gap-2">
                       <span className="text-red-500 mt-1">•</span>
-                      <span>すべてのデータが完全に削除されます</span>
+                      <span>{LABELS.CONFIRM.DELETE_ALL_DATA}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-red-500 mt-1">•</span>
-                      <span>お気に入り配信者のリストも削除されます</span>
+                      <span>{LABELS.CONFIRM.DELETE_FAVORITES_WARNING}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-red-500 mt-1">•</span>
-                      <span className="font-semibold">この操作は取り消せません</span>
+                      <span className="font-semibold">{LABELS.CONFIRM.OPERATION_IRREVERSIBLE}</span>
                     </li>
                   </ul>
                 </div>
@@ -92,7 +92,7 @@ export function DangerZoneSection({ onSuccess, onError }: DangerZoneSectionProps
               <Button
                 onClick={() => setShowConfirm(false)}
                 variant="outline"
-                className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800 transition-colors"
+                className="flex-1 border-gray-200 text-gray-600 hover:bg-gray-100 transition-colors"
                 disabled={isPending}
               >
                 {LABELS.BUTTONS.CANCEL}

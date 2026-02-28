@@ -66,7 +66,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja" className="dark">
+    <html lang="ja">
       <head>
         <script
           type="application/ld+json"
@@ -74,7 +74,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-900 text-gray-100`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#f9fafb] text-gray-900`}
       >
         <ProgressBarProvider>
           <QueryProvider>

@@ -86,16 +86,16 @@ export function LikedClipsSection() {
 
   return (
     <>
-      <Card className="bg-[#1a1a1a] border-0">
+      <Card className="bg-white border-0">
         <CardHeader>
-          <CardTitle className="text-gray-100">いいねしたクリップ</CardTitle>
-          <CardDescription className="text-gray-400">
+          <CardTitle className="text-gray-900">いいねしたクリップ</CardTitle>
+          <CardDescription className="text-gray-500">
             あとで見返したいクリップを保存できます（{likedClips.length}件）
           </CardDescription>
         </CardHeader>
         <CardContent>
           {likedClips.length === 0 && !isLoading ? (
-            <div className="text-center py-12 text-gray-400">
+            <div className="text-center py-12 text-gray-500">
               <div className="text-5xl mb-3">💜</div>
               <p>まだいいねしたクリップがありません</p>
               <p className="text-sm mt-2">ダッシュボードでクリップにいいねしてみましょう</p>

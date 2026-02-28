@@ -147,7 +147,7 @@ export function FavoriteList({ onRemoveFavorite }: FavoriteListProps) {
 
   if (favorites.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-400 text-sm">
+      <div className="text-center py-8 text-gray-500 text-sm">
         お気に入りの配信者がまだありません
       </div>
     );
@@ -171,7 +171,7 @@ export function FavoriteList({ onRemoveFavorite }: FavoriteListProps) {
       {visibleFavorites.map((favorite, index) => (
         <Card
           key={favorite.id}
-          className={`p-3 bg-gray-900 border-gray-700 hover:bg-gray-800 cursor-pointer transition ${showCards ? 'animate-card' : 'opacity-0'}`}
+          className={`p-3 bg-white border-gray-200 hover:bg-gray-100 cursor-pointer transition ${showCards ? 'animate-card' : 'opacity-0'}`}
           style={showCards ? { animationDelay: `${index * ANIMATION.CARD_DELAY_STEP}ms` } : undefined}
           onClick={() => handleClickStreamer(favorite.streamerLogin)}
         >
@@ -186,12 +186,12 @@ export function FavoriteList({ onRemoveFavorite }: FavoriteListProps) {
                   />
                 )}
                 {favorite.isLive && (
-                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-red-600 rounded-full border-2 border-gray-900" />
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-red-600 rounded-full border-2 border-white" />
                 )}
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-sm text-gray-100">{favorite.streamerName}</span>
+                  <span className="font-medium text-sm text-gray-900">{favorite.streamerName}</span>
                   {favorite.isLive && (
                     <Badge className="bg-red-600 text-white text-xs px-2 py-0">LIVE</Badge>
                   )}
@@ -216,7 +216,7 @@ export function FavoriteList({ onRemoveFavorite }: FavoriteListProps) {
       {sortedFavorites.length > displayLimit && (
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full py-2 text-sm text-gray-400 hover:text-gray-200 transition-colors"
+          className="w-full py-2 text-sm text-gray-500 hover:text-gray-800 transition-colors"
         >
           {isExpanded ? '▲ 閉じる' : `▼ もっと見る (${hiddenCount}人)`}
         </button>

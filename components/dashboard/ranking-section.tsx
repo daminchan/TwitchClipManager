@@ -18,10 +18,10 @@ interface RankingSectionProps {
 
 function RankLabel({ rank }: { rank: number }) {
   const colorClass =
-    rank === 1 ? 'text-yellow-400' :
-    rank === 2 ? 'text-gray-300' :
-    rank === 3 ? 'text-amber-600' :
-    'text-gray-400';
+    rank === 1 ? 'text-[#d4a017]' :
+    rank === 2 ? 'text-[#8a8a9a]' :
+    rank === 3 ? 'text-[#c07840]' :
+    'text-[#b8b0a6]';
 
   return (
     <div className={`flex items-center gap-1 mb-2 ${colorClass}`}>
@@ -82,16 +82,18 @@ export function RankingSection({
     <div>
       {/* ヘッダー + ページ切り替えボタン */}
       <div className="flex items-center gap-2 mb-4">
-        <Trophy className="w-5 h-5 text-purple-400" />
-        <h2 className="text-lg font-bold text-gray-100">
-          {LABELS.SECTIONS.WEEKLY_RANKING}
-        </h2>
-        {hasButtons && (
+        <div className="inline-flex items-center gap-2 ranking-header-badge rounded-full px-4 py-1.5">
+          <Trophy className="w-5 h-5 text-amber-100" />
+          <h2 className="text-lg font-bold text-white">
+            {LABELS.SECTIONS.WEEKLY_RANKING}
+          </h2>
+        </div>
+        {hasButtons ? (
           <div className="ml-auto flex items-center gap-2">
             {prevButton}
             {nextButton}
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* カードグリッド（常に1行） */}

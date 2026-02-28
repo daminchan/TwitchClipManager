@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trash2, Users, RefreshCw } from 'lucide-react';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { removeStreamerFromFolder } from '@/actions/folders';
 import { modalOverlay, modalContent } from '@/lib/animations';
+import { LABELS } from '@/lib/constants';
 import type { Folder, FolderStreamer } from '@/types/database';
 
 interface FolderStreamersModalProps {
@@ -75,21 +76,24 @@ export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: Fol
     <AnimatePresence>
       {isOpen && folder && (
         <motion.div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-2 sm:p-4"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-2 sm:p-4"
           variants={modalOverlay}
           initial="hidden"
           animate="visible"
           exit="exit"
         >
           <motion.div
-            className="relative w-full max-w-2xl bg-[#0f0f0f] rounded-lg shadow-2xl border border-[#2a2a2a] overflow-hidden max-h-[95vh] sm:max-h-[80vh] flex flex-col"
+            className="relative w-full max-w-2xl bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden max-h-[95vh] sm:max-h-[80vh] flex flex-col"
             variants={modalContent}
             initial="hidden"
             animate="visible"
             exit="exit"
+            role="dialog"
+            aria-modal="true"
+            aria-label={folder.name}
           >
             {/* ヘッダー */}
-            <div className="flex items-center justify-between p-6 border-b border-[#2a2a2a]">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div className="flex items-center gap-3">
                 <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center"
@@ -98,15 +102,15 @@ export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: Fol
                   <Users className="w-5 h-5" style={{ color: folder.color }} />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-100">{folder.name}</h2>
+                  <h2 className="text-xl font-bold text-gray-900">{folder.name}</h2>
                   <div className="flex items-center gap-2">
-                    <p className="text-sm text-gray-400">
-                      {localStreamers.length}人の配信者
+                    <p className="text-sm text-gray-500">
+                      {localStreamers.length}{LABELS.FOLDERS.STREAMERS_COUNT_SUFFIX}
                     </p>
                     {/* 同期中インジケーター */}
                     {pendingCount > 0 && (
                       <span className="flex items-center gap-1.5 text-xs text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded-full">
-                        <RefreshCw className="w-3 h-3 animate-spin" />
+                        <div className="animate-spin"><RefreshCw className="w-3 h-3" /></div>
                         同期中: {pendingCount}件
                       </span>
                     )}
@@ -119,11 +123,11 @@ export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: Fol
                 className={`p-2 rounded-full transition-colors button-press-feedback ${
                   pendingCount > 0
                     ? 'opacity-50 cursor-not-allowed'
-                    : 'hover:bg-[#1a1a1a]'
+                    : 'hover:bg-gray-100'
                 }`}
                 aria-label="閉じる"
               >
-                <X className="w-5 h-5 text-gray-400" />
+                <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>
 
@@ -132,15 +136,15 @@ export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: Fol
               {localStreamers.length === 0 ? (
                 <div className="text-center py-16">
                   <Users className="w-16 h-16 mx-auto mb-4 text-gray-600" />
-                  <p className="text-gray-400 mb-2">配信者がいません</p>
+                  <p className="text-gray-500 mb-2">{LABELS.FOLDERS.NO_STREAMERS}</p>
                   <p className="text-sm text-gray-500">
-                    お気に入り配信者ページからドラッグ＆ドロップで追加できます
+                    {LABELS.FOLDERS.NO_STREAMERS_DESC}
                   </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {localStreamers.map((streamer) => {
-                    // temp-で始まるIDは同期中（楽観的UI追加中）
+                    // temp-で始まるIDは同期中（楽観的UI{LABELS.BUTTONS.ADDING}）
                     const isSyncing = streamer.id.startsWith('temp-');
 
                     return (
@@ -148,16 +152,16 @@ export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: Fol
                         key={streamer.id}
                         className={`relative group rounded-lg p-4 transition-all duration-200 ${
                           isSyncing
-                            ? 'bg-[#1a1a1a]/50 cursor-not-allowed'
-                            : 'bg-[#1a1a1a] hover:bg-[#222222]'
+                            ? 'bg-white/50 cursor-not-allowed'
+                            : 'bg-white hover:bg-gray-100'
                         }`}
                       >
                         {/* 同期中バッジ */}
                         {isSyncing && (
                           <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10">
                             <span className="flex items-center gap-1 text-xs text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded-full">
-                              <RefreshCw className="w-3 h-3 animate-spin" />
-                              追加中
+                              <div className="animate-spin"><RefreshCw className="w-3 h-3" /></div>
+                              {LABELS.BUTTONS.ADDING}
                             </span>
                           </div>
                         )}
@@ -184,10 +188,10 @@ export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: Fol
 
                           {/* 配信者情報 */}
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-gray-100 truncate">
+                            <p className="text-sm font-semibold text-gray-900 truncate">
                               {streamer.streamerName}
                             </p>
-                            <p className="text-xs text-gray-400 truncate">
+                            <p className="text-xs text-gray-500 truncate">
                               @{streamer.streamerLogin}
                             </p>
                           </div>
@@ -199,7 +203,7 @@ export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: Fol
                               className="p-2 hover:bg-red-900/30 rounded transition-colors button-press-feedback opacity-0 group-hover:opacity-100"
                               aria-label="フォルダから削除"
                             >
-                              <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-400" />
+                              <Trash2 className="w-4 h-4 text-gray-500 hover:text-red-400" />
                             </button>
                           )}
                         </div>
@@ -211,7 +215,7 @@ export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: Fol
             </div>
 
             {/* フッター */}
-            <div className="p-6 border-t border-[#2a2a2a]">
+            <div className="p-6 border-t border-gray-200">
               <Button
                 onClick={handleClose}
                 disabled={pendingCount > 0}
@@ -224,11 +228,11 @@ export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: Fol
               >
                 {pendingCount > 0 ? (
                   <span className="flex items-center gap-2">
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    同期完了までお待ちください...
+                    <div className="animate-spin"><RefreshCw className="w-4 h-4" /></div>
+                    {LABELS.FOLDERS.SYNC_WAIT}
                   </span>
                 ) : (
-                  '閉じる'
+                  LABELS.BUTTONS.CLOSE
                 )}
               </Button>
             </div>

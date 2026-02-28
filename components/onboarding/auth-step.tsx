@@ -95,10 +95,10 @@ export function AuthStep({ onSuccess }: AuthStepProps) {
     <div className="flex flex-col h-full">
       {/* ヘッダー */}
       <div className="mb-8 text-center">
-        <h2 className="text-3xl font-bold text-gray-100 mb-2">
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">
           {isSignUp ? AUTH.TITLE_SIGNUP : AUTH.TITLE_LOGIN}
         </h2>
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-gray-500">
           {isSignUp ? AUTH.SUBTITLE_SIGNUP : AUTH.SUBTITLE_LOGIN}
         </p>
       </div>
@@ -134,10 +134,10 @@ export function AuthStep({ onSuccess }: AuthStepProps) {
       {/* 区切り線 */}
       <div className="relative mb-6">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-700"></div>
+          <div className="w-full border-t border-gray-200"></div>
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="px-4 bg-[#0f0f0f] text-gray-400">{AUTH.OR}</span>
+          <span className="px-4 bg-white text-gray-500">{AUTH.OR}</span>
         </div>
       </div>
 
@@ -147,17 +147,17 @@ export function AuthStep({ onSuccess }: AuthStepProps) {
           {/* 名前（新規登録時のみ） */}
           {isSignUp && (
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-600 mb-2">
                 {LABELS.FORM.NAME}
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
                 <Input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder={LABELS.PLACEHOLDERS.NAME}
-                  className="pl-10 bg-[#1a1a1a] border-gray-700 text-gray-100"
+                  className="pl-10 bg-white border-gray-200 text-gray-900"
                 />
               </div>
             </div>
@@ -165,36 +165,36 @@ export function AuthStep({ onSuccess }: AuthStepProps) {
 
           {/* メールアドレス */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-600 mb-2">
               {LABELS.FORM.EMAIL}
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
               <Input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={LABELS.PLACEHOLDERS.EMAIL}
                 required
-                className="pl-10 bg-[#1a1a1a] border-gray-700 text-gray-100"
+                className="pl-10 bg-white border-gray-200 text-gray-900"
               />
             </div>
           </div>
 
           {/* パスワード */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-600 mb-2">
               {LABELS.FORM.PASSWORD}
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
               <Input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={LABELS.PLACEHOLDERS.PASSWORD}
                 required
-                className="pl-10 bg-[#1a1a1a] border-gray-700 text-gray-100"
+                className="pl-10 bg-white border-gray-200 text-gray-900"
               />
             </div>
           </div>
@@ -227,7 +227,7 @@ export function AuthStep({ onSuccess }: AuthStepProps) {
             setIsSignUp(!isSignUp);
             setError('');
           }}
-          className="text-sm text-gray-400 hover:text-gray-300 transition-colors"
+          className="text-sm text-gray-500 hover:text-gray-600 transition-colors"
         >
           {isSignUp ? (
             <>

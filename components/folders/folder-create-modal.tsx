@@ -8,7 +8,7 @@ import { modalOverlay, modalContent } from '@/lib/animations';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createFolder } from '@/actions/folders';
-import { FOLDER_COLORS } from '@/lib/constants';
+import { FOLDER_COLORS, LABELS } from '@/lib/constants';
 import type { Folder } from '@/types/database';
 
 interface FolderCreateModalProps {
@@ -30,7 +30,7 @@ export function FolderCreateModal({ isOpen, onClose, onSuccess, onFolderIdResolv
     setError('');
 
     if (!name.trim()) {
-      setError('フォルダ名を入力してください');
+      setError(LABELS.ERRORS.FOLDER_NAME_REQUIRED);
       return;
     }
 
@@ -91,9 +91,9 @@ export function FolderCreateModal({ isOpen, onClose, onSuccess, onFolderIdResolv
     <AnimatePresence>
       {isOpen && (
         <motion.div className="modal-overlay" variants={modalOverlay} initial="hidden" animate="visible" exit="exit">
-          <motion.div className="modal-container-sm" variants={modalContent} initial="hidden" animate="visible" exit="exit">
+          <motion.div className="modal-container-sm" variants={modalContent} initial="hidden" animate="visible" exit="exit" role="dialog" aria-modal="true" aria-label={LABELS.FOLDERS.NEW_FOLDER}>
         <div className="modal-header">
-          <h2 className="text-title">新しいフォルダ</h2>
+          <h2 className="text-title">{LABELS.FOLDERS.NEW_FOLDER}</h2>
           <button
             onClick={handleClose}
             disabled={isPending}
@@ -109,14 +109,14 @@ export function FolderCreateModal({ isOpen, onClose, onSuccess, onFolderIdResolv
           {/* フォルダ名 */}
           <div>
             <label htmlFor="folder-name" className="text-label">
-              フォルダ名
+              {LABELS.FOLDERS.FOLDER_NAME}
             </label>
             <Input
               id="folder-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="例: ぶいすぽ"
+              placeholder={LABELS.PLACEHOLDERS.FOLDER_NAME}
               disabled={isPending}
               className="input-dark"
               maxLength={50}
@@ -129,7 +129,7 @@ export function FolderCreateModal({ isOpen, onClose, onSuccess, onFolderIdResolv
           {/* カラー選択 */}
           <div>
             <label className="text-label">
-              フォルダの色
+              {LABELS.FOLDERS.FOLDER_COLOR}
             </label>
             <div className="grid grid-cols-4 gap-3">
               {FOLDER_COLORS.map((color) => (
@@ -141,7 +141,7 @@ export function FolderCreateModal({ isOpen, onClose, onSuccess, onFolderIdResolv
                   className={`
                     relative h-12 rounded-lg transition-all duration-200 button-press-feedback
                     ${selectedColor === color.value
-                      ? 'ring-2 ring-white ring-offset-2 ring-offset-[#0f0f0f] scale-110'
+                      ? 'ring-2 ring-white ring-offset-2 ring-offset-white scale-110'
                       : 'hover:scale-105'
                     }
                   `}
@@ -167,9 +167,9 @@ export function FolderCreateModal({ isOpen, onClose, onSuccess, onFolderIdResolv
               variant="outline"
               onClick={handleClose}
               disabled={isPending}
-              className="flex-1 border-gray-700 text-gray-300 hover:bg-[#1a1a1a] button-press-feedback"
+              className="flex-1 border-gray-200 text-gray-600 hover:bg-gray-100 button-press-feedback"
             >
-              キャンセル
+              {LABELS.BUTTONS.CANCEL}
             </Button>
             <Button
               type="submit"
@@ -179,10 +179,10 @@ export function FolderCreateModal({ isOpen, onClose, onSuccess, onFolderIdResolv
               {isPending ? (
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  作成中...
+                  {LABELS.BUTTONS.CREATING}
                 </div>
               ) : (
-                '作成'
+                LABELS.BUTTONS.CREATE
               )}
             </Button>
           </div>

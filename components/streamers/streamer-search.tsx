@@ -9,17 +9,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { API_ENDPOINTS } from '@/lib/constants';
+import { API_ENDPOINTS, LABELS } from '@/lib/constants';
 import { sortByLiveStatus } from '@/lib/utils';
 
 import type { TwitchChannel } from '@/types/twitch';
+
+const EMPTY_STREAMER_IDS: string[] = [];
 
 interface StreamerSearchProps {
   onSelectStreamer: (streamer: TwitchChannel) => void;
   addedStreamerIds?: string[]; // 既に追加済みの配信者ID
 }
 
-export function StreamerSearch({ onSelectStreamer, addedStreamerIds = [] }: StreamerSearchProps) {
+export function StreamerSearch({ onSelectStreamer, addedStreamerIds = EMPTY_STREAMER_IDS }: StreamerSearchProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<TwitchChannel[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -63,7 +65,7 @@ export function StreamerSearch({ onSelectStreamer, addedStreamerIds = [] }: Stre
     e.preventDefault();
 
     if (!query || query.trim().length === 0) {
-      setError('配信者名を入力してください');
+      setError(LABELS.ERRORS.STREAMER_NAME_REQUIRED);
       return;
     }
 
@@ -82,7 +84,7 @@ export function StreamerSearch({ onSelectStreamer, addedStreamerIds = [] }: Stre
       );
 
       if (!response.ok) {
-        throw new Error('検索に失敗しました');
+        throw new Error(LABELS.ERRORS.SEARCH_FAILED);
       }
 
       const result = await response.json();
@@ -94,11 +96,11 @@ export function StreamerSearch({ onSelectStreamer, addedStreamerIds = [] }: Stre
       setResults(result.data);
 
       if (result.data.length === 0) {
-        setError('配信者が見つかりませんでした');
+        setError(LABELS.ERRORS.STREAMER_NOT_FOUND);
       }
     } catch (error) {
 
-      setError('検索中にエラーが発生しました');
+      setError(LABELS.ERRORS.SEARCH_ERROR);
     } finally {
       setIsLoading(false);
     }
@@ -109,18 +111,18 @@ export function StreamerSearch({ onSelectStreamer, addedStreamerIds = [] }: Stre
       <form onSubmit={handleSearch} className="flex gap-2">
         <Input
           type="text"
-          placeholder="配信者名を検索..."
+          placeholder={LABELS.PLACEHOLDERS.SEARCH_STREAMERS}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           disabled={isLoading}
-          className="flex-1 bg-gray-900 border-gray-700 text-gray-100 placeholder-gray-400"
+          className="flex-1 bg-white border-gray-200 text-gray-900 placeholder-gray-500"
         />
         <Button
           type="submit"
           disabled={isLoading}
           className="bg-purple-600 hover:bg-purple-700"
         >
-          {isLoading ? '検索中...' : '検索'}
+          {isLoading ? LABELS.BUTTONS.SEARCHING : '検索'}
         </Button>
       </form>
 
@@ -133,13 +135,13 @@ export function StreamerSearch({ onSelectStreamer, addedStreamerIds = [] }: Stre
       {sortedResults.length > 0 && (
         <div className="space-y-2">
           {/* 検索結果ヘッダー */}
-          <div className="flex items-center justify-between pb-2 border-b border-gray-800">
-            <p className="text-sm text-gray-400">
+          <div className="flex items-center justify-between pb-2 border-b border-gray-200">
+            <p className="text-sm text-gray-500">
               {sortedResults.length}件の配信者が見つかりました
             </p>
             <button
               onClick={handleClearResults}
-              className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-100 transition"
+              className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-900 transition"
               aria-label="検索結果を閉じる"
             >
               <X className="w-4 h-4" />
@@ -155,7 +157,7 @@ export function StreamerSearch({ onSelectStreamer, addedStreamerIds = [] }: Stre
             return (
               <Card
                 key={streamer.id}
-                className="p-3 bg-gray-900 border-gray-700 hover:bg-gray-800 transition"
+                className="p-3 bg-white border-gray-200 hover:bg-gray-100 transition"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center space-x-3 flex-1 min-w-0">
@@ -165,7 +167,7 @@ export function StreamerSearch({ onSelectStreamer, addedStreamerIds = [] }: Stre
                       className="w-10 h-10 rounded-full flex-shrink-0"
                     />
                     <div className="min-w-0">
-                      <div className="font-medium text-sm text-gray-100 truncate">{streamer.display_name}</div>
+                      <div className="font-medium text-sm text-gray-900 truncate">{streamer.display_name}</div>
                       <div className="text-xs text-gray-500 truncate">
                         {streamer.game_name || '配信中ではありません'}
                       </div>
@@ -187,7 +189,7 @@ export function StreamerSearch({ onSelectStreamer, addedStreamerIds = [] }: Stre
                         className="bg-green-600/20 text-green-400 border border-green-600/50 cursor-default"
                       >
                         <Check className="w-4 h-4 mr-1" />
-                        追加済み
+                        {LABELS.BUTTONS.ADDED}
                       </Button>
                     ) : isAddingThis ? (
                       <Button
@@ -196,8 +198,8 @@ export function StreamerSearch({ onSelectStreamer, addedStreamerIds = [] }: Stre
                         disabled
                         className="bg-purple-600/20 text-purple-400 border border-purple-600/50"
                       >
-                        <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                        追加中
+                        <div className="animate-spin"><Loader2 className="w-4 h-4" /></div>
+                        {LABELS.BUTTONS.ADDING}
                       </Button>
                     ) : (
                       <Button

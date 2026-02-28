@@ -110,25 +110,27 @@ export function OnboardingModal({ isOpen, onClose, skipAuth = false }: Onboardin
           exit="exit"
         >
           {/* 背景オーバーレイ */}
-          <div className="absolute inset-0 bg-black/90" />
+          <div className="absolute inset-0 bg-black/50" />
 
           {/* モーダルコンテンツ */}
           <motion.div
-            className="relative w-full max-w-4xl h-[95vh] sm:h-[90vh] bg-[#0f0f0f] rounded-lg shadow-2xl border border-gray-800 flex flex-col"
+            className="relative w-full max-w-4xl h-[95vh] sm:h-[90vh] bg-white rounded-lg shadow-2xl border border-gray-200 flex flex-col"
             variants={modalContent}
             initial="hidden"
             animate="visible"
             exit="exit"
+            role="dialog"
+            aria-modal="true"
           >
             {/* ヘッダー（閉じるボタン） */}
             {currentStep !== 'auth' && (
               <div className="absolute top-4 right-4 z-10">
                 <button
                   onClick={onClose}
-                  className="p-2 rounded-full bg-[#1a1a1a] hover:bg-[#2a2a2a] transition-colors"
+                  className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
                   aria-label="閉じる"
                 >
-                  <X className="w-6 h-6 text-gray-400" />
+                  <X className="w-6 h-6 text-gray-500" />
                 </button>
               </div>
             )}
@@ -147,7 +149,7 @@ export function OnboardingModal({ isOpen, onClose, skipAuth = false }: Onboardin
                       className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
                         currentStep === 'game'
                           ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/50'
-                          : 'bg-gray-700 text-gray-400'
+                          : 'bg-gray-200 text-gray-500'
                       }`}
                     >
                       1
@@ -159,7 +161,7 @@ export function OnboardingModal({ isOpen, onClose, skipAuth = false }: Onboardin
 
                   {/* 区切り線 */}
                   <div className={`w-12 h-0.5 transition-colors duration-300 ${
-                    currentStep === 'streamer' ? 'bg-purple-600' : 'bg-gray-700'
+                    currentStep === 'streamer' ? 'bg-purple-600' : 'bg-gray-200'
                   }`} />
 
                   {/* ステップ2: 配信者選択 */}
@@ -172,7 +174,7 @@ export function OnboardingModal({ isOpen, onClose, skipAuth = false }: Onboardin
                       className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
                         currentStep === 'streamer'
                           ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/50'
-                          : 'bg-gray-700 text-gray-400'
+                          : 'bg-gray-200 text-gray-500'
                       }`}
                     >
                       2

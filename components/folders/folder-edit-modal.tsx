@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { updateFolder } from '@/actions/folders';
 import { modalOverlay, modalContent } from '@/lib/animations';
-import { FOLDER_COLORS } from '@/lib/constants';
+import { FOLDER_COLORS, LABELS } from '@/lib/constants';
 import type { Folder } from '@/types/database';
 
 interface FolderEditModalProps {
@@ -24,13 +24,16 @@ export function FolderEditModal({ isOpen, folder, onClose, onSuccess }: FolderEd
   const [selectedColor, setSelectedColor] = useState<string>(FOLDER_COLORS[0].value);
   const [error, setError] = useState('');
 
-  // フォルダ情報をフォームに反映
+  // フォルダIDが変更されたら即座にリセット（前のデータが表示される問題を防止）
+  const prevFolderIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (folder) {
-      setName(folder.name);
-      setSelectedColor(folder.color);
+    const currentId = folder?.id || null;
+    if (currentId !== prevFolderIdRef.current) {
+      setName(folder?.name || '');
+      setSelectedColor(folder?.color || FOLDER_COLORS[0].value);
+      prevFolderIdRef.current = currentId;
     }
-  }, [folder]);
+  }, [folder?.id, folder?.name, folder?.color]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +41,7 @@ export function FolderEditModal({ isOpen, folder, onClose, onSuccess }: FolderEd
     setError('');
 
     if (!name.trim()) {
-      setError('フォルダ名を入力してください');
+      setError(LABELS.ERRORS.FOLDER_NAME_REQUIRED);
       return;
     }
 
@@ -97,9 +100,12 @@ export function FolderEditModal({ isOpen, folder, onClose, onSuccess }: FolderEd
             initial="hidden"
             animate="visible"
             exit="exit"
+            role="dialog"
+            aria-modal="true"
+            aria-label={LABELS.FOLDERS.EDIT_FOLDER}
           >
             <div className="modal-header">
-              <h2 className="text-title">フォルダを編集</h2>
+              <h2 className="text-title">{LABELS.FOLDERS.EDIT_FOLDER}</h2>
               <button
                 onClick={handleClose}
                 className="modal-close-btn button-press-feedback"
@@ -114,14 +120,14 @@ export function FolderEditModal({ isOpen, folder, onClose, onSuccess }: FolderEd
               {/* フォルダ名 */}
               <div>
                 <label htmlFor="folder-name-edit" className="text-label">
-                  フォルダ名
+                  {LABELS.FOLDERS.FOLDER_NAME}
                 </label>
                 <Input
                   id="folder-name-edit"
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="例: ぶいすぽ"
+                  placeholder={LABELS.PLACEHOLDERS.FOLDER_NAME}
                   className="input-dark"
                   maxLength={50}
                 />
@@ -133,7 +139,7 @@ export function FolderEditModal({ isOpen, folder, onClose, onSuccess }: FolderEd
               {/* カラー選択 */}
               <div>
                 <label className="text-label">
-                  フォルダの色
+                  {LABELS.FOLDERS.FOLDER_COLOR}
                 </label>
                 <div className="grid grid-cols-4 gap-3">
                   {FOLDER_COLORS.map((color) => (
@@ -144,7 +150,7 @@ export function FolderEditModal({ isOpen, folder, onClose, onSuccess }: FolderEd
                       className={`
                         relative h-12 rounded-lg transition-all duration-200 button-press-feedback
                         ${selectedColor === color.value
-                          ? 'ring-2 ring-white ring-offset-2 ring-offset-[#0f0f0f] scale-110'
+                          ? 'ring-2 ring-white ring-offset-2 ring-offset-white scale-110'
                           : 'hover:scale-105'
                         }
                       `}
@@ -169,16 +175,16 @@ export function FolderEditModal({ isOpen, folder, onClose, onSuccess }: FolderEd
                   type="button"
                   variant="outline"
                   onClick={handleClose}
-                  className="flex-1 border-gray-700 text-gray-300 hover:bg-[#1a1a1a] button-press-feedback"
+                  className="flex-1 border-gray-200 text-gray-600 hover:bg-gray-100 button-press-feedback"
                 >
-                  キャンセル
+                  {LABELS.BUTTONS.CANCEL}
                 </Button>
                 <Button
                   type="submit"
                   disabled={!name.trim()}
                   className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white button-press-feedback"
                 >
-                  更新
+                  {LABELS.BUTTONS.UPDATE_LABEL}
                 </Button>
               </div>
             </form>
