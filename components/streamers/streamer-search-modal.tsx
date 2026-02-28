@@ -136,15 +136,15 @@ export function StreamerSearchModal({
             aria-label={LABELS.SECTIONS.SEARCH_STREAMERS}
           >
             <div className="modal-header">
-              <h2 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+              <h2 className="text-title">
                 {LABELS.SECTIONS.SEARCH_STREAMERS}
               </h2>
               <button
                 onClick={handleClose}
-                className="modal-close-btn"
+                className="modal-close-btn button-press-feedback"
                 aria-label="閉じる"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
@@ -152,20 +152,20 @@ export function StreamerSearchModal({
               {/* 検索フォーム */}
               <form onSubmit={handleSearch} className="mb-6">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#b8b0a6]" />
                   <Input
                     type="text"
                     placeholder={LABELS.PLACEHOLDERS.SEARCH_STREAMERS}
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     disabled={isLoading}
-                    className="pl-10 bg-white border-gray-200 text-gray-900 placeholder-gray-500"
+                    className="pl-10 input-dark"
                   />
                 </div>
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full mt-3 bg-purple-600 hover:bg-purple-700"
+                  className="w-full mt-3 btn-primary"
                 >
                   {isLoading ? LABELS.BUTTONS.SEARCHING : '検索'}
                 </Button>
@@ -173,7 +173,7 @@ export function StreamerSearchModal({
 
               {/* エラー表示 */}
               {error && (
-                <div className="bg-red-900/30 border border-red-700/50 text-red-400 text-sm p-3 rounded-md mb-4">
+                <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-md mb-4">
                   {error}
                 </div>
               )}
@@ -181,7 +181,7 @@ export function StreamerSearchModal({
               {/* 検索結果 */}
               {sortedResults.length > 0 && (
                 <div>
-                  <p className="text-sm text-gray-500 mb-4">
+                  <p className="text-sm text-[#a09890] mb-4">
                     {sortedResults.length}件の配信者が見つかりました
                   </p>
 
@@ -193,7 +193,7 @@ export function StreamerSearchModal({
                       return (
                         <Card
                           key={streamer.id}
-                          className="p-4 bg-white border-gray-200 hover:bg-gray-100 transition"
+                          className="p-4 bg-[#faf8f5] border-[#e6e0d6] hover:bg-[#ebe5dc] transition"
                         >
                           <div className="flex items-center justify-between gap-3">
                             <div className="flex items-center space-x-3 flex-1 min-w-0">
@@ -203,11 +203,11 @@ export function StreamerSearchModal({
                                 className="w-14 h-14 rounded-full flex-shrink-0"
                               />
                               <div className="min-w-0">
-                                <div className="font-medium text-base text-gray-900 truncate">{streamer.display_name}</div>
-                                <div className="text-sm text-gray-500 truncate">
+                                <div className="font-medium text-base text-[#44403c] truncate">{streamer.display_name}</div>
+                                <div className="text-sm text-[#a09890] truncate">
                                   @{streamer.broadcaster_login}
                                 </div>
-                                <div className="text-xs text-gray-500 mt-1 truncate">
+                                <div className="text-xs text-[#b8b0a6] mt-1 truncate">
                                   {streamer.game_name || '配信中ではありません'}
                                 </div>
                               </div>
@@ -216,7 +216,7 @@ export function StreamerSearchModal({
                             <div className="flex items-center gap-2 flex-shrink-0">
                               {/* ライブバッジ */}
                               {streamer.is_live && (
-                                <Badge className="bg-red-600 text-white text-xs">LIVE</Badge>
+                                <Badge className="bg-red-500 text-white text-xs">LIVE</Badge>
                               )}
 
                               {/* 追加ボタン */}
@@ -225,7 +225,7 @@ export function StreamerSearchModal({
                                   size="sm"
                                   variant="ghost"
                                   disabled
-                                  className="bg-green-600/20 text-green-400 border border-green-600/50 cursor-default"
+                                  className="bg-green-50 text-green-600 border border-green-200 cursor-default"
                                 >
                                   <Check className="w-4 h-4 mr-1" />
                                   {LABELS.BUTTONS.ADDED}
@@ -235,7 +235,7 @@ export function StreamerSearchModal({
                                   size="sm"
                                   variant="ghost"
                                   disabled
-                                  className="bg-purple-600/20 text-purple-400 border border-purple-600/50"
+                                  className="bg-[#ebe5dc] text-[#6b655c] border border-[#e0d9cf]"
                                 >
                                   <div className="animate-spin"><Loader2 className="w-4 h-4" /></div>
                                   {LABELS.BUTTONS.ADDING}
@@ -244,7 +244,7 @@ export function StreamerSearchModal({
                                 <Button
                                   size="sm"
                                   onClick={(e) => handleSelectStreamer(streamer, e)}
-                                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                                  className="btn-primary"
                                 >
                                   <Plus className="w-4 h-4 mr-1" />
                                   追加
@@ -262,8 +262,8 @@ export function StreamerSearchModal({
               {/* 初期状態 */}
               {!isLoading && results.length === 0 && !error && (
                 <div className="text-center py-12">
-                  <Search className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                  <p className="text-gray-500 text-sm">
+                  <Search className="w-16 h-16 text-[#c4bdb2] mx-auto mb-4" />
+                  <p className="text-[#a09890] text-sm">
                     配信者名を入力して検索してください
                   </p>
                 </div>

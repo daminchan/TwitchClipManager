@@ -7,7 +7,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { Search, Heart, ThumbsUp, Gamepad2, Radio, ChevronRight, Play } from 'lucide-react';
+import { Search, Folder, ThumbsUp, Gamepad2, Radio, ChevronRight, Play } from 'lucide-react';
 import { LiveStreamerList } from '@/components/streamers/live-streamer-list';
 
 // モーダルを遅延読み込み（bundle-dynamic-imports）
@@ -234,7 +234,7 @@ export function DashboardSidebar({
                 focus:ring-[#baa8c2] group cursor-pointer
               `}>
                 <div className={`flex items-center ${isSidebarOpen ? 'gap-3' : 'justify-center'}`}>
-                  <Heart className="w-5 h-5 text-[#9868a0] flex-shrink-0" />
+                  <Folder className="w-5 h-5 text-[#9868a0] flex-shrink-0" />
                   {isSidebarOpen && (
                     <>
                       <span className="text-sm font-medium text-[#7a5085] flex-1">
@@ -257,7 +257,7 @@ export function DashboardSidebar({
                 focus:ring-[#baa8c2] group cursor-pointer
               `}>
                 <div className={`flex items-center ${isSidebarOpen ? 'gap-3' : 'justify-center'}`}>
-                  <Heart className="w-5 h-5 text-[#9868a0] flex-shrink-0" />
+                  <Folder className="w-5 h-5 text-[#9868a0] flex-shrink-0" />
                   {isSidebarOpen && (
                     <span className="text-sm font-medium text-[#7a5085] flex-1 text-left">
                       {LABELS.SECTIONS.FAVORITE_STREAMERS}

@@ -2,11 +2,12 @@
 
 'use client';
 
+import Link from 'next/link';
 import { TrendingUp, Calendar, Folder } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { LABELS } from '@/lib/constants';
+import { LABELS, ROUTES } from '@/lib/constants';
 import type { Folder as FolderType } from '@/types/database';
 
 export type SortType = 'views' | 'date-desc' | 'date-asc';
@@ -64,6 +65,19 @@ export function ClipSortTabs({
             </Button>
           );
         })}
+
+        {/* お気に入り配信者リンク */}
+        <Button
+          variant="ghost"
+          size="sm"
+          asChild
+          className="text-[#c09080] hover:text-[#a06858] hover:bg-[#f5e8e4] rounded-none"
+        >
+          <Link href={ROUTES.FAVORITES}>
+            <span className="mr-2">📁</span>
+            お気に入り配信者
+          </Link>
+        </Button>
 
         {/* クリップ数バッジ */}
         {clipCount > 0 ? (

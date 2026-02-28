@@ -93,40 +93,62 @@ export function DashboardContent({
 
   const folders: Folder[] = foldersResult?.data || [];
 
-  // 選択されたフォルダの配信者IDを取得
-  const selectedFolderStreamerIds = useMemo(() => {
+  // 選択されたフォルダの配信者IDをSetで取得（7.11: O(1) lookups）
+  const selectedFolderStreamerIdSet = useMemo(() => {
     if (!selectedFolderId) return null;
     const folder = folders.find((f) => f.id === selectedFolderId);
-    if (!folder || !folder.folderStreamers) return [];
-    return folder.folderStreamers.map((fs) => fs.streamerId);
+    if (!folder || !folder.folderStreamers) return new Set<string>();
+    return new Set(folder.folderStreamers.map((fs) => fs.streamerId));
   }, [selectedFolderId, folders]);
 
   // フォルダフィルタリング適用
   const allDisplayClips = useMemo(() => {
-    if (!selectedFolderStreamerIds) return activeClips.filteredClips;
+    if (!selectedFolderStreamerIdSet) return activeClips.filteredClips;
     return activeClips.filteredClips.filter((clip) =>
-      selectedFolderStreamerIds.includes(clip.broadcaster_id)
+      selectedFolderStreamerIdSet.has(clip.broadcaster_id)
     );
-  }, [activeClips.filteredClips, selectedFolderStreamerIds]);
+  }, [activeClips.filteredClips, selectedFolderStreamerIdSet]);
 
-  // 3セクション表示するかどうか（検索/フォルダ選択なし時のみ）
-  const showSections = !activeClips.searchQuery && !selectedFolderId;
+  // フォルダフィルタを3セクションにも適用
+  const filteredRanking = useMemo(() => {
+    if (!selectedFolderStreamerIdSet) return ranking;
+    return ranking.filter((clip) =>
+      selectedFolderStreamerIdSet.has(clip.broadcaster_id)
+    );
+  }, [ranking, selectedFolderStreamerIdSet]);
+
+  const filteredHot = useMemo(() => {
+    if (!selectedFolderStreamerIdSet) return hot;
+    return hot.filter((clip) =>
+      selectedFolderStreamerIdSet.has(clip.broadcaster_id)
+    );
+  }, [hot, selectedFolderStreamerIdSet]);
+
+  const filteredRecommended = useMemo(() => {
+    if (!selectedFolderStreamerIdSet) return recommended;
+    return recommended.filter((clip) =>
+      selectedFolderStreamerIdSet.has(clip.broadcaster_id)
+    );
+  }, [recommended, selectedFolderStreamerIdSet]);
+
+  // 3セクション表示するかどうか（検索なし時のみ。フォルダ選択時もセクションは維持）
+  const showSections = !activeClips.searchQuery;
 
   // おすすめセクションにソートを適用
   const sortedRecommended = useMemo(() => {
     if (activeClips.sortType === 'date-desc') {
-      return recommended.toSorted(
+      return filteredRecommended.toSorted(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
     }
     if (activeClips.sortType === 'date-asc') {
-      return recommended.toSorted(
+      return filteredRecommended.toSorted(
         (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
       );
     }
     // 'views' はデフォルトの再生数順（useHomeSectionsで既にソート済み）
-    return recommended;
-  }, [recommended, activeClips.sortType]);
+    return filteredRecommended;
+  }, [filteredRecommended, activeClips.sortType]);
 
   // おすすめセクション用ページネーション
   const [displayedCount, setDisplayedCount] = useState<number>(
@@ -185,10 +207,10 @@ export function DashboardContent({
       {showSections ? (
         <>
           {/* ① 週間ランキング（ヘッダー内蔵） */}
-          {ranking.length > 0 ? (
+          {filteredRanking.length > 0 ? (
             <section className="mb-8">
               <RankingSection
-                clips={ranking}
+                clips={filteredRanking}
                 likedClipIds={activeClips.likedClipIds}
                 onLikeToggle={handleLikeToggle}
               />
@@ -196,7 +218,7 @@ export function DashboardContent({
           ) : null}
 
           {/* ② HOT */}
-          {hot.length > 0 ? (
+          {filteredHot.length > 0 ? (
             <section className="mb-8">
               <SectionHeader
                 title={LABELS.SECTIONS.HOT}
@@ -206,7 +228,7 @@ export function DashboardContent({
                 textColor="text-[#8a5848]"
               />
               <HotSection
-                clips={hot}
+                clips={filteredHot}
                 likedClipIds={activeClips.likedClipIds}
                 onLikeToggle={handleLikeToggle}
               />

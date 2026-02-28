@@ -3,7 +3,7 @@
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Heart, Star, Sparkles } from 'lucide-react';
+import { X, UserPlus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { useIsMounted } from '@/hooks/use-is-mounted';
@@ -36,28 +36,26 @@ export function RegistrationPromptModal({ isOpen, onClose }: RegistrationPromptM
 
         {/* コンテンツ */}
         <div className="p-8 text-center">
-          {/* アイコンデコレーション */}
-          <div className="flex justify-center items-center gap-2 mb-6">
-            <Star className="w-6 h-6 text-yellow-400" />
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-              <Heart className="w-8 h-8 text-white fill-white" />
+          {/* アイコン */}
+          <div className="flex justify-center mb-6">
+            <div className="w-16 h-16 rounded-full bg-[#ebe5dc] flex items-center justify-center">
+              <UserPlus className="w-8 h-8 text-[#8a8078]" />
             </div>
-            <Sparkles className="w-6 h-6 text-purple-400" />
           </div>
 
           {/* タイトル */}
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">
+          <h2 className="text-2xl font-bold text-[#44403c] mb-3">
             {LABELS.REGISTRATION.TITLE}
           </h2>
 
           {/* 説明 */}
-          <p className="text-gray-500 text-sm mb-8 leading-relaxed">
+          <p className="text-[#a09890] text-sm mb-8 leading-relaxed">
             {LABELS.REGISTRATION.DESCRIPTION}
           </p>
 
           {/* CTAボタン */}
           <Link href={ROUTES.LOGIN} onClick={onClose}>
-            <Button className="w-full py-6 text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl button-press-feedback">
+            <Button className="w-full py-6 text-lg font-bold btn-primary rounded-xl button-press-feedback">
               {LABELS.REGISTRATION.CTA}
             </Button>
           </Link>
@@ -65,7 +63,7 @@ export function RegistrationPromptModal({ isOpen, onClose }: RegistrationPromptM
           {/* キャンセル */}
           <button
             onClick={onClose}
-            className="mt-4 text-sm text-gray-500 hover:text-gray-600 transition-colors"
+            className="mt-4 text-sm text-[#a09890] hover:text-[#6b655c] transition-colors"
           >
             あとで
           </button>

@@ -115,7 +115,7 @@ export function FavoritesContent() {
         <Link href={ROUTES.DASHBOARD}>
           <Button
             variant="ghost"
-            className="text-gray-500 hover:text-gray-900 hover:bg-gray-100 active:bg-gray-200 active:text-gray-600 button-press-feedback"
+            className="text-[#a09890] hover:text-[#44403c] hover:bg-[#ebe5dc] active:bg-[#e0d9cf] active:text-[#6b655c] button-press-feedback"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             {LABELS.CONFIRM.BACK_TO_CLIPS}
@@ -124,10 +124,10 @@ export function FavoritesContent() {
       </div>
 
       <div className="mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
+        <h1 className="text-4xl font-bold text-[#44403c] mb-2">
           お気に入り配信者
         </h1>
-        <p className="text-gray-500">
+        <p className="text-[#a09890]">
           {LABELS.MESSAGES.FAVORITES_PAGE_DESC}
         </p>
       </div>
@@ -136,14 +136,14 @@ export function FavoritesContent() {
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <FolderIcon className="w-5 h-5 text-blue-400" />
-            <h2 className="text-lg font-semibold text-gray-900">フォルダ</h2>
+            <FolderIcon className="w-5 h-5 text-[#8a8078]" />
+            <h2 className="text-lg font-semibold text-[#44403c]">フォルダ</h2>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setIsFolderModalOpen(true)}
-            className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
+            className="text-[#8a8078] hover:text-[#6b655c] hover:bg-[#ebe5dc]"
           >
             <Plus className="w-4 h-4 mr-1" />
             {LABELS.BUTTONS.NEW_CREATE}
@@ -151,10 +151,10 @@ export function FavoritesContent() {
         </div>
 
         {folders.length === 0 ? (
-          <div className="text-center py-8 bg-white rounded-lg border border-gray-200">
-            <FolderIcon className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-            <p className="text-gray-500 text-sm">{LABELS.FOLDERS.NO_FOLDERS}</p>
-            <p className="text-gray-500 text-xs mt-1">{LABELS.FOLDERS.NO_FOLDERS_DESC}</p>
+          <div className="text-center py-8 bg-[#faf8f5] rounded-lg border border-[#e6e0d6]">
+            <FolderIcon className="w-12 h-12 text-[#c4bdb2] mx-auto mb-3" />
+            <p className="text-[#6b655c] text-sm">{LABELS.FOLDERS.NO_FOLDERS}</p>
+            <p className="text-[#a09890] text-xs mt-1">{LABELS.FOLDERS.NO_FOLDERS_DESC}</p>
           </div>
         ) : (
           <motion.div
@@ -179,11 +179,11 @@ export function FavoritesContent() {
       </div>
 
       {/* 区切り線 */}
-      <div className="border-t border-gray-200 my-8"></div>
+      <div className="border-t border-[#e6e0d6] my-8"></div>
 
       {/* 配信者セクション */}
       <div className="mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">すべての配信者</h2>
+        <h2 className="text-lg font-semibold text-[#44403c]">すべての配信者</h2>
       </div>
 
       {isLoading ? (
@@ -191,18 +191,18 @@ export function FavoritesContent() {
           {[...Array(16)].map((_, i) => (
             <div
               key={i}
-              className="bg-white rounded-lg p-4 animate-pulse"
+              className="bg-[#faf8f5] rounded-lg p-4 animate-pulse"
             >
-              <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-3"></div>
-              <div className="h-4 bg-gray-200 rounded mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded"></div>
+              <div className="w-24 h-24 bg-[#ebe5dc] rounded-full mx-auto mb-3"></div>
+              <div className="h-4 bg-[#ebe5dc] rounded mb-2"></div>
+              <div className="h-3 bg-[#ebe5dc] rounded"></div>
             </div>
           ))}
         </div>
       ) : favorites.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-gray-500 mb-4">お気に入り配信者がまだいません</p>
-          <p className="text-sm text-gray-500">
+          <p className="text-[#6b655c] mb-4">お気に入り配信者がまだいません</p>
+          <p className="text-sm text-[#a09890]">
             サイドバーから配信者を追加してください
           </p>
         </div>
@@ -306,13 +306,13 @@ function DraggableStreamerCard({ favorite, onDelete }: DraggableStreamerCardProp
     >
       <div className={`group rounded-lg p-4 transition-all duration-200 ${
         isSyncing
-          ? 'bg-white/50 cursor-not-allowed'
-          : 'bg-white hover:bg-gray-100 hover:shadow-lg hover:shadow-purple-500/20'
+          ? 'bg-[#faf8f5]/50 cursor-not-allowed'
+          : 'bg-[#faf8f5] hover:bg-[#ebe5dc] hover:shadow-lg hover:shadow-[#c4bdb2]/20'
       }`}>
         {/* 同期中バッジ */}
         {isSyncing && (
           <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10">
-            <span className="flex items-center gap-1 text-xs text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded-full">
+            <span className="flex items-center gap-1 text-xs text-[#6890a8] bg-[#e4e9ee] px-2 py-0.5 rounded-full">
               <div className="animate-spin"><RefreshCw className="w-3 h-3" /></div>
               {LABELS.BUTTONS.ADDING}
             </span>
@@ -333,7 +333,7 @@ function DraggableStreamerCard({ favorite, onDelete }: DraggableStreamerCardProp
           {/* ドラッグインジケーター（ホバー時表示、同期中は非表示） */}
           {!isSyncing && (
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
-              <div className="absolute inset-0 bg-black/30 rounded-full" />
+              <div className="absolute inset-0 bg-[#44403c]/30 rounded-full" />
               <GripVertical className="w-6 h-6 text-white drop-shadow-lg" />
             </div>
           )}
@@ -348,7 +348,7 @@ function DraggableStreamerCard({ favorite, onDelete }: DraggableStreamerCardProp
               draggable={false}
             />
           ) : (
-            <div className="w-full h-full rounded-full bg-purple-600 flex items-center justify-center pointer-events-none">
+            <div className="w-full h-full rounded-full bg-[#c4bdb2] flex items-center justify-center pointer-events-none">
               <span className="text-2xl text-white font-bold">
                 {favorite.streamerName.charAt(0).toUpperCase()}
               </span>
@@ -367,12 +367,12 @@ function DraggableStreamerCard({ favorite, onDelete }: DraggableStreamerCardProp
           }`}
         >
           <p className={`text-sm font-semibold line-clamp-1 mb-1 ${
-            isSyncing ? 'text-gray-500' : 'text-gray-900 group-hover/link:text-purple-400'
+            isSyncing ? 'text-[#b8b0a6]' : 'text-[#44403c] group-hover/link:text-[#6b655c]'
           }`}>
             {favorite.streamerName}
           </p>
           <p className={`text-xs line-clamp-1 ${
-            isSyncing ? 'text-gray-500' : 'text-gray-500 group-hover/link:text-purple-300'
+            isSyncing ? 'text-[#b8b0a6]' : 'text-[#a09890] group-hover/link:text-[#6b655c]'
           }`}>
             @{favorite.streamerLogin}
           </p>
@@ -384,7 +384,7 @@ function DraggableStreamerCard({ favorite, onDelete }: DraggableStreamerCardProp
             {/* Twitchへリンク */}
             <button
               onClick={handleTwitchClick}
-              className="p-1.5 bg-purple-600/80 hover:bg-purple-500 rounded-full transition-colors"
+              className="p-1.5 bg-[#8a8078]/80 hover:bg-[#7a706a] rounded-full transition-colors"
               aria-label="Twitchで開く"
             >
               <Twitch className="w-3 h-3 text-white" />
@@ -395,10 +395,10 @@ function DraggableStreamerCard({ favorite, onDelete }: DraggableStreamerCardProp
                 e.stopPropagation();
                 onDelete();
               }}
-              className="p-1.5 bg-gray-200/80 hover:bg-red-100 rounded-full transition-colors"
+              className="p-1.5 bg-[#ebe5dc]/80 hover:bg-red-50 rounded-full transition-colors"
               aria-label="お気に入りから削除"
             >
-              <Trash2 className="w-3 h-3 text-gray-600 hover:text-red-400" />
+              <Trash2 className="w-3 h-3 text-[#a09890] hover:text-red-400" />
             </button>
           </div>
         )}
@@ -449,23 +449,23 @@ function DroppableFolderCard({ folder, isDragging, onView, onEdit, onDelete }: D
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className={`
-        relative bg-white rounded-lg p-4 transition-all duration-200
+        relative bg-[#faf8f5] rounded-lg p-4 transition-all duration-200 border border-[#e6e0d6]
         ${isPending
           ? 'opacity-70 cursor-default'
           : 'cursor-pointer'
         }
         ${isDragging
-          ? 'ring-2 ring-blue-500 ring-opacity-50 animate-pulse'
-          : !isPending ? 'hover:bg-gray-100 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/20' : ''
+          ? 'ring-2 ring-[#6890a8] ring-opacity-50 animate-pulse'
+          : !isPending ? 'hover:bg-[#ebe5dc] hover:scale-105 hover:shadow-lg hover:shadow-[#c4bdb2]/20' : ''
         }
-        ${isOver ? 'bg-blue-500/20 ring-2 ring-blue-400 scale-105' : ''}
+        ${isOver ? 'bg-[#e4e9ee] ring-2 ring-[#6890a8] scale-105' : ''}
       `}
     >
       {/* 作成中インジケーター */}
       {isPending && (
         <div className="absolute top-2 left-2 flex items-center gap-1.5 z-10">
-          <div className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-xs text-blue-400">作成中...</span>
+          <div className="w-3 h-3 border-2 border-[#6890a8] border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-xs text-[#6890a8]">作成中...</span>
         </div>
       )}
 
@@ -474,17 +474,17 @@ function DroppableFolderCard({ folder, isDragging, onView, onEdit, onDelete }: D
         <div className="absolute top-2 right-2 flex gap-1 z-10">
           <button
             onClick={handleEdit}
-            className="p-1.5 bg-gray-200/80 hover:bg-gray-200 rounded transition-colors"
+            className="p-1.5 bg-[#ebe5dc]/80 hover:bg-[#e0d9cf] rounded transition-colors"
             aria-label="フォルダを編集"
           >
-            <Edit2 className="w-3.5 h-3.5 text-gray-600 hover:text-gray-900" />
+            <Edit2 className="w-3.5 h-3.5 text-[#6b655c] hover:text-[#44403c]" />
           </button>
           <button
             onClick={handleDelete}
-            className="p-1.5 bg-gray-200/80 hover:bg-red-100 rounded transition-colors"
+            className="p-1.5 bg-[#ebe5dc]/80 hover:bg-red-50 rounded transition-colors"
             aria-label="フォルダを削除"
           >
-            <Trash2 className="w-3.5 h-3.5 text-gray-600 hover:text-red-400" />
+            <Trash2 className="w-3.5 h-3.5 text-[#6b655c] hover:text-red-400" />
           </button>
         </div>
       )}
@@ -503,10 +503,10 @@ function DroppableFolderCard({ folder, isDragging, onView, onEdit, onDelete }: D
       </div>
 
       {/* フォルダ名 */}
-      <p className="text-center text-sm font-semibold text-gray-900 line-clamp-1 mb-1">
+      <p className="text-center text-sm font-semibold text-[#44403c] line-clamp-1 mb-1">
         {folder.name}
       </p>
-      <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
+      <div className="flex items-center justify-center gap-1 text-xs text-[#a09890]">
         <Users className="w-3 h-3" />
         <span>{streamerCount}人</span>
       </div>

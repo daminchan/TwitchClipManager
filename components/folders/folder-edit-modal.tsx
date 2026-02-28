@@ -150,7 +150,7 @@ export function FolderEditModal({ isOpen, folder, onClose, onSuccess }: FolderEd
                       className={`
                         relative h-12 rounded-lg transition-all duration-200 button-press-feedback
                         ${selectedColor === color.value
-                          ? 'ring-2 ring-white ring-offset-2 ring-offset-white scale-110'
+                          ? 'ring-2 ring-[#44403c] ring-offset-2 ring-offset-[#faf8f5] scale-110'
                           : 'hover:scale-105'
                         }
                       `}
@@ -175,14 +175,14 @@ export function FolderEditModal({ isOpen, folder, onClose, onSuccess }: FolderEd
                   type="button"
                   variant="outline"
                   onClick={handleClose}
-                  className="flex-1 border-gray-200 text-gray-600 hover:bg-gray-100 button-press-feedback"
+                  className="flex-1 btn-secondary button-press-feedback"
                 >
                   {LABELS.BUTTONS.CANCEL}
                 </Button>
                 <Button
                   type="submit"
                   disabled={!name.trim()}
-                  className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white button-press-feedback"
+                  className="flex-1 btn-primary button-press-feedback"
                 >
                   {LABELS.BUTTONS.UPDATE_LABEL}
                 </Button>

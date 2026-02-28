@@ -64,11 +64,11 @@ export function FolderCreateModal({ isOpen, onClose, onSuccess, onFolderIdResolv
       const result = await createFolder({ name: tempFolder.name, color: selectedColor });
 
       if (result.success) {
-        // temp→real IDマッピングを通知
+        // temp→real IDマッピングを通知（キュー処理完了を待ってからinvalidate）
         if (result.data?.id && onFolderIdResolved) {
-          onFolderIdResolved(tempFolder.id, result.data.id);
+          await onFolderIdResolved(tempFolder.id, result.data.id);
         }
-        // 実データで上書き
+        // キュー処理完了後に実データで上書き
         onSuccess();
       } else {
         // エラー時はロールバックして再度モーダルを開く
@@ -141,7 +141,7 @@ export function FolderCreateModal({ isOpen, onClose, onSuccess, onFolderIdResolv
                   className={`
                     relative h-12 rounded-lg transition-all duration-200 button-press-feedback
                     ${selectedColor === color.value
-                      ? 'ring-2 ring-white ring-offset-2 ring-offset-white scale-110'
+                      ? 'ring-2 ring-[#44403c] ring-offset-2 ring-offset-[#faf8f5] scale-110'
                       : 'hover:scale-105'
                     }
                   `}
@@ -167,14 +167,14 @@ export function FolderCreateModal({ isOpen, onClose, onSuccess, onFolderIdResolv
               variant="outline"
               onClick={handleClose}
               disabled={isPending}
-              className="flex-1 border-gray-200 text-gray-600 hover:bg-gray-100 button-press-feedback"
+              className="flex-1 btn-secondary button-press-feedback"
             >
               {LABELS.BUTTONS.CANCEL}
             </Button>
             <Button
               type="submit"
               disabled={isPending || !name.trim()}
-              className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white button-press-feedback"
+              className="flex-1 btn-primary button-press-feedback"
             >
               {isPending ? (
                 <div className="flex items-center gap-2">

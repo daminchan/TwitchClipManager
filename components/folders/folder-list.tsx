@@ -34,7 +34,7 @@ export function FolderList({ isDragging = false, selectedFolderId, onFolderClick
     return (
       <div className="space-y-2">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="h-8 bg-gray-200 rounded animate-pulse"></div>
+          <div key={i} className="h-8 bg-[#ebe5dc] rounded animate-pulse"></div>
         ))}
       </div>
     );
@@ -42,7 +42,7 @@ export function FolderList({ isDragging = false, selectedFolderId, onFolderClick
 
   if (folders.length === 0) {
     return (
-      <p className="text-xs text-gray-500 text-center py-2">
+      <p className="text-xs text-[#a09890] text-center py-2">
         フォルダを作成してください
       </p>
     );
@@ -134,24 +134,24 @@ function FolderItem({ folder, isDragging, isSelected, onFolderClick, onFolderEdi
       className={`
         group relative flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200
         ${isPending ? 'opacity-70 cursor-default' : 'cursor-pointer'}
-        ${isSelected && !isPending ? 'bg-purple-600/20 ring-1 ring-purple-500' : ''}
+        ${isSelected && !isPending ? 'bg-[#ebe5dc] ring-1 ring-[#c4bdb2]' : ''}
         ${isDragging
-          ? 'ring-2 ring-blue-500 ring-opacity-50 animate-pulse'
-          : !isPending ? 'hover:bg-gray-200' : ''
+          ? 'ring-2 ring-[#6890a8] ring-opacity-50 animate-pulse'
+          : !isPending ? 'hover:bg-[#ebe5dc]' : ''
         }
-        ${isOver ? 'bg-gray-100 ring-2 ring-blue-400' : ''}
+        ${isOver ? 'bg-[#e4e9ee] ring-2 ring-[#6890a8]' : ''}
       `}
     >
       {/* 作成中インジケーター */}
       {isPending ? (
-        <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+        <div className="w-4 h-4 border-2 border-[#6890a8] border-t-transparent rounded-full animate-spin flex-shrink-0" />
       ) : (
         <FolderIcon
           className="w-4 h-4 flex-shrink-0"
           style={{ color: folder.color }}
         />
       )}
-      <span className="text-sm text-gray-600 truncate flex-1">
+      <span className="text-sm text-[#6b655c] truncate flex-1">
         {folder.name}
       </span>
 
@@ -159,7 +159,7 @@ function FolderItem({ folder, isDragging, isSelected, onFolderClick, onFolderEdi
       {!isPending && (
         <button
           onClick={handleViewStreamers}
-          className="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-400 px-2 py-1 rounded hover:bg-blue-500/10 transition-all button-press-feedback"
+          className="flex items-center gap-1 text-xs text-[#a09890] hover:text-[#6890a8] px-2 py-1 rounded hover:bg-[#e4e9ee] transition-all button-press-feedback"
           aria-label="配信者を表示"
         >
           <Users className="w-3 h-3 flex-shrink-0" />
@@ -174,17 +174,17 @@ function FolderItem({ folder, isDragging, isSelected, onFolderClick, onFolderEdi
         <div className="flex items-center gap-1">
           <button
             onClick={handleEdit}
-            className="p-1 hover:bg-gray-200 rounded transition-colors button-press-feedback"
+            className="p-1 hover:bg-[#ebe5dc] rounded transition-colors button-press-feedback"
             aria-label="フォルダを編集"
           >
-            <Edit2 className="w-3 h-3 text-gray-500 hover:text-gray-900" />
+            <Edit2 className="w-3 h-3 text-[#a09890] hover:text-[#44403c]" />
           </button>
           <button
             onClick={handleDelete}
-            className="p-1 hover:bg-red-900/30 rounded transition-colors button-press-feedback"
+            className="p-1 hover:bg-red-50 rounded transition-colors button-press-feedback"
             aria-label="フォルダを削除"
           >
-            <Trash2 className="w-3 h-3 text-gray-500 hover:text-red-400" />
+            <Trash2 className="w-3 h-3 text-[#a09890] hover:text-red-400" />
           </button>
         </div>
       )}

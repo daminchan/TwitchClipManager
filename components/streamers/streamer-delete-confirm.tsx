@@ -49,11 +49,11 @@ export function StreamerDeleteConfirm({ isOpen, streamer, onClose, onSuccess }: 
 
   return (
     <div className="modal-overlay">
-      <div className="modal-container-sm border-red-900/50" role="alertdialog" aria-modal="true">
+      <div className="modal-container-sm" role="alertdialog" aria-modal="true">
         <div className="modal-header">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-red-900/30 rounded-full">
-              <AlertTriangle className="w-5 h-5 text-red-400" />
+            <div className="p-2 bg-red-50 rounded-full">
+              <AlertTriangle className="w-5 h-5 text-red-500" />
             </div>
             <h2 className="text-title">お気に入りから削除</h2>
           </div>
@@ -70,7 +70,7 @@ export function StreamerDeleteConfirm({ isOpen, streamer, onClose, onSuccess }: 
         {/* コンテンツ */}
         <div className="p-6 space-y-4">
           {/* 配信者情報 */}
-          <div className="flex items-center gap-4 p-4 bg-white rounded-lg">
+          <div className="flex items-center gap-4 p-4 bg-[#faf8f5] rounded-lg border border-[#e6e0d6]">
             <div className="relative w-16 h-16 flex-shrink-0">
               {streamer.streamerImage ? (
                 <Image
@@ -81,7 +81,7 @@ export function StreamerDeleteConfirm({ isOpen, streamer, onClose, onSuccess }: 
                   sizes="64px"
                 />
               ) : (
-                <div className="w-full h-full rounded-full bg-purple-600 flex items-center justify-center">
+                <div className="w-full h-full rounded-full bg-[#c4bdb2] flex items-center justify-center">
                   <span className="text-xl text-white font-bold">
                     {streamer.streamerName.charAt(0).toUpperCase()}
                   </span>
@@ -89,12 +89,12 @@ export function StreamerDeleteConfirm({ isOpen, streamer, onClose, onSuccess }: 
               )}
             </div>
             <div>
-              <p className="font-semibold text-white text-lg">{streamer.streamerName}</p>
-              <p className="text-gray-500 text-sm">@{streamer.streamerLogin}</p>
+              <p className="font-semibold text-[#44403c] text-lg">{streamer.streamerName}</p>
+              <p className="text-[#a09890] text-sm">@{streamer.streamerLogin}</p>
             </div>
           </div>
 
-          <p className="text-gray-600">
+          <p className="text-[#6b655c]">
             この配信者をお気に入りから削除しますか？
           </p>
           <p className="text-description">
@@ -102,7 +102,7 @@ export function StreamerDeleteConfirm({ isOpen, streamer, onClose, onSuccess }: 
           </p>
 
           {error && (
-            <p className="text-error bg-red-900/20 border border-red-900/50 rounded p-3">
+            <p className="text-error bg-red-50 border border-red-200 rounded p-3">
               {error}
             </p>
           )}
@@ -114,7 +114,7 @@ export function StreamerDeleteConfirm({ isOpen, streamer, onClose, onSuccess }: 
               variant="outline"
               onClick={handleClose}
               disabled={isPending}
-              className="flex-1 border-gray-200 text-gray-600 hover:bg-gray-100 button-press-feedback"
+              className="flex-1 btn-secondary button-press-feedback"
             >
               {LABELS.BUTTONS.CANCEL}
             </Button>
@@ -122,7 +122,7 @@ export function StreamerDeleteConfirm({ isOpen, streamer, onClose, onSuccess }: 
               type="button"
               onClick={handleDelete}
               disabled={isPending}
-              className="flex-1 bg-red-600 hover:bg-red-700 text-white button-press-feedback"
+              className="flex-1 btn-danger button-press-feedback"
             >
               {isPending ? (
                 <div className="flex items-center gap-2">
