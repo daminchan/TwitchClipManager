@@ -3,6 +3,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 
 import { AuthStep } from './auth-step';
@@ -11,6 +12,7 @@ import { StreamerSelectionStep } from './streamer-selection-step';
 import { CompletionStep } from './completion-step';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { addMultipleFavoriteStreamers } from '@/actions/favorites';
+import { modalOverlay, modalContent } from '@/lib/animations';
 import { LABELS } from '@/lib/constants';
 import type { RecommendedStreamer } from '@/types/twitch';
 
@@ -30,8 +32,6 @@ export function OnboardingModal({ isOpen, onClose, skipAuth = false }: Onboardin
   const [selectedGameName, setSelectedGameName] = useState('');
   const [selectedStreamers, setSelectedStreamers] = useState<RecommendedStreamer[]>([]);
   const [isPending, startTransition] = useTransition();
-
-  if (!isOpen) return null;
 
   const handleAuthSuccess = async () => {
     // 認証成功後、既存ユーザーかどうかをチェック
@@ -100,124 +100,140 @@ export function OnboardingModal({ isOpen, onClose, skipAuth = false }: Onboardin
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 animate-in fade-in duration-300">
-      {/* 背景オーバーレイ */}
-      <div className="absolute inset-0 bg-black/90 animate-in fade-in duration-300" />
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4"
+          variants={modalOverlay}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+        >
+          {/* 背景オーバーレイ */}
+          <div className="absolute inset-0 bg-black/90" />
 
-      {/* モーダルコンテンツ */}
-      <div className="relative w-full max-w-4xl h-[95vh] sm:h-[90vh] bg-[#0f0f0f] rounded-lg shadow-2xl border border-gray-800 flex flex-col animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
-        {/* ヘッダー（閉じるボタン） */}
-        {currentStep !== 'auth' && (
-          <div className="absolute top-4 right-4 z-10">
-            <button
-              onClick={onClose}
-              className="p-2 rounded-full bg-[#1a1a1a] hover:bg-[#2a2a2a] transition-colors"
-              aria-label="閉じる"
-            >
-              <X className="w-6 h-6 text-gray-400" />
-            </button>
-          </div>
-        )}
-
-        {/* ステップインジケーター */}
-        {currentStep !== 'auth' && currentStep !== 'completion' && (
-          <div className="px-4 sm:px-8 pt-6 sm:pt-8 pb-3 sm:pb-4 animate-in fade-in slide-in-from-top-2 duration-300">
-            <div className="flex items-center justify-center gap-2">
-              {/* ステップ1: ゲーム選択 */}
-              <div
-                className={`flex items-center transition-all duration-300 ${
-                  currentStep === 'game' ? 'text-purple-400 scale-105' : 'text-gray-500 scale-100'
-                }`}
-              >
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
-                    currentStep === 'game'
-                      ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/50'
-                      : 'bg-gray-700 text-gray-400'
-                  }`}
+          {/* モーダルコンテンツ */}
+          <motion.div
+            className="relative w-full max-w-4xl h-[95vh] sm:h-[90vh] bg-[#0f0f0f] rounded-lg shadow-2xl border border-gray-800 flex flex-col"
+            variants={modalContent}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
+            {/* ヘッダー（閉じるボタン） */}
+            {currentStep !== 'auth' && (
+              <div className="absolute top-4 right-4 z-10">
+                <button
+                  onClick={onClose}
+                  className="p-2 rounded-full bg-[#1a1a1a] hover:bg-[#2a2a2a] transition-colors"
+                  aria-label="閉じる"
                 >
-                  1
-                </div>
-                <span className="ml-2 text-sm font-medium hidden sm:inline">
-                  ゲーム選択
-                </span>
+                  <X className="w-6 h-6 text-gray-400" />
+                </button>
               </div>
+            )}
 
-              {/* 区切り線 */}
-              <div className={`w-12 h-0.5 transition-colors duration-300 ${
-                currentStep === 'streamer' ? 'bg-purple-600' : 'bg-gray-700'
-              }`} />
+            {/* ステップインジケーター */}
+            {currentStep !== 'auth' && currentStep !== 'completion' && (
+              <div className="px-4 sm:px-8 pt-6 sm:pt-8 pb-3 sm:pb-4">
+                <div className="flex items-center justify-center gap-2">
+                  {/* ステップ1: ゲーム選択 */}
+                  <div
+                    className={`flex items-center transition-all duration-300 ${
+                      currentStep === 'game' ? 'text-purple-400 scale-105' : 'text-gray-500 scale-100'
+                    }`}
+                  >
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
+                        currentStep === 'game'
+                          ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/50'
+                          : 'bg-gray-700 text-gray-400'
+                      }`}
+                    >
+                      1
+                    </div>
+                    <span className="ml-2 text-sm font-medium hidden sm:inline">
+                      ゲーム選択
+                    </span>
+                  </div>
 
-              {/* ステップ2: 配信者選択 */}
-              <div
-                className={`flex items-center transition-all duration-300 ${
-                  currentStep === 'streamer' ? 'text-purple-400 scale-105' : 'text-gray-500 scale-100'
-                }`}
-              >
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
-                    currentStep === 'streamer'
-                      ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/50'
-                      : 'bg-gray-700 text-gray-400'
-                  }`}
-                >
-                  2
+                  {/* 区切り線 */}
+                  <div className={`w-12 h-0.5 transition-colors duration-300 ${
+                    currentStep === 'streamer' ? 'bg-purple-600' : 'bg-gray-700'
+                  }`} />
+
+                  {/* ステップ2: 配信者選択 */}
+                  <div
+                    className={`flex items-center transition-all duration-300 ${
+                      currentStep === 'streamer' ? 'text-purple-400 scale-105' : 'text-gray-500 scale-100'
+                    }`}
+                  >
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
+                        currentStep === 'streamer'
+                          ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/50'
+                          : 'bg-gray-700 text-gray-400'
+                      }`}
+                    >
+                      2
+                    </div>
+                    <span className="ml-2 text-sm font-medium hidden sm:inline">
+                      配信者選択
+                    </span>
+                  </div>
                 </div>
-                <span className="ml-2 text-sm font-medium hidden sm:inline">
-                  配信者選択
-                </span>
               </div>
-            </div>
-          </div>
-        )}
+            )}
 
-        {/* ステップコンテンツ */}
-        <div className="flex-1 overflow-hidden px-4 sm:px-8 pb-4 sm:pb-8">
-          {currentStep === 'auth' && (
-            <div className="animate-in fade-in slide-in-from-right-4 duration-300 h-full">
-              <AuthStep onSuccess={handleAuthSuccess} />
-            </div>
-          )}
+            {/* ステップコンテンツ */}
+            <div className="flex-1 overflow-hidden px-4 sm:px-8 pb-4 sm:pb-8">
+              {currentStep === 'auth' && (
+                <div className="animate-in fade-in slide-in-from-right-4 duration-300 h-full">
+                  <AuthStep onSuccess={handleAuthSuccess} />
+                </div>
+              )}
 
-          {currentStep === 'game' && (
-            <div className="animate-in fade-in slide-in-from-right-4 duration-300 h-full">
-              <GameSelectionStep
-                onNext={handleGameNext}
-                onBack={!skipAuth ? handleBack : undefined}
-              />
-            </div>
-          )}
+              {currentStep === 'game' && (
+                <div className="animate-in fade-in slide-in-from-right-4 duration-300 h-full">
+                  <GameSelectionStep
+                    onNext={handleGameNext}
+                    onBack={!skipAuth ? handleBack : undefined}
+                  />
+                </div>
+              )}
 
-          {currentStep === 'streamer' && (
-            <div className="animate-in fade-in slide-in-from-right-4 duration-300 h-full">
-              <StreamerSelectionStep
-                gameId={selectedGameId}
-                gameName={selectedGameName}
-                onNext={handleStreamerNext}
-                onBack={handleBack}
-              />
-            </div>
-          )}
+              {currentStep === 'streamer' && (
+                <div className="animate-in fade-in slide-in-from-right-4 duration-300 h-full">
+                  <StreamerSelectionStep
+                    gameId={selectedGameId}
+                    gameName={selectedGameName}
+                    onNext={handleStreamerNext}
+                    onBack={handleBack}
+                  />
+                </div>
+              )}
 
-          {currentStep === 'completion' && (
-            <div className="animate-in fade-in zoom-in-95 duration-500 h-full">
-              <CompletionStep
-                streamerCount={selectedStreamers.length}
-                onComplete={handleComplete}
-              />
+              {currentStep === 'completion' && (
+                <div className="animate-in fade-in zoom-in-95 duration-500 h-full">
+                  <CompletionStep
+                    streamerCount={selectedStreamers.length}
+                    onComplete={handleComplete}
+                  />
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* ローディングオーバーレイ */}
-        {isPending && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg animate-in fade-in duration-200">
-            <div className="animate-in zoom-in-95 duration-300">
-              <LoadingSpinner size="lg" text={LABELS.MESSAGES.ADDING_FAVORITES} />
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+            {/* ローディングオーバーレイ */}
+            {isPending && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg animate-in fade-in duration-200">
+                <div className="animate-in zoom-in-95 duration-300">
+                  <LoadingSpinner size="lg" text={LABELS.MESSAGES.ADDING_FAVORITES} />
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

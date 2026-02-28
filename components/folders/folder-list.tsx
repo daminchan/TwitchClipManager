@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Folder as FolderIcon, MoreVertical, Edit2, Trash2, Users } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Folder as FolderIcon, Edit2, Trash2, Users } from 'lucide-react';
 import { useDroppable } from '@dnd-kit/core';
 import { getFolders } from '@/actions/folders';
+import { staggerContainer, fadeInUp } from '@/lib/animations';
 import type { Folder } from '@/types/database';
 
 interface FolderListProps {
@@ -47,20 +49,26 @@ export function FolderList({ isDragging = false, selectedFolderId, onFolderClick
   }
 
   return (
-    <div className="space-y-2">
+    <motion.div
+      className="space-y-2"
+      variants={staggerContainer}
+      initial="hidden"
+      animate="visible"
+    >
       {folders.map((folder) => (
-        <FolderItem
-          key={folder.id}
-          folder={folder}
-          isDragging={isDragging}
-          isSelected={selectedFolderId === folder.id}
-          onFolderClick={onFolderClick}
-          onFolderEdit={onFolderEdit}
-          onFolderDelete={onFolderDelete}
-          onViewStreamers={onViewStreamers}
-        />
+        <motion.div key={folder.id} variants={fadeInUp}>
+          <FolderItem
+            folder={folder}
+            isDragging={isDragging}
+            isSelected={selectedFolderId === folder.id}
+            onFolderClick={onFolderClick}
+            onFolderEdit={onFolderEdit}
+            onFolderDelete={onFolderDelete}
+            onViewStreamers={onViewStreamers}
+          />
+        </motion.div>
       ))}
-    </div>
+    </motion.div>
   );
 }
 
@@ -86,7 +94,6 @@ function FolderItem({ folder, isDragging, isSelected, onFolderClick, onFolderEdi
       type: 'folder',
       folder,
     },
-    disabled: isPending, // 作成中はドロップ不可
   });
 
   const handleClick = () => {
@@ -126,13 +133,13 @@ function FolderItem({ folder, isDragging, isSelected, onFolderClick, onFolderEdi
       onMouseLeave={() => setShowMenu(false)}
       className={`
         group relative flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200
-        ${isPending ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+        ${isPending ? 'opacity-70 cursor-default' : 'cursor-pointer'}
         ${isSelected && !isPending ? 'bg-purple-600/20 ring-1 ring-purple-500' : ''}
-        ${isDragging && !isPending
+        ${isDragging
           ? 'ring-2 ring-blue-500 ring-opacity-50 animate-pulse'
           : !isPending ? 'hover:bg-[#2a2a2a]' : ''
         }
-        ${isOver && !isPending ? 'bg-[#2a2a2a] ring-2 ring-blue-400' : ''}
+        ${isOver ? 'bg-[#2a2a2a] ring-2 ring-blue-400' : ''}
       `}
     >
       {/* 作成中インジケーター */}

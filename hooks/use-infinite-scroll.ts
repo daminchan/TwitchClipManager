@@ -60,26 +60,31 @@ export function useInfiniteScroll({
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // 読み込み処理（遅延付き）
-  const handleLoadMore = useCallback(() => {
-    if (isLoadingMore || !hasMore) return;
+  // isLoadingMoreをrefで管理（コールバックの再生成を防止 — ルール5.12）
+  const isLoadingMoreRef = useRef(false);
 
+  // 読み込み処理（遅延付き）— 関数型setState使用（ルール5.9）
+  const handleLoadMore = useCallback(() => {
+    if (isLoadingMoreRef.current || !hasMore) return;
+
+    isLoadingMoreRef.current = true;
     setIsLoadingMore(true);
     setTimeout(() => {
       onLoadMore();
+      isLoadingMoreRef.current = false;
       setIsLoadingMore(false);
     }, delay);
-  }, [isLoadingMore, hasMore, onLoadMore, delay]);
+  }, [hasMore, onLoadMore, delay]);
 
   // Intersection Observerのコールバック
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
       const [entry] = entries;
-      if (entry.isIntersecting && hasMore && !isLoadingMore) {
+      if (entry.isIntersecting && hasMore && !isLoadingMoreRef.current) {
         handleLoadMore();
       }
     },
-    [hasMore, isLoadingMore, handleLoadMore]
+    [hasMore, handleLoadMore]
   );
 
   // Intersection Observerの設定

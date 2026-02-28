@@ -2,7 +2,9 @@
 
 import { useState, useTransition } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
+import { modalOverlay, modalContent } from '@/lib/animations';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createFolder } from '@/actions/folders';
@@ -13,16 +15,15 @@ interface FolderCreateModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  onFolderIdResolved?: (tempId: string, realId: string) => void;
 }
 
-export function FolderCreateModal({ isOpen, onClose, onSuccess }: FolderCreateModalProps) {
+export function FolderCreateModal({ isOpen, onClose, onSuccess, onFolderIdResolved }: FolderCreateModalProps) {
   const queryClient = useQueryClient();
   const [name, setName] = useState('');
   const [selectedColor, setSelectedColor] = useState<string>(FOLDER_COLORS[0].value);
   const [error, setError] = useState('');
   const [isPending, startTransition] = useTransition();
-
-  if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,6 +64,10 @@ export function FolderCreateModal({ isOpen, onClose, onSuccess }: FolderCreateMo
       const result = await createFolder({ name: tempFolder.name, color: selectedColor });
 
       if (result.success) {
+        // temp→real IDマッピングを通知
+        if (result.data?.id && onFolderIdResolved) {
+          onFolderIdResolved(tempFolder.id, result.data.id);
+        }
         // 実データで上書き
         onSuccess();
       } else {
@@ -83,8 +88,10 @@ export function FolderCreateModal({ isOpen, onClose, onSuccess }: FolderCreateMo
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-container-sm">
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div className="modal-overlay" variants={modalOverlay} initial="hidden" animate="visible" exit="exit">
+          <motion.div className="modal-container-sm" variants={modalContent} initial="hidden" animate="visible" exit="exit">
         <div className="modal-header">
           <h2 className="text-title">新しいフォルダ</h2>
           <button
@@ -180,7 +187,9 @@ export function FolderCreateModal({ isOpen, onClose, onSuccess }: FolderCreateMo
             </Button>
           </div>
         </form>
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

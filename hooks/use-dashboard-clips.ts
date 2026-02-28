@@ -6,7 +6,11 @@ import { API_ENDPOINTS, LABELS, ANIMATION, CACHE_TIME } from '@/lib/constants';
 import { getLikedClips, addLikedClip, removeLikedClip } from '@/actions/liked-clips';
 import type { LikedClip } from '@/types/database';
 
-export function useDashboardClips() {
+interface UseDashboardClipsOptions {
+  enabled?: boolean;
+}
+
+export function useDashboardClips({ enabled = true }: UseDashboardClipsOptions = {}) {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortType, setSortType] = useState<SortType>('date-desc');
@@ -27,7 +31,7 @@ export function useDashboardClips() {
       const response = await fetch(API_ENDPOINTS.CLIPS.FAVORITES, {
         method: 'GET',
         credentials: 'include',
-        cache: 'no-store', // ブラウザキャッシュを使わない（React Queryのキャッシュのみ使用）
+        cache: 'no-store',
       });
 
       if (!response.ok) {
@@ -46,6 +50,7 @@ export function useDashboardClips() {
       return result.data as TwitchClip[];
     },
     staleTime: CACHE_TIME.DEFAULT_STALE_TIME,
+    enabled,
   });
 
   // いいねしたクリップIDを取得（React Query）
@@ -59,6 +64,7 @@ export function useDashboardClips() {
       return [];
     },
     staleTime: CACHE_TIME.DEFAULT_STALE_TIME,
+    enabled,
   });
 
   // likedClipIds を Set に変換
@@ -175,29 +181,29 @@ export function useDashboardClips() {
 
   // フィルターとソートを適用（useMemo で最適化）
   const filteredClips = useMemo(() => {
-    let result = [...allClips];
-
     // 検索フィルター
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (clip) =>
-          clip.title.toLowerCase().includes(query) ||
-          clip.broadcaster_name.toLowerCase().includes(query) ||
-          clip.creator_name.toLowerCase().includes(query)
-      );
-    }
+    const filtered = searchQuery.trim()
+      ? allClips.filter((clip) => {
+          const query = searchQuery.toLowerCase();
+          return (
+            clip.title.toLowerCase().includes(query) ||
+            clip.broadcaster_name.toLowerCase().includes(query) ||
+            clip.creator_name.toLowerCase().includes(query)
+          );
+        })
+      : allClips;
 
-    // ソート
+    // ソート — toSorted()でイミュータブルに（ルール7.12）
     if (sortType === 'views') {
-      result.sort((a, b) => b.view_count - a.view_count);
-    } else if (sortType === 'date-desc') {
-      result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    } else if (sortType === 'date-asc') {
-      result.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      return filtered.toSorted((a, b) => b.view_count - a.view_count);
     }
-
-    return result;
+    if (sortType === 'date-desc') {
+      return filtered.toSorted((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
+    if (sortType === 'date-asc') {
+      return filtered.toSorted((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    }
+    return filtered;
   }, [allClips, searchQuery, sortType]);
 
   return {

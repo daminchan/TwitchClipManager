@@ -140,6 +140,60 @@ const sensors = useSensors(mouseSensor, touchSensor);
 
 ---
 
+## パフォーマンス最適化（Vercel Best Practices準拠）
+
+### イミュータブルソート — `toSorted()`
+
+配列の`.sort()`はミュータブル。`toSorted()`を使用すること。
+
+```typescript
+// ❌ ミュータブル
+const sorted = [...items].sort((a, b) => a.name.localeCompare(b.name));
+
+// ✅ イミュータブル
+const sorted = items.toSorted((a, b) => a.name.localeCompare(b.name));
+```
+
+### SVGアニメーション — ラッパーで囲む
+
+SVG要素への直接アニメーションはGPU加速が効かない。divラッパーを使う。
+
+```typescript
+// ❌ SVG直接
+<Loader2 className="w-5 h-5 animate-spin" />
+
+// ✅ divラッパー
+<div className="animate-spin">
+  <Loader2 className="w-5 h-5" />
+</div>
+```
+
+### 動的インポート — 初回表示に不要なコンポーネント
+
+モーダル等の条件付き表示コンポーネントは`next/dynamic`で遅延読み込み。
+
+```typescript
+import dynamic from 'next/dynamic';
+
+const HeavyModal = dynamic(
+  () => import('./heavy-modal').then(m => ({ default: m.HeavyModal })),
+  { ssr: false }
+);
+```
+
+### content-visibility — オフスクリーン最適化
+
+長いリストでは`content-visibility: auto`でオフスクリーンのレンダリングをスキップ。
+
+```css
+@utility clip-card-item {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 300px;
+}
+```
+
+---
+
 ## Tailwind CSS v4
 
 ### `@utility`ディレクティブ（推奨）

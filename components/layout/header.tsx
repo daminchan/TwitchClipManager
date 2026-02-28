@@ -114,8 +114,20 @@ export function Header({ onToggleSidebar }: HeaderProps) {
           </Link>
         </div>
 
-        {/* 右側: ユーザー情報 */}
-        {session?.user && (
+        {/* 右側: ユーザー情報 or ログインボタン */}
+        {!session?.user ? (
+          <div className="flex items-center gap-2">
+            <Link href={ROUTES.LOGIN}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-sm bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 button-press-feedback"
+              >
+                ログイン / 登録
+              </Button>
+            </Link>
+          </div>
+        ) : (
           <div className="flex items-center gap-2 md:gap-3">
             {/* モバイル用ボタン */}
             <div className="flex lg:hidden items-center gap-1">
@@ -179,6 +191,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
             </Button>
           </div>
         )}
+
       </div>
     </header>
 

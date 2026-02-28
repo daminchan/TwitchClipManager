@@ -78,10 +78,8 @@ export async function GET() {
     });
 
     const allClipsArrays = await Promise.all(clipPromises);
-    const allClips = allClipsArrays.flat();
-
-    // 再生数順にソート
-    allClips.sort((a, b) => b.view_count - a.view_count);
+    // toSorted()でイミュータブルに（ルール7.12）
+    const allClips = allClipsArrays.flat().toSorted((a, b) => b.view_count - a.view_count);
 
     return NextResponse.json(
       { data: allClips },

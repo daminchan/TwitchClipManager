@@ -4,13 +4,15 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Play } from 'lucide-react';
+import { Play, Copy } from 'lucide-react';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ClipDetailModal } from './clip-detail-modal';
 import { useModal } from '@/hooks/use-modal';
 import { useIsMounted } from '@/hooks/use-is-mounted';
+import { useToast } from '@/hooks/use-toast';
+import { Toast } from '@/components/ui/toast';
 import { formatViewCount, formatRelativeTime, formatDuration } from '@/lib/utils';
 import { LABELS, TWITCH_URLS } from '@/lib/constants';
 import type { TwitchClip } from '@/types/twitch';
@@ -30,6 +32,14 @@ export function ClipCard({ clip, isLiked = false, onLikeToggle }: ClipCardProps)
   const [isHovered, setIsHovered] = useState(false);
   const { isOpen: isModalOpen, openModal, closeModal } = useModal();
   const isMounted = useIsMounted();
+  const { toast, showToast, hideToast } = useToast();
+
+  const handleCopyLink = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(clip.url).then(() => {
+      showToast(LABELS.REGISTRATION.LINK_COPIED, 'success');
+    });
+  };
 
   // 相対時間の計算（クライアントサイドでのみ - Hydrationエラー防止）
   const relativeTime = useMemo(() => {
@@ -57,6 +67,17 @@ export function ClipCard({ clip, isLiked = false, onLikeToggle }: ClipCardProps)
           <Badge className="absolute bottom-2 right-2 bg-black/90 text-white border-0 font-semibold px-2 py-0.5">
             {formatDuration(clip.duration)}
           </Badge>
+
+          {/* コピーボタン（ホバー時表示） */}
+          {isHovered && (
+            <button
+              onClick={handleCopyLink}
+              className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1.5 transition-colors button-press-feedback"
+              aria-label="リンクをコピー"
+            >
+              <Copy className="w-4 h-4" />
+            </button>
+          )}
 
           {/* ホバー時の再生オーバーレイ */}
           {isHovered && (
@@ -115,6 +136,11 @@ export function ClipCard({ clip, isLiked = false, onLikeToggle }: ClipCardProps)
         isLiked={isLiked}
         onLikeToggle={onLikeToggle}
       />
+
+      {/* コピートースト */}
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={hideToast} />
+      )}
     </>
   );
 }

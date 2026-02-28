@@ -2,12 +2,14 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { ArrowLeft, Folder as FolderIcon, Plus, Edit2, Trash2, Users, GripVertical, Twitch, RefreshCw } from 'lucide-react';
+import { staggerContainer, fadeInUp } from '@/lib/animations';
 
 import { Button } from '@/components/ui/button';
 import { FolderCreateModal } from '@/components/folders/folder-create-modal';
@@ -17,25 +19,19 @@ import { FolderStreamersModal } from '@/components/folders/folder-streamers-moda
 import { StreamerDeleteConfirm } from '@/components/streamers/streamer-delete-confirm';
 import { API_ENDPOINTS, ROUTES, LABELS } from '@/lib/constants';
 import { getFolders } from '@/actions/folders';
-import { useDragContext } from '@/components/layout/authenticated-layout';
+import { useDragContext, useFolderContext } from '@/components/layout/authenticated-layout';
 
 import type { FavoriteStreamer, Folder } from '@/types/database';
 
 export function FavoritesContent() {
   const queryClient = useQueryClient();
   const { isDragging } = useDragContext();
+  const { onFolderIdResolved } = useFolderContext();
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
   const [folderToEdit, setFolderToEdit] = useState<Folder | null>(null);
   const [folderToDelete, setFolderToDelete] = useState<Folder | null>(null);
   const [folderToView, setFolderToView] = useState<Folder | null>(null);
   const [streamerToDelete, setStreamerToDelete] = useState<FavoriteStreamer | null>(null);
-  const [showCards, setShowCards] = useState(false);
-
-  // マウント後、カード表示アニメーション開始
-  useEffect(() => {
-    const timer = setTimeout(() => setShowCards(true), 50);
-    return () => clearTimeout(timer);
-  }, []);
 
   // お気に入り配信者を取得（サイドバーと同じキャッシュを使用）
   const { data: favorites = [], isLoading } = useQuery<FavoriteStreamer[]>({
@@ -164,12 +160,14 @@ export function FavoritesContent() {
             <p className="text-gray-500 text-xs mt-1">フォルダを作成して配信者を整理しましょう</p>
           </div>
         ) : (
-          <div className="grid-folders">
+          <motion.div
+            className="grid-folders"
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+          >
             {folders.map((folder) => (
-              <div
-                key={folder.id}
-                className={showCards ? 'animate-card' : 'opacity-0'}
-              >
+              <motion.div key={folder.id} variants={fadeInUp}>
                 <DroppableFolderCard
                   folder={folder}
                   isDragging={isDragging}
@@ -177,9 +175,9 @@ export function FavoritesContent() {
                   onEdit={() => setFolderToEdit(folder)}
                   onDelete={() => setFolderToDelete(folder)}
                 />
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
       </div>
 
@@ -212,19 +210,21 @@ export function FavoritesContent() {
           </p>
         </div>
       ) : (
-        <div className="grid-streamers">
+        <motion.div
+          className="grid-streamers"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+        >
           {favorites.map((favorite) => (
-            <div
-              key={favorite.id}
-              className={showCards ? 'animate-card' : 'opacity-0'}
-            >
+            <motion.div key={favorite.id} variants={fadeInUp}>
               <DraggableStreamerCard
                 favorite={favorite}
                 onDelete={() => setStreamerToDelete(favorite)}
               />
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
 
       {/* フォルダ作成モーダル */}
@@ -232,6 +232,7 @@ export function FavoritesContent() {
         isOpen={isFolderModalOpen}
         onClose={() => setIsFolderModalOpen(false)}
         onSuccess={handleFolderCreated}
+        onFolderIdResolved={onFolderIdResolved}
       />
 
       {/* フォルダ編集モーダル */}
@@ -431,7 +432,6 @@ function DroppableFolderCard({ folder, isDragging, onView, onEdit, onDelete }: D
       type: 'folder',
       folder,
     },
-    disabled: isPending, // 作成中はドロップ不可
   });
 
   const streamerCount = folder.folderStreamers?.length || 0;
@@ -455,14 +455,14 @@ function DroppableFolderCard({ folder, isDragging, onView, onEdit, onDelete }: D
       className={`
         relative bg-[#1a1a1a] rounded-lg p-4 transition-all duration-200
         ${isPending
-          ? 'opacity-50 cursor-not-allowed'
+          ? 'opacity-70 cursor-default'
           : 'cursor-pointer'
         }
-        ${isDragging && !isPending
+        ${isDragging
           ? 'ring-2 ring-blue-500 ring-opacity-50 animate-pulse'
           : !isPending ? 'hover:bg-[#222222] hover:scale-105 hover:shadow-lg hover:shadow-blue-500/10' : ''
         }
-        ${isOver && !isPending ? 'bg-blue-500/20 ring-2 ring-blue-400 scale-105' : ''}
+        ${isOver ? 'bg-blue-500/20 ring-2 ring-blue-400 scale-105' : ''}
       `}
     >
       {/* 作成中インジケーター */}

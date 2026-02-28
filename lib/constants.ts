@@ -48,6 +48,12 @@ export const APP_CONFIG = {
   fullName: 'Twitch Clip Viewer',
   description: 'お気に入りの配信者のクリップを見つけよう',
   version: '1.0.0',
+  url: 'https://twipu.vercel.app',
+  seo: {
+    title: 'ついっぷ - Twitchクリップビューアー | VTuber・切り抜き',
+    description: 'Twitchの人気クリップをまとめて視聴できるビューアー。VTuberや配信者の切り抜き・クリップをお気に入り登録して、いつでも楽しめます。ゲーム配信の面白い瞬間を見逃さない！',
+    keywords: ['twitch', 'vtuber', '切り抜き', 'クリップ', 'ゲーム配信', 'ついっぷ', '配信者', 'ストリーマー'],
+  },
 } as const;
 
 /**
@@ -70,6 +76,7 @@ export const API_ENDPOINTS = {
   FAVORITES: '/api/favorites',
   CLIPS: {
     FAVORITES: '/api/clips/favorites',
+    POPULAR: '/api/clips/popular',
   },
   TWITCH: {
     STREAMERS: '/api/twitch/search',
@@ -84,6 +91,7 @@ export const API_ENDPOINTS = {
 export const LABELS = {
   // セクションタイトル
   SECTIONS: {
+    CLIP_LIST: 'クリップ一覧',
     SEARCH_STREAMERS: '配信者を検索して追加',
     GAME_BASED_ADD: '好きなゲームから配信者を追加',
     FAVORITE_STREAMERS: 'お気に入り配信者',
@@ -194,6 +202,15 @@ export const LABELS = {
     CLIP_UNIT: 'クリップ',
     FOLDER_LABEL: 'フォルダ:',
     VIEWS_SUFFIX: 'views',
+  },
+
+  // 登録促進
+  REGISTRATION: {
+    TITLE: 'もっと楽しもう！',
+    DESCRIPTION: 'アカウント登録すると、お気に入りの配信者を保存したり、クリップにいいねできます。',
+    CTA: '無料で登録',
+    LIVE_HINT: 'お気に入り登録すると、配信中の配信者が表示されます！',
+    LINK_COPIED: 'リンクをコピーしました',
   },
 
   // プレースホルダー
@@ -347,6 +364,8 @@ export const CACHE_TIME = {
   STREAMERS: 5 * 60 * 1000,        // 5分間（中程度の更新頻度）
   // ライブステータス
   LIVE_STATUS: 2 * 60 * 1000,      // 2分間（頻繁に更新）
+  // 人気クリップ
+  POPULAR_CLIPS: 10 * 60 * 1000,   // 10分間
   // デフォルト設定（グローバル）
   DEFAULT_STALE_TIME: 5 * 60 * 1000,   // 5分間（デフォルトのstaleTime）
   DEFAULT_GC_TIME: 10 * 60 * 1000,     // 10分間（デフォルトのgcTime）
@@ -365,6 +384,24 @@ export const PAGINATION = {
 /**
  * フォルダカラーパレット
  */
+/**
+ * 人気クリップ取得設定（未認証ユーザー向け）
+ */
+export const POPULAR_CLIPS_CONFIG = {
+  TOP_GAMES_COUNT: 5,         // 取得するゲーム数
+  CLIPS_PER_GAME: 100,        // 各ゲームから取得するクリップ数
+  MAX_PER_STREAMER: 5,        // 各配信者の最大表示件数
+  DAYS: 7,                    // 直近7日間
+} as const;
+
+/**
+ * デフォルトフォルダ設定（新規登録時に自動作成）
+ */
+export const DEFAULT_FOLDER = {
+  name: 'お気に入り配信者',
+  color: '#a855f7',
+} as const;
+
 export const FOLDER_COLORS = [
   { name: '赤', value: '#ef4444' },
   { name: 'ピンク', value: '#ec4899' },

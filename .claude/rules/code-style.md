@@ -54,6 +54,12 @@ const filtered = useMemo(
 );
 ```
 
+## イミュータブル操作
+
+- **MUST**: `.sort()` ではなく `.toSorted()` を使用（元配列を変更しない）
+- **MUST**: `.reverse()` ではなく `.toReversed()` を使用
+- **SHOULD**: `.splice()` ではなく `.toSpliced()` を使用
+
 ## 早期リターン
 
 条件分岐はネストを避け、早期リターンで読みやすくする：

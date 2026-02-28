@@ -3,8 +3,9 @@
 
 'use client';
 
-import { useState, createContext, useContext, useMemo } from 'react';
+import { useState, useRef, useCallback, createContext, useContext, useMemo } from 'react';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
+import { useSession } from 'next-auth/react';
 import {
   DndContext,
   DragOverlay,
@@ -15,6 +16,8 @@ import {
   type DragEndEvent,
   type DragStartEvent
 } from '@dnd-kit/core';
+import { motion, AnimatePresence } from 'framer-motion';
+import { scaleIn } from '@/lib/animations';
 import Image from 'next/image';
 import { Header } from '@/components/layout/header';
 import { MobileNav } from '@/components/layout/mobile-nav';
@@ -33,6 +36,7 @@ import type { FavoriteStreamer } from '@/types/database';
 interface FolderContextType {
   selectedFolderId: string | null;
   setSelectedFolderId: (id: string | null) => void;
+  onFolderIdResolved?: (tempId: string, realId: string) => void;
 }
 
 const FolderContext = createContext<FolderContextType | undefined>(undefined);
@@ -62,11 +66,19 @@ export function useDragContext() {
   return context;
 }
 
+// temp-フォルダへのD&Dをキューに保存する型
+interface QueuedDrop {
+  tempFolderId: string;
+  streamer: FavoriteStreamer;
+}
+
 interface AuthenticatedLayoutProps {
   children: React.ReactNode;
 }
 
 export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
+  const { data: session } = useSession();
+  const isAuthenticated = !!session?.user;
   const queryClient = useQueryClient();
   const { toast, showToast, hideToast } = useToast();
   const { handleAddFavorite: addFavorite } = useFavoriteActions();
@@ -99,6 +111,9 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
   const [activeStreamer, setActiveStreamer] = useState<FavoriteStreamer | null>(null);
   const [pendingAdditions, setPendingAdditions] = useState<Set<string>>(new Set());
 
+  // temp-フォルダへのD&Dキュー
+  const dropQueueRef = useRef<QueuedDrop[]>([]);
+
   // お気に入り配信者のIDリストを抽出（キャッシュを監視）
   // FavoriteListコンポーネントがqueryFnを定義・実行するので、ここでは同じqueryFnを使用
   const { data: favoritesData } = useQuery({
@@ -113,12 +128,52 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
       return result.data as FavoriteStreamer[];
     },
     staleTime: CACHE_TIME.DEFAULT_STALE_TIME,
+    enabled: isAuthenticated,
   });
 
   const favoriteStreamerIds = useMemo(() => {
     if (!favoritesData || !Array.isArray(favoritesData)) return [];
     return favoritesData.map((f) => f.streamerId);
   }, [favoritesData]);
+
+  // temp-フォルダIDが実IDに解決された時のハンドラー
+  const handleFolderIdResolved = useCallback(async (tempId: string, realId: string) => {
+    // キューからtemp-フォルダ宛のドロップを取り出す
+    const queued = dropQueueRef.current.filter((q) => q.tempFolderId === tempId);
+    dropQueueRef.current = dropQueueRef.current.filter((q) => q.tempFolderId !== tempId);
+
+    // 楽観的キャッシュのtemp-IDをreal-IDに更新（invalidateで上書きされるが先にマッピング）
+    for (const item of queued) {
+      const pendingKey = `${realId}:${item.streamer.streamerId}`;
+      setPendingAdditions((prev) => new Set(prev).add(pendingKey));
+
+      try {
+        const result = await addStreamerToFolder(realId, {
+          streamerId: item.streamer.streamerId,
+          streamerName: item.streamer.streamerName,
+          streamerLogin: item.streamer.streamerLogin,
+          streamerImage: item.streamer.streamerImage,
+        });
+
+        if (!result.success) {
+          showToast(result.message, 'error');
+        }
+      } catch {
+        showToast('フォルダへの追加に失敗しました', 'error');
+      } finally {
+        setPendingAdditions((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(pendingKey);
+          return newSet;
+        });
+      }
+    }
+
+    // 実データで上書き
+    if (queued.length > 0) {
+      await queryClient.invalidateQueries({ queryKey: ['folders'] });
+    }
+  }, [queryClient, showToast]);
 
   // お気に入り配信者を追加
   const handleAddFavorite = async (streamer: TwitchChannel) => {
@@ -168,9 +223,32 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
       const folderId = over.id as string;
       const pendingKey = `${folderId}:${streamer.streamerId}`;
 
-      // 作成中フォルダには追加不可
+      // 作成中フォルダの場合はキューに保存して楽観的UI更新
       if (folderId.startsWith('temp-')) {
-        showToast('フォルダ作成中は追加できません', 'error');
+        dropQueueRef.current.push({ tempFolderId: folderId, streamer });
+
+        // 楽観的UI: 即座にキャッシュを更新（見た目上は追加済み）
+        queryClient.setQueryData<{ data: Folder[] }>(['folders'], (oldData) => {
+          if (!oldData?.data) return oldData;
+          return {
+            ...oldData,
+            data: oldData.data.map((f) => {
+              if (f.id === folderId) {
+                const newStreamer = {
+                  id: `temp-${Date.now()}`,
+                  folderId,
+                  streamerId: streamer.streamerId,
+                  streamerName: streamer.streamerName,
+                  streamerLogin: streamer.streamerLogin,
+                  streamerImage: streamer.streamerImage,
+                  addedAt: new Date().toISOString(),
+                };
+                return { ...f, folderStreamers: [...(f.folderStreamers || []), newStreamer] };
+              }
+              return f;
+            }),
+          };
+        });
         return;
       }
 
@@ -257,7 +335,7 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <FolderContext.Provider value={{ selectedFolderId, setSelectedFolderId }}>
+      <FolderContext.Provider value={{ selectedFolderId, setSelectedFolderId, onFolderIdResolved: handleFolderIdResolved }}>
         <DragContext.Provider value={{ isDragging, activeStreamer, pendingAdditions }}>
           <div className="h-screen bg-[#0f0f0f] flex flex-col overflow-hidden">
             {/* 固定ヘッダー */}
@@ -267,8 +345,9 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
               {/* 固定サイドバー */}
               <DashboardSidebar
                 isSidebarOpen={isSidebarOpen}
-                onAddFavorite={handleAddFavorite}
-                onRemoveFavorite={handleRemoveFavorite}
+                isAuthenticated={isAuthenticated}
+                onAddFavorite={isAuthenticated ? handleAddFavorite : undefined}
+                onRemoveFavorite={isAuthenticated ? handleRemoveFavorite : undefined}
                 favoriteStreamerIds={favoriteStreamerIds}
               />
 
@@ -293,7 +372,12 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
             {/* ドラッグオーバーレイ */}
             <DragOverlay>
               {activeStreamer && (
-                <div className="group bg-[#1a1a1a] hover:bg-[#222222] rounded-lg p-2 cursor-move transition-all duration-200 shadow-2xl scale-50 rotate-3">
+                <motion.div
+                  className="group bg-[#1a1a1a] hover:bg-[#222222] rounded-lg p-2 cursor-move transition-all duration-200 shadow-2xl scale-50 rotate-3"
+                  variants={scaleIn}
+                  initial="hidden"
+                  animate="visible"
+                >
                   {/* プロフィール画像 */}
                   <div className="relative w-12 h-12 mx-auto mb-1">
                     {activeStreamer.streamerImage ? (
@@ -320,7 +404,7 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
                   <p className="text-center text-[10px] text-gray-400 line-clamp-1">
                     @{activeStreamer.streamerLogin}
                   </p>
-                </div>
+                </motion.div>
               )}
             </DragOverlay>
           </div>

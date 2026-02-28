@@ -134,7 +134,6 @@
     }
   }
 
-  /* カード用アニメーション（動的に遅延を設定） */
   .animate-card {
     animation: fadeInCard 0.3s ease-out forwards;
     opacity: 0;
@@ -454,6 +453,14 @@
   &::placeholder {
     color: #6b7280;
   }
+}
+
+/* --- パフォーマンス系 --- */
+
+/* オフスクリーンのクリップカードのレンダリングをスキップ（ルール6.2: content-visibility） */
+@utility clip-card-item {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 300px;
 }
 
 /* --- レイアウト系 --- */
