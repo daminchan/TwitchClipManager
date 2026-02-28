@@ -463,6 +463,40 @@
   contain-intrinsic-size: 0 300px;
 }
 
+/* --- ランキング系 --- */
+
+/* グラデーション枠のピルボタン */
+.btn-gradient-pill {
+  display: inline-flex;
+  border-radius: 9999px;
+  padding: 2px;
+  background: conic-gradient(from 0deg, #f97316, #ec4899, #8b5cf6, #3b82f6, #10b981, #f97316);
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.btn-gradient-pill:hover {
+  opacity: 0.85;
+}
+
+.btn-gradient-pill:active {
+  transform: scale(0.97);
+}
+
+.btn-gradient-pill > span {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  background-color: #0f0f0f;
+  border-radius: 9999px;
+  padding: 0.5rem 1.25rem;
+  color: #e5e7eb;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 /* --- レイアウト系 --- */
 
 @utility page-container {

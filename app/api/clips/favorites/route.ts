@@ -67,6 +67,7 @@ export async function GET() {
         // 配信者情報を各クリップに追加
         return clips.map((clip: TwitchClip) => ({
           ...clip,
+          profile_image_url: favorite.streamerImage || undefined,
           favoriteStreamerId: favorite.streamerId,
           favoriteStreamerName: favorite.streamerName,
           favoriteStreamerImage: favorite.streamerImage,

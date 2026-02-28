@@ -24,6 +24,18 @@ export const TWITCH_URLS = {
 export const DEFAULT_CLIPS_LIMIT = 20;
 
 /**
+ * トップページ3セクション設定
+ */
+export const HOME_SECTIONS = {
+  RANKING_COUNT: 10,
+  RANKING_INITIAL_DISPLAY: 5,
+  HOT_COUNT: 5,
+  FAVORITE_RATIO: 0.7,
+  HOT_SCORE_GRAVITY: 1.5,
+  HOT_SCORE_OFFSET: 2,
+} as const;
+
+/**
  * クリップフィルターの設定
  * 直近2日間の各配信者上位5件を取得
  *
@@ -91,6 +103,10 @@ export const API_ENDPOINTS = {
 export const LABELS = {
   // セクションタイトル
   SECTIONS: {
+    WEEKLY_RANKING: '週間ランキング',
+    RANKING_SUFFIX: '位',
+    HOT: 'HOT',
+    RECOMMENDED: 'おすすめ',
     CLIP_LIST: 'クリップ一覧',
     SEARCH_STREAMERS: '配信者を検索して追加',
     GAME_BASED_ADD: '好きなゲームから配信者を追加',

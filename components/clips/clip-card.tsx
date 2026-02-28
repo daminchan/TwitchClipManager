@@ -3,17 +3,16 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Play, Copy } from 'lucide-react';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ClipDetailModal } from './clip-detail-modal';
 import { useModal } from '@/hooks/use-modal';
-import { useIsMounted } from '@/hooks/use-is-mounted';
 import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
-import { formatViewCount, formatRelativeTime, formatDuration } from '@/lib/utils';
+import { formatDuration } from '@/lib/utils';
 import { LABELS, TWITCH_URLS } from '@/lib/constants';
 import type { TwitchClip } from '@/types/twitch';
 
@@ -31,7 +30,6 @@ interface ClipCardProps {
 export function ClipCard({ clip, isLiked = false, onLikeToggle }: ClipCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const { isOpen: isModalOpen, openModal, closeModal } = useModal();
-  const isMounted = useIsMounted();
   const { toast, showToast, hideToast } = useToast();
 
   const handleCopyLink = (e: React.MouseEvent) => {
@@ -41,16 +39,10 @@ export function ClipCard({ clip, isLiked = false, onLikeToggle }: ClipCardProps)
     });
   };
 
-  // 相対時間の計算（クライアントサイドでのみ - Hydrationエラー防止）
-  const relativeTime = useMemo(() => {
-    if (!isMounted) return formatRelativeTime(clip.created_at);
-    return formatRelativeTime(clip.created_at, new Date());
-  }, [isMounted, clip.created_at]);
-
   return (
     <>
       <Card
-        className="overflow-hidden cursor-pointer transition-all duration-200 hover:scale-[1.02] bg-[#1a1a1a] border-0 hover:bg-[#222222] hover:shadow-lg hover:shadow-purple-500/10"
+        className="h-full flex flex-col overflow-hidden cursor-pointer transition-all duration-200 hover:scale-[1.02] bg-[#1a1a1a] border-0 hover:bg-[#222222] hover:shadow-lg hover:shadow-purple-500/10"
         onMouseEnter={() => !isModalOpen && setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onClick={openModal}
@@ -96,11 +88,11 @@ export function ClipCard({ clip, isLiked = false, onLikeToggle }: ClipCardProps)
         </div>
 
         {/* クリップ情報部分 */}
-        <CardContent className="p-4">
+        <CardContent className="p-4 flex-1">
           <div className="flex gap-3">
             {/* 配信者アバター */}
             <img
-              src={TWITCH_URLS.PROFILE_IMAGE(clip.broadcaster_name)}
+              src={clip.profile_image_url || TWITCH_URLS.DEFAULT_AVATAR}
               alt={clip.broadcaster_name}
               className="w-10 h-10 rounded-full flex-shrink-0 mt-0.5"
               onError={(e) => {
@@ -118,10 +110,10 @@ export function ClipCard({ clip, isLiked = false, onLikeToggle }: ClipCardProps)
               </div>
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <span>
-                  {formatViewCount(clip.view_count)} {LABELS.CLIPS.VIEWS_SUFFIX}
+                  {clip.view_count.toLocaleString()}再生
                 </span>
                 <span>•</span>
-                <span>{relativeTime}</span>
+                <span>{new Date(clip.created_at).toLocaleDateString('ja-JP')}</span>
               </div>
             </div>
           </div>

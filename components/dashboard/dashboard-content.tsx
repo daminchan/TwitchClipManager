@@ -1,15 +1,18 @@
 // - YouTube風レイアウト: コンテンツのみ（ヘッダー・サイドバーはレイアウトにあり）
-// 機能: ダッシュボードのメインコンテンツ（クリップ一覧、検索、ソート）
+// 機能: ダッシュボードのメインコンテンツ（3セクション表示、検索、ソート）
 
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
-import { Search } from 'lucide-react';
+import { Search, Flame, Sparkles } from 'lucide-react';
 
 import { ClipGrid } from '@/components/clips/clip-grid';
 import { ClipSortTabs } from '@/components/dashboard/clip-sort-tabs';
+import { SectionHeader } from '@/components/dashboard/section-header';
+import { RankingSection } from '@/components/dashboard/ranking-section';
+import { HotSection } from '@/components/dashboard/hot-section';
 import { Input } from '@/components/ui/input';
 import { Toast } from '@/components/ui/toast';
 
@@ -25,6 +28,7 @@ const RegistrationPromptModal = dynamic(
 import { useToast } from '@/hooks/use-toast';
 import { useDashboardClips } from '@/hooks/use-dashboard-clips';
 import { usePopularClips } from '@/hooks/use-popular-clips';
+import { useHomeSections } from '@/hooks/use-home-sections';
 import { useFolderContext } from '@/components/layout/authenticated-layout';
 import { getFolders } from '@/actions/folders';
 import { LABELS, PAGINATION } from '@/lib/constants';
@@ -40,6 +44,7 @@ interface DashboardContentProps {
 /**
  * ダッシュボードコンテンツコンポーネント
  * クリップ一覧の表示、検索、ソート、フィルタリング機能を提供
+ * デフォルトは3セクション表示、検索/フォルダ選択時は1グリッド表示
  */
 export function DashboardContent({
   userId,
@@ -56,6 +61,13 @@ export function DashboardContent({
   // 認証状態に応じてどちらのクリップデータを使うか決定
   const usePopular = !isAuthenticated || skipAuth;
   const activeClips = usePopular ? popularClips : dashboardClips;
+
+  // 3セクション振り分け
+  const { ranking, hot, recommended } = useHomeSections({
+    popularClips: popularClips.allClips,
+    favoriteClips: isAuthenticated && !skipAuth ? dashboardClips.allClips : [],
+    isAuthenticated: isAuthenticated && !skipAuth,
+  });
 
   // UI State
   const { toast, showToast, hideToast } = useToast();
@@ -97,7 +109,26 @@ export function DashboardContent({
     );
   }, [activeClips.filteredClips, selectedFolderStreamerIds]);
 
-  // 無限スクロール用ページネーション
+  // 3セクション表示するかどうか（検索/フォルダ選択なし時のみ）
+  const showSections = !activeClips.searchQuery && !selectedFolderId;
+
+  // おすすめセクションにソートを適用
+  const sortedRecommended = useMemo(() => {
+    if (activeClips.sortType === 'date-desc') {
+      return recommended.toSorted(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    }
+    if (activeClips.sortType === 'date-asc') {
+      return recommended.toSorted(
+        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
+    }
+    // 'views' はデフォルトの再生数順（useHomeSectionsで既にソート済み）
+    return recommended;
+  }, [recommended, activeClips.sortType]);
+
+  // おすすめセクション用ページネーション
   const [displayedCount, setDisplayedCount] = useState<number>(
     PAGINATION.CLIPS_PER_PAGE
   );
@@ -109,15 +140,20 @@ export function DashboardContent({
 
   // 表示するクリップ（ページネーション適用）
   const displayClips = useMemo(() => {
+    if (showSections) {
+      return sortedRecommended.slice(0, displayedCount);
+    }
     return allDisplayClips.slice(0, displayedCount);
-  }, [allDisplayClips, displayedCount]);
+  }, [showSections, sortedRecommended, allDisplayClips, displayedCount]);
 
   // もっと読み込む
   const handleLoadMore = useCallback(() => {
     setDisplayedCount((prev) => prev + PAGINATION.CLIPS_PER_PAGE);
   }, []);
 
-  const hasMore = displayedCount < allDisplayClips.length;
+  const hasMore = showSections
+    ? displayedCount < sortedRecommended.length
+    : displayedCount < allDisplayClips.length;
 
   // いいね/解除（未認証時は登録促進モーダル表示）
   const handleLikeToggle = (clipId: string, isCurrentlyLiked: boolean) => {
@@ -146,27 +182,81 @@ export function DashboardContent({
         </div>
       </div>
 
-      {/* ソートタブ + フォルダタグ */}
-      <div className="mb-6">
-        <ClipSortTabs
-          sortType={activeClips.sortType}
-          onSortChange={activeClips.setSortType}
-          clipCount={allDisplayClips.length}
-          folders={isAuthenticated ? folders : []}
-          selectedFolderId={selectedFolderId}
-          onFolderClick={setSelectedFolderId}
-        />
-      </div>
+      {showSections ? (
+        <>
+          {/* ① 週間ランキング（ヘッダー内蔵） */}
+          {ranking.length > 0 && (
+            <section className="mb-8">
+              <RankingSection
+                clips={ranking}
+                likedClipIds={activeClips.likedClipIds}
+                onLikeToggle={handleLikeToggle}
+              />
+            </section>
+          )}
 
-      {/* クリップグリッド（無限スクロール対応） */}
-      <ClipGrid
-        clips={displayClips}
-        isLoading={activeClips.isLoadingClips}
-        likedClipIds={activeClips.likedClipIds}
-        onLikeToggle={handleLikeToggle}
-        hasMore={hasMore}
-        onLoadMore={handleLoadMore}
-      />
+          {/* ② HOT */}
+          {hot.length > 0 && (
+            <section className="mb-8">
+              <SectionHeader title={LABELS.SECTIONS.HOT} icon={Flame} />
+              <HotSection
+                clips={hot}
+                likedClipIds={activeClips.likedClipIds}
+                onLikeToggle={handleLikeToggle}
+              />
+            </section>
+          )}
+
+          {/* ③ おすすめ */}
+          <section>
+            <SectionHeader title={LABELS.SECTIONS.RECOMMENDED} icon={Sparkles} />
+
+            {/* ソートタブ + フォルダタグ */}
+            <div className="mb-6">
+              <ClipSortTabs
+                sortType={activeClips.sortType}
+                onSortChange={activeClips.setSortType}
+                clipCount={sortedRecommended.length}
+                folders={isAuthenticated ? folders : []}
+                selectedFolderId={selectedFolderId}
+                onFolderClick={setSelectedFolderId}
+              />
+            </div>
+
+            <ClipGrid
+              clips={displayClips}
+              isLoading={activeClips.isLoadingClips}
+              likedClipIds={activeClips.likedClipIds}
+              onLikeToggle={handleLikeToggle}
+              hasMore={hasMore}
+              onLoadMore={handleLoadMore}
+            />
+          </section>
+        </>
+      ) : (
+        <>
+          {/* 検索/フォルダ選択時: 従来通り1グリッド表示 */}
+          <div className="mb-6">
+            <ClipSortTabs
+              sortType={activeClips.sortType}
+              onSortChange={activeClips.setSortType}
+              clipCount={allDisplayClips.length}
+              folders={isAuthenticated ? folders : []}
+              selectedFolderId={selectedFolderId}
+              onFolderClick={setSelectedFolderId}
+            />
+          </div>
+
+          <ClipGrid
+            clips={displayClips}
+            isLoading={activeClips.isLoadingClips}
+            likedClipIds={activeClips.likedClipIds}
+            onLikeToggle={handleLikeToggle}
+            hasMore={hasMore}
+            onLoadMore={handleLoadMore}
+          />
+        </>
+      )}
 
       {/* トースト通知 */}
       {toast && (

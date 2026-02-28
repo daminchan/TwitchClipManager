@@ -6,7 +6,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { getTopGames, getClipsByGame } from '@/lib/twitch-api';
+import { getTopGames, getClipsByGame, getStreamersByIds } from '@/lib/twitch-api';
 import { POPULAR_CLIPS_CONFIG } from '@/lib/constants';
 import type { TwitchClip, TwitchGame } from '@/types/twitch';
 
@@ -61,8 +61,25 @@ export async function GET() {
     // toSorted()でイミュータブルに（ルール7.12）
     const allClips = allClipsArrays.flat().toSorted((a, b) => b.view_count - a.view_count);
 
+    // プロフィール画像をバッチ取得して付与
+    const uniqueBroadcasterIds = [...new Set(allClips.map((clip) => clip.broadcaster_id))];
+    let clipsWithImages = allClips;
+
+    try {
+      const users = await getStreamersByIds(uniqueBroadcasterIds);
+      const profileImageMap = new Map(
+        users.map((user) => [user.id, user.profile_image_url])
+      );
+      clipsWithImages = allClips.map((clip) => ({
+        ...clip,
+        profile_image_url: profileImageMap.get(clip.broadcaster_id),
+      }));
+    } catch (error) {
+      console.error('Failed to fetch streamer profiles:', error);
+    }
+
     return NextResponse.json(
-      { data: allClips },
+      { data: clipsWithImages },
       {
         headers: {
           'Cache-Control': 'public, max-age=600',
