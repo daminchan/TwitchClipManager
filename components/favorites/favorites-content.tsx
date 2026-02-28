@@ -1,7 +1,3 @@
-// 適用スキル: component-creator
-// 適用ルール:
-// - セクション4.6: コンポーネント構造
-// - セクション10.2: サーバー/クライアントコンポーネント分離
 // - YouTube風レイアウト: コンテンツのみ
 
 'use client';
@@ -76,7 +72,7 @@ export function FavoritesContent() {
 
   const handleFolderDeleteSuccess = (deletedFolderId: string) => {
     // 楽観的UI: キャッシュから削除
-    queryClient.setQueryData(['folders'], (oldData: any) => {
+    queryClient.setQueryData<{ data: Folder[] }>(['folders'], (oldData) => {
       if (!oldData?.data) return oldData;
       return {
         ...oldData,
@@ -98,7 +94,7 @@ export function FavoritesContent() {
     });
 
     // 楽観的UI: 全フォルダからも削除（サーバー側でも同時削除されるため）
-    queryClient.setQueryData(['folders'], (oldData: any) => {
+    queryClient.setQueryData<{ data: Folder[] }>(['folders'], (oldData) => {
       if (!oldData?.data) return oldData;
       return {
         ...oldData,

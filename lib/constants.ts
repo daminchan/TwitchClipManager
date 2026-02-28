@@ -7,6 +7,19 @@
 export const TWITCH_API_BASE_URL = 'https://api.twitch.tv/helix';
 export const TWITCH_AUTH_URL = 'https://id.twitch.tv/oauth2/token';
 
+/**
+ * Twitch CDN URL定義
+ * プロフィール画像やデフォルトアバターのURL
+ */
+export const TWITCH_URLS = {
+  // プロフィール画像URL（{username}を置換して使用）
+  PROFILE_IMAGE: (username: string) =>
+    `https://static-cdn.jtvnw.net/jtv_user_pictures/${username}-profile_image-70x70.png`,
+  // デフォルトアバター（プロフィール画像取得失敗時のフォールバック）
+  DEFAULT_AVATAR:
+    'https://static-cdn.jtvnw.net/user-default-pictures-uv/cdd517fe-def4-11e9-948e-784f43822e80-profile_image-70x70.png',
+} as const;
+
 // クリップ設定
 export const DEFAULT_CLIPS_LIMIT = 20;
 
@@ -158,6 +171,9 @@ export const LABELS = {
     // ゲーム・配信者取得
     GAME_FETCH_FAILED: 'ゲーム一覧の取得に失敗しました',
     STREAMER_FETCH_FAILED: 'おすすめ配信者の取得に失敗しました',
+    // クリップ
+    CLIPS_FETCH_FAILED: 'クリップの取得に失敗しました',
+    CLIPS_DATA_EMPTY: 'データが取得できませんでした',
     // 汎用
     UNKNOWN_ERROR: '予期しないエラーが発生しました',
     NETWORK_ERROR: '通信エラーが発生しました。接続を確認してください',
@@ -169,6 +185,15 @@ export const LABELS = {
     VIEWS: '再生数',
     DATE_DESC: '新しい順',
     DATE_ASC: '古い順',
+  },
+
+  // クリップ関連
+  CLIPS: {
+    VIEW_ON_TWITCH: 'Twitchで見る',
+    PLAY_CLIP: 'クリップを再生',
+    CLIP_UNIT: 'クリップ',
+    FOLDER_LABEL: 'フォルダ:',
+    VIEWS_SUFFIX: 'views',
   },
 
   // プレースホルダー
@@ -270,6 +295,18 @@ export const ANIMATION = {
   LIKE_HEART_DURATION: 1000,  // 浮遊ハートアニメーション時間（ms）
   LIKE_HEART_OFFSET: 40,      // 浮遊ハートのランダム横ずれ範囲（px）
   LIKE_DEBOUNCE: 500,         // いいねリクエストのDebounce時間（ms）
+  // クリップグリッド関連
+  GRID_SKELETON_COUNT: 10,    // ローディング時のスケルトン表示数
+  GRID_INITIAL_DELAY: 350,    // 初回アニメーション完了待機時間（ms）
+  LOAD_MORE_DELAY: 300,       // 追加読み込み時の遅延（ms）
+} as const;
+
+/**
+ * 無限スクロール設定
+ */
+export const INFINITE_SCROLL = {
+  ROOT_MARGIN: '100px',       // 発火位置（ビューポートからの距離）
+  THRESHOLD: 0,               // 交差割合
 } as const;
 
 /**

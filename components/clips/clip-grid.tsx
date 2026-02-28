@@ -1,15 +1,13 @@
-// 適用スキル: component-creator
-// 適用ルール:
-// - セクション4.6: コンポーネント構造
-// - セクション8.2: Props型定義
-// - セクション5.3: レスポンシブデザイン（モバイルファースト）
-// - 無限スクロール対応（Intersection Observer使用）
+// 機能: クリップのグリッド表示（無限スクロール対応）
 
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
+
 import { ClipCard } from './clip-card';
+import { useInfiniteScroll } from '@/hooks/use-infinite-scroll';
+import { LABELS, ANIMATION } from '@/lib/constants';
 import type { TwitchClip } from '@/types/twitch';
 
 interface ClipGridProps {
@@ -17,12 +15,19 @@ interface ClipGridProps {
   isLoading?: boolean;
   likedClipIds?: Set<string>;
   onLikeToggle?: (clipId: string, isCurrentlyLiked: boolean) => void;
-  // 無限スクロール用
+  /** 無限スクロール: さらに読み込むデータがあるか */
   hasMore?: boolean;
+  /** 無限スクロール: 追加読み込み時のコールバック */
   onLoadMore?: () => void;
+  /** 無限スクロール: 読み込み中かどうか */
   isLoadingMore?: boolean;
 }
 
+/**
+ * クリップグリッドコンポーネント
+ * クリップカードをグリッドレイアウトで表示
+ * 無限スクロールに対応（Intersection Observer使用）
+ */
 export function ClipGrid({
   clips,
   isLoading,
@@ -34,44 +39,27 @@ export function ClipGrid({
 }: ClipGridProps) {
   // 初回表示アニメーション用（追加読み込み時はアニメーションしない）
   const [initialAnimationDone, setInitialAnimationDone] = useState(false);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  // 無限スクロール（useInfiniteScrollフック使用）
+  const { loadMoreRef } = useInfiniteScroll({
+    hasMore,
+    onLoadMore: onLoadMore ?? (() => {}),
+  });
 
   // 初回マウント後、アニメーション開始→完了
   useEffect(() => {
-    const timer = setTimeout(() => setInitialAnimationDone(true), 350); // アニメーション完了後
+    const timer = setTimeout(
+      () => setInitialAnimationDone(true),
+      ANIMATION.GRID_INITIAL_DELAY
+    );
     return () => clearTimeout(timer);
   }, []);
 
-  // Intersection Observer で無限スクロール
-  const handleObserver = useCallback(
-    (entries: IntersectionObserverEntry[]) => {
-      const [entry] = entries;
-      if (entry.isIntersecting && hasMore && !isLoadingMore && onLoadMore) {
-        onLoadMore();
-      }
-    },
-    [hasMore, isLoadingMore, onLoadMore]
-  );
-
-  useEffect(() => {
-    const element = loadMoreRef.current;
-    if (!element) return;
-
-    const observer = new IntersectionObserver(handleObserver, {
-      root: null,
-      rootMargin: '100px', // 100px手前で発火
-      threshold: 0,
-    });
-
-    observer.observe(element);
-
-    return () => observer.disconnect();
-  }, [handleObserver]);
-
+  // ローディング中: スケルトン表示
   if (isLoading) {
     return (
       <div className="grid-clips">
-        {Array.from({ length: 10 }).map((_, i) => (
+        {Array.from({ length: ANIMATION.GRID_SKELETON_COUNT }).map((_, i) => (
           <div
             key={i}
             className="aspect-video bg-gray-800 animate-pulse rounded-lg"
@@ -81,17 +69,19 @@ export function ClipGrid({
     );
   }
 
+  // クリップなし: 空状態表示
   if (clips.length === 0) {
     return (
       <div className="text-center py-16 text-gray-400">
         <div className="text-6xl mb-4">📺</div>
-        <p className="text-lg">クリップが見つかりませんでした</p>
+        <p className="text-lg">{LABELS.MESSAGES.NO_CLIPS}</p>
       </div>
     );
   }
 
   return (
     <div>
+      {/* クリップグリッド */}
       <div className="grid-clips">
         {clips.map((clip) => (
           <div
@@ -109,14 +99,11 @@ export function ClipGrid({
 
       {/* 無限スクロール: ローディング & トリガー */}
       {hasMore && (
-        <div
-          ref={loadMoreRef}
-          className="flex justify-center py-8"
-        >
+        <div ref={loadMoreRef} className="flex justify-center py-8">
           {isLoadingMore ? (
             <div className="flex items-center gap-2 text-gray-400">
               <Loader2 className="w-5 h-5 animate-spin" />
-              <span>読み込み中...</span>
+              <span>{LABELS.BUTTONS.LOADING}</span>
             </div>
           ) : (
             <div className="h-8" /> // トリガー用の空要素

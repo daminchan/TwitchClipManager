@@ -1,7 +1,3 @@
-// 適用スキル: component-creator
-// 適用ルール:
-// - セクション4.6: コンポーネント構造
-// - セクション10.2: サーバー/クライアントコンポーネント分離
 // - オンボーディングフロー設計.md: オンボーディングモーダル統合
 
 'use client';
@@ -53,7 +49,7 @@ export function OnboardingModal({ isOpen, onClose, skipAuth = false }: Onboardin
           }
         }
       } catch (error) {
-        console.error('Failed to check favorites:', error);
+
       }
 
       // お気に入り配信者がいない場合は新規ユーザー → ゲーム選択へ
@@ -84,7 +80,6 @@ export function OnboardingModal({ isOpen, onClose, skipAuth = false }: Onboardin
       if (result.success) {
         setCurrentStep('completion');
       } else {
-        console.error('Failed to add favorite streamers:', result.message);
         // エラー処理（必要に応じてトースト表示等）
       }
     });

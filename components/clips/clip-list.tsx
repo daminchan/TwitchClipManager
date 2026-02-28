@@ -1,7 +1,3 @@
-// 適用スキル: component-creator
-// 適用ルール:
-// - セクション4.6: コンポーネント構造
-// - セクション8.2: Props型定義
 // - 無限スクロール対応（Intersection Observer使用）
 
 'use client';

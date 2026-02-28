@@ -1,8 +1,3 @@
-// 適用スキル: component-creator
-// 適用ルール:
-// - セクション4.1: ファイル命名規則（kebab-case）
-// - セクション4.6: コンポーネント構造
-// - セクション8.2: Props型定義
 // - モーダルデザイン
 
 'use client';
@@ -101,7 +96,7 @@ export function StreamerSearchModal({
         setError('配信者が見つかりませんでした');
       }
     } catch (error) {
-      console.error('Search error:', error);
+
       setError('検索中にエラーが発生しました');
     } finally {
       setIsLoading(false);
@@ -119,24 +114,22 @@ export function StreamerSearchModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-2 sm:p-4">
-      <div className="bg-[#1a1a1a] rounded-lg w-full max-w-2xl max-h-[95vh] sm:max-h-[80vh] flex flex-col border border-gray-800 shadow-2xl">
-        {/* ヘッダー */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-800">
+    <div className="modal-overlay">
+      <div className="modal-container-md sm:max-h-[80vh]">
+        <div className="modal-header">
           <h2 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
             配信者を検索して追加
           </h2>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-gray-100 transition"
+            className="modal-close-btn"
             aria-label="閉じる"
           >
             <X className="w-6 h-6" />
           </button>
         </div>
 
-        {/* コンテンツ */}
-        <div className="p-6 overflow-y-auto flex-1">
+        <div className="modal-body">
           {/* 検索フォーム */}
           <form onSubmit={handleSearch} className="mb-6">
             <div className="relative">

@@ -1,13 +1,9 @@
-// 適用スキル: component-creator
-// 適用ルール:
-// - セクション4.6: コンポーネント構造
-// - セクション8.2: Props型定義
-
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { X, SkipBack, SkipForward, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useIsMounted } from '@/hooks/use-is-mounted';
 import type { TwitchClip } from '@/types/twitch';
 
 interface ClipPlayerModalProps {
@@ -29,14 +25,8 @@ export function ClipPlayerModal({
   currentIndex,
   totalClips,
 }: ClipPlayerModalProps) {
-  const [isMounted, setIsMounted] = useState(false);
+  const isMounted = useIsMounted();
 
-  // クライアントサイドでのみマウント状態を更新（Hydrationエラー防止）
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  // embedのparentはクライアントサイドでのみ取得
   const embedParent = useMemo(() => {
     if (!isMounted) return 'localhost';
     return window.location.hostname;

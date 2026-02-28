@@ -1,8 +1,3 @@
-// 適用スキル: component-creator
-// 適用ルール:
-// - セクション4.1: ファイル命名規則（kebab-case）
-// - セクション4.6: コンポーネント構造（型定義 → コンポーネント → フック → ハンドラー → JSX）
-// - セクション8.2: Props型定義
 // - API Routes を使用して配信者検索（キャッシュ最適化）
 
 'use client';
@@ -102,7 +97,7 @@ export function StreamerSearch({ onSelectStreamer, addedStreamerIds = [] }: Stre
         setError('配信者が見つかりませんでした');
       }
     } catch (error) {
-      console.error('Search error:', error);
+
       setError('検索中にエラーが発生しました');
     } finally {
       setIsLoading(false);

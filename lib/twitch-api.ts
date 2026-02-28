@@ -1,4 +1,5 @@
 import { TWITCH_API_BASE_URL, TWITCH_AUTH_URL, DEFAULT_CLIPS_LIMIT } from './constants';
+import type { TwitchClip } from '@/types/twitch';
 
 let accessToken: string | null = null;
 let tokenExpiry: number = 0;
@@ -159,7 +160,7 @@ export async function getClipsByBroadcaster(
 
   // 視聴回数順にソート
   const sortedClips = data.data.sort(
-    (a: any, b: any) => b.view_count - a.view_count
+    (a: TwitchClip, b: TwitchClip) => b.view_count - a.view_count
   );
 
   return sortedClips;

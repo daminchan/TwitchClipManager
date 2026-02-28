@@ -312,3 +312,163 @@
     @apply space-y-2;
   }
 }
+
+/* ===================================
+ * セマンティッククラス（Tailwind v4 @utility）
+ * =================================== */
+
+/* --- モーダル系 --- */
+
+@utility modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgb(0 0 0 / 0.9);
+  padding: 1rem;
+}
+
+@utility modal-container-sm {
+  position: relative;
+  width: 100%;
+  max-width: 28rem;
+  background-color: #0f0f0f;
+  border-radius: 0.5rem;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  border: 1px solid #2a2a2a;
+  overflow: hidden;
+}
+
+@utility modal-container-md {
+  position: relative;
+  width: 100%;
+  max-width: 42rem;
+  max-height: 95vh;
+  background-color: #0f0f0f;
+  border-radius: 0.5rem;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  border: 1px solid #2a2a2a;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+@utility modal-container-lg {
+  position: relative;
+  width: 100%;
+  max-width: 56rem;
+  max-height: 95vh;
+  background-color: #0f0f0f;
+  border-radius: 0.5rem;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  border: 1px solid #2a2a2a;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+@utility modal-container-xl {
+  position: relative;
+  width: 100%;
+  max-width: 64rem;
+  max-height: 95vh;
+  background-color: #0f0f0f;
+  border-radius: 0.5rem;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  border: 1px solid #2a2a2a;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+@utility modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+@utility modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+@utility modal-footer {
+  padding: 1.5rem;
+  border-top: 1px solid #2a2a2a;
+}
+
+@utility modal-close-btn {
+  padding: 0.5rem;
+  border-radius: 9999px;
+  transition: background-color 150ms;
+  color: #9ca3af;
+
+  &:hover {
+    background-color: #1a1a1a;
+    color: #f3f4f6;
+  }
+}
+
+/* --- テキスト系 --- */
+
+@utility text-title {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 700;
+  color: #f3f4f6;
+}
+
+@utility text-description {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: #9ca3af;
+}
+
+@utility text-label {
+  display: block;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: #d1d5db;
+  margin-bottom: 0.5rem;
+}
+
+@utility text-error {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: #f87171;
+}
+
+/* --- フォーム系 --- */
+
+@utility input-dark {
+  background-color: #1a1a1a;
+  border-color: #374151;
+  color: #f3f4f6;
+
+  &::placeholder {
+    color: #6b7280;
+  }
+}
+
+/* --- レイアウト系 --- */
+
+@utility page-container {
+  width: 100%;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  padding-top: 1rem;
+  padding-bottom: 6rem;
+  max-width: 56rem;
+  margin-left: auto;
+  margin-right: auto;
+
+  @media (min-width: 1024px) {
+    padding-bottom: 1rem;
+  }
+}

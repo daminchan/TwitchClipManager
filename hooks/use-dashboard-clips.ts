@@ -1,21 +1,10 @@
-/**
- * Dashboard クリップ管理用カスタムフック（React Query版）
- * クリップの取得、フィルター、ソート、いいね機能のロジックを集約
- *
- * 適用ルール:
- * - セクション2: 技術スタック（React Query）
- * - セクション7: 状態管理（useQuery でサーバー状態管理）
- * - セクション10.2: サーバーアクション（いいね機能）
- * - セクション14.2: カスタムフック（複雑なロジック分離）
- * - セクション17: 定数管理（ANIMATION定数使用）
- */
-
 import { useState, useMemo, useCallback, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { TwitchClip } from '@/types/twitch';
 import type { SortType } from '@/components/dashboard/clip-sort-tabs';
 import { API_ENDPOINTS, LABELS, ANIMATION, CACHE_TIME } from '@/lib/constants';
 import { getLikedClips, addLikedClip, removeLikedClip } from '@/actions/liked-clips';
+import type { LikedClip } from '@/types/database';
 
 export function useDashboardClips() {
   const queryClient = useQueryClient();
@@ -43,15 +32,15 @@ export function useDashboardClips() {
 
       if (!response.ok) {
         if (response.status === 401) {
-          throw new Error('認証が必要です');
+          throw new Error(LABELS.ERRORS.AUTH_REQUIRED);
         }
-        throw new Error('クリップの取得に失敗しました');
+        throw new Error(LABELS.ERRORS.CLIPS_FETCH_FAILED);
       }
 
       const result = await response.json();
 
       if (!result.data) {
-        throw new Error('データが取得できませんでした');
+        throw new Error(LABELS.ERRORS.CLIPS_DATA_EMPTY);
       }
 
       return result.data as TwitchClip[];
@@ -118,7 +107,7 @@ export function useDashboardClips() {
       // 1. 即座にUIを更新（楽観的UI）
       const newLikedState = !isCurrentlyLiked;
 
-      queryClient.setQueryData(['clips', 'liked'], (old: any) => {
+      queryClient.setQueryData<LikedClip[]>(['clips', 'liked'], (old) => {
         if (!old) return [];
 
         if (newLikedState) {
@@ -139,11 +128,11 @@ export function useDashboardClips() {
             duration: clip.duration,
             clipCreatedAt: clip.created_at,
             likedAt: new Date().toISOString(),
-          };
+          } as LikedClip;
           return [...old, newClip];
         } else {
           // いいね削除
-          return old.filter((clip: any) => clip.clipId !== clipId);
+          return old.filter((clip) => clip.clipId !== clipId);
         }
       });
 
@@ -166,18 +155,14 @@ export function useDashboardClips() {
             const clip = allClips.find((c) => c.id === id);
             if (clip) {
               addLikeMutation.mutate(clip, {
-                onError: (error) => {
-                  console.error('Add like error:', error);
-                  // エラー時はキャッシュを再取得して同期
+                onError: () => {
                   queryClient.invalidateQueries({ queryKey: ['clips', 'liked'] });
                 },
               });
             }
           } else {
             removeLikeMutation.mutate(id, {
-              onError: (error) => {
-                console.error('Remove like error:', error);
-                // エラー時はキャッシュを再取得して同期
+              onError: () => {
                 queryClient.invalidateQueries({ queryKey: ['clips', 'liked'] });
               },
             });

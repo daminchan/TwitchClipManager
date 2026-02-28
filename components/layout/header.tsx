@@ -1,9 +1,3 @@
-// 適用スキル: component-creator
-// 適用ルール:
-// - セクション4.1: ファイル命名規則（kebab-case: header.tsx）
-// - セクション4.2: コンポーネント命名規則（PascalCase: Header）
-// - セクション4.5: インポート順序
-// - セクション4.6: コンポーネント構造
 // - YouTube風統一ヘッダー（全ページ共通）
 
 'use client';

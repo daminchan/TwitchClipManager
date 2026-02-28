@@ -1,10 +1,3 @@
-// 適用スキル: component-creator
-// 適用ルール:
-// - セクション2: 技術スタック（React Query）
-// - セクション4.1: ファイル命名規則（kebab-case）
-// - セクション4.6: コンポーネント構造
-// - セクション10.2: サーバー/クライアントコンポーネント分離
-
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';

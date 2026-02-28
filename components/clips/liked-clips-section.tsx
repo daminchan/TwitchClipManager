@@ -1,7 +1,3 @@
-// 適用スキル: component-creator
-// 適用ルール:
-// - セクション4.6: コンポーネント構造
-// - セクション8.2: Props型定義
 // - サーバーアクションの使用
 
 'use client';
@@ -55,7 +51,7 @@ export function LikedClipsSection() {
       setLikedClips(convertedClips);
       setLikedClipIds(new Set(result.data.map((clip: LikedClip) => clip.clipId)));
     } catch (error) {
-      console.error('Fetch liked clips error:', error);
+
       showToast('いいねしたクリップの読み込みに失敗しました', 'error');
     } finally {
       setIsLoading(false);

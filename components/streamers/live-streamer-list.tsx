@@ -1,8 +1,3 @@
-// 適用スキル: component-creator
-// 適用ルール:
-// - セクション2: 技術スタック（React Query）
-// - セクション4.6: コンポーネント構造
-// - セクション7: 状態管理（useQuery でサーバー状態管理）
 // - サイドバー用LIVE配信者表示コンポーネント
 // - LIVE状態は別クエリに分離（キャッシュ競合回避）
 
@@ -75,11 +70,11 @@ export function LiveStreamerList() {
           const liveStatusResult = await response.json();
 
           if (liveStatusResult.data) {
-            return new Set<string>(liveStatusResult.data.map((stream: any) => stream.user_id));
+            return new Set<string>(liveStatusResult.data.map((stream: { user_id: string }) => stream.user_id));
           }
         }
       } catch (error) {
-        console.error('Fetch live status error:', error);
+
       }
 
       return new Set<string>();

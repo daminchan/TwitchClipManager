@@ -1,7 +1,3 @@
-// 適用スキル: component-creator
-// 適用ルール:
-// - セクション4.6: コンポーネント構造
-// - セクション10.2: サーバー/クライアントコンポーネント分離
 // - YouTube風永続レイアウト
 // - @dnd-kit を使用したドラッグ&ドロップ
 
@@ -27,6 +23,7 @@ import { Toast } from '@/components/ui/toast';
 import { useToast } from '@/hooks/use-toast';
 import { useFavoriteActions } from '@/hooks/use-favorite-actions';
 import { addStreamerToFolder } from '@/actions/folders';
+import type { Folder } from '@/types/database';
 import { API_ENDPOINTS, CACHE_TIME } from '@/lib/constants';
 
 import type { TwitchChannel } from '@/types/twitch';
@@ -184,10 +181,10 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
       }
 
       // 既に存在するかチェック（キャッシュから）
-      const foldersData = queryClient.getQueryData(['folders']) as any;
+      const foldersData = queryClient.getQueryData<{ data: Folder[] }>(['folders']);
       if (foldersData?.data) {
-        const targetFolder = foldersData.data.find((f: any) => f.id === folderId);
-        if (targetFolder?.folderStreamers?.some((fs: any) => fs.streamerId === streamer.streamerId)) {
+        const targetFolder = foldersData.data.find((f) => f.id === folderId);
+        if (targetFolder?.folderStreamers?.some((fs) => fs.streamerId === streamer.streamerId)) {
           showToast('この配信者は既にこのフォルダに追加されています', 'error');
           return;
         }
@@ -197,12 +194,12 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
       setPendingAdditions(prev => new Set(prev).add(pendingKey));
 
       // 楽観的UI: 即座にキャッシュを更新
-      queryClient.setQueryData(['folders'], (oldData: any) => {
+      queryClient.setQueryData<{ data: Folder[] }>(['folders'], (oldData) => {
         if (!oldData?.data) return oldData;
 
         return {
           ...oldData,
-          data: oldData.data.map((f: any) => {
+          data: oldData.data.map((f) => {
             if (f.id === folderId) {
               // このフォルダに配信者を追加
               const newStreamer = {
@@ -243,7 +240,7 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
           showToast(result.message, 'error');
         }
       } catch (error) {
-        console.error('Add to folder error:', error);
+
         // エラー時はロールバック
         await queryClient.invalidateQueries({ queryKey: ['folders'] });
         showToast('フォルダへの追加に失敗しました', 'error');

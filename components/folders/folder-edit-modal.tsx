@@ -1,8 +1,3 @@
-// 適用スキル: component-creator
-// 適用ルール:
-// - セクション4.6: コンポーネント構造
-// - セクション8.2: Props型定義
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -50,7 +45,7 @@ export function FolderEditModal({ isOpen, folder, onClose, onSuccess }: FolderEd
     const updatedColor = selectedColor;
 
     // 楽観的UI: 即座にキャッシュを更新
-    queryClient.setQueryData(['folders'], (oldData: any) => {
+    queryClient.setQueryData<{ data: Folder[] }>(['folders'], (oldData) => {
       if (!oldData?.data) return oldData;
       return {
         ...oldData,
@@ -86,17 +81,16 @@ export function FolderEditModal({ isOpen, folder, onClose, onSuccess }: FolderEd
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-2 sm:p-4">
-      <div className="relative w-full max-w-md bg-[#0f0f0f] rounded-lg shadow-2xl border border-[#2a2a2a] overflow-hidden">
-        {/* ヘッダー */}
-        <div className="flex items-center justify-between p-6 border-b border-[#2a2a2a]">
-          <h2 className="text-xl font-bold text-gray-100">フォルダを編集</h2>
+    <div className="modal-overlay">
+      <div className="modal-container-sm">
+        <div className="modal-header">
+          <h2 className="text-title">フォルダを編集</h2>
           <button
             onClick={handleClose}
-            className="p-2 hover:bg-[#1a1a1a] rounded-full transition-colors button-press-feedback"
+            className="modal-close-btn button-press-feedback"
             aria-label="閉じる"
           >
-            <X className="w-5 h-5 text-gray-400" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -104,7 +98,7 @@ export function FolderEditModal({ isOpen, folder, onClose, onSuccess }: FolderEd
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* フォルダ名 */}
           <div>
-            <label htmlFor="folder-name-edit" className="block text-sm font-medium text-gray-300 mb-2">
+            <label htmlFor="folder-name-edit" className="text-label">
               フォルダ名
             </label>
             <Input
@@ -113,17 +107,17 @@ export function FolderEditModal({ isOpen, folder, onClose, onSuccess }: FolderEd
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="例: ぶいすぽ"
-              className="bg-[#1a1a1a] border-gray-700 text-gray-100 placeholder-gray-500"
+              className="input-dark"
               maxLength={50}
             />
             {error && (
-              <p className="text-sm text-red-400 mt-2">{error}</p>
+              <p className="text-error mt-2">{error}</p>
             )}
           </div>
 
           {/* カラー選択 */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-3">
+            <label className="text-label">
               フォルダの色
             </label>
             <div className="grid grid-cols-4 gap-3">

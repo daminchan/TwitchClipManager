@@ -1,7 +1,3 @@
-// 適用スキル: component-creator
-// 適用ルール:
-// - セクション4.6: コンポーネント構造
-// - セクション8.2: Props型定義
 // - CSS共通クラス使用（sidebar-btn, sidebar-section）
 
 'use client';

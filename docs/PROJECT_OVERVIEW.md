@@ -309,8 +309,7 @@ model User {
 ```
 
 **重要ポイント**:
-- `password` は `bcryptjs` で10ラウンドハッシュ化
-- NextAuth標準フィールド (`accounts`, `sessions`) を含む
+
 - カスケード削除設定により、ユーザー削除時に関連データも削除
 
 #### 2. FavoriteStreamer（お気に入り配信者）
@@ -363,7 +362,7 @@ model LikedClip {
 ```
 
 **重要ポイント**:
-- Twitchクリップの詳細情報を保存（オフライン閲覧可能）
+
 - `@@unique([userId, clipId])` で同じクリップの重複いいねを防止
 - `likedAt` インデックスで新しい順ソートを高速化
 
