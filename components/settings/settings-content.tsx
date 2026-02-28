@@ -1,7 +1,3 @@
-// 適用スキル: component-creator
-// 適用ルール:
-// - セクション4.6: コンポーネント構造
-// - セクション10.2: サーバー/クライアントコンポーネント分離
 // - YouTube風レイアウト: コンテンツのみ
 
 'use client';
@@ -30,7 +26,7 @@ export function SettingsContent({ userEmail, userName }: SettingsContentProps) {
   };
 
   return (
-    <div className="w-full px-3 py-4 pb-24 lg:pb-4 max-w-4xl mx-auto">
+    <div className="page-container">
       {/* ヘッダーセクション */}
       <div className="mb-10">
         <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">

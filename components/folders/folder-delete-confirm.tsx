@@ -1,8 +1,3 @@
-// 適用スキル: component-creator
-// 適用ルール:
-// - セクション4.6: コンポーネント構造
-// - セクション8.2: Props型定義
-
 'use client';
 
 import { useState, useTransition } from 'react';
@@ -51,37 +46,35 @@ export function FolderDeleteConfirm({ isOpen, folder, onClose, onSuccess }: Fold
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-2 sm:p-4">
-      <div className="relative w-full max-w-md bg-[#0f0f0f] rounded-lg shadow-2xl border border-red-900/50 overflow-hidden">
-        {/* ヘッダー */}
-        <div className="flex items-center justify-between p-6 border-b border-[#2a2a2a]">
+    <div className="modal-overlay">
+      <div className="modal-container-sm border-red-900/50">
+        <div className="modal-header">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-red-900/30 rounded-full">
               <AlertTriangle className="w-5 h-5 text-red-400" />
             </div>
-            <h2 className="text-xl font-bold text-gray-100">フォルダを削除</h2>
+            <h2 className="text-title">フォルダを削除</h2>
           </div>
           <button
             onClick={handleClose}
             disabled={isPending}
-            className="p-2 hover:bg-[#1a1a1a] rounded-full transition-colors button-press-feedback"
+            className="modal-close-btn button-press-feedback"
             aria-label="閉じる"
           >
-            <X className="w-5 h-5 text-gray-400" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* コンテンツ */}
         <div className="p-6 space-y-4">
           <p className="text-gray-300">
             フォルダ <span className="font-semibold text-white">「{folder.name}」</span> を削除しますか？
           </p>
-          <p className="text-sm text-gray-400">
+          <p className="text-description">
             このフォルダに追加されている配信者は削除されません。フォルダのみが削除されます。
           </p>
 
           {error && (
-            <p className="text-sm text-red-400 bg-red-900/20 border border-red-900/50 rounded p-3">
+            <p className="text-error bg-red-900/20 border border-red-900/50 rounded p-3">
               {error}
             </p>
           )}

@@ -1,9 +1,5 @@
-// 適用スキル: component-creator
-// 適用ルール:
-// - セクション2: 技術スタック（React Query）
-// - セクション4.6: コンポーネント構造
-// - セクション10.2: サーバー/クライアントコンポーネント分離
 // - YouTube風レイアウト: コンテンツのみ（ヘッダー・サイドバーはレイアウトにあり）
+// 機能: ダッシュボードのメインコンテンツ（クリップ一覧、検索、ソート）
 
 'use client';
 
@@ -15,14 +11,12 @@ import { ClipGrid } from '@/components/clips/clip-grid';
 import { ClipSortTabs } from '@/components/dashboard/clip-sort-tabs';
 import { Input } from '@/components/ui/input';
 import { Toast } from '@/components/ui/toast';
-import { useToast } from '@/hooks/use-toast';
 import { OnboardingModal } from '@/components/onboarding/onboarding-modal';
+import { useToast } from '@/hooks/use-toast';
+import { useDashboardClips } from '@/hooks/use-dashboard-clips';
 import { useFolderContext } from '@/components/layout/authenticated-layout';
 import { getFolders } from '@/actions/folders';
-
-import { useDashboardClips } from '@/hooks/use-dashboard-clips';
 import { LABELS, PAGINATION } from '@/lib/constants';
-
 import type { Folder } from '@/types/database';
 
 interface DashboardContentProps {
@@ -32,7 +26,16 @@ interface DashboardContentProps {
   skipAuth: boolean;
 }
 
-export function DashboardContent({ userId, userEmail, isAuthenticated, skipAuth }: DashboardContentProps) {
+/**
+ * ダッシュボードコンテンツコンポーネント
+ * クリップ一覧の表示、検索、ソート、フィルタリング機能を提供
+ */
+export function DashboardContent({
+  userId,
+  userEmail,
+  isAuthenticated,
+  skipAuth,
+}: DashboardContentProps) {
   // カスタムフックでクリップロジックを管理
   const {
     allClips,
@@ -53,7 +56,9 @@ export function DashboardContent({ userId, userEmail, isAuthenticated, skipAuth 
   const { selectedFolderId, setSelectedFolderId } = useFolderContext();
 
   // オンボーディングモーダル表示制御
-  const [showOnboarding, setShowOnboarding] = useState(!isAuthenticated || skipAuth);
+  const [showOnboarding, setShowOnboarding] = useState(
+    !isAuthenticated || skipAuth
+  );
 
   // ログイン済み + お気に入り配信者が0人の場合、自動でモーダル表示
   useEffect(() => {
@@ -75,22 +80,23 @@ export function DashboardContent({ userId, userEmail, isAuthenticated, skipAuth 
   // 選択されたフォルダの配信者IDを取得
   const selectedFolderStreamerIds = useMemo(() => {
     if (!selectedFolderId) return null;
-    const folder = folders.find(f => f.id === selectedFolderId);
+    const folder = folders.find((f) => f.id === selectedFolderId);
     if (!folder || !folder.folderStreamers) return [];
-    return folder.folderStreamers.map(fs => fs.streamerId);
+    return folder.folderStreamers.map((fs) => fs.streamerId);
   }, [selectedFolderId, folders]);
 
   // フォルダフィルタリング適用
   const allDisplayClips = useMemo(() => {
     if (!selectedFolderStreamerIds) return filteredClips;
-    return filteredClips.filter(clip =>
+    return filteredClips.filter((clip) =>
       selectedFolderStreamerIds.includes(clip.broadcaster_id)
     );
   }, [filteredClips, selectedFolderStreamerIds]);
 
   // 無限スクロール用ページネーション
-  const [displayedCount, setDisplayedCount] = useState<number>(PAGINATION.CLIPS_PER_PAGE);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [displayedCount, setDisplayedCount] = useState<number>(
+    PAGINATION.CLIPS_PER_PAGE
+  );
 
   // フィルター変更時にページネーションをリセット
   useEffect(() => {
@@ -104,12 +110,7 @@ export function DashboardContent({ userId, userEmail, isAuthenticated, skipAuth 
 
   // もっと読み込む
   const handleLoadMore = useCallback(() => {
-    setIsLoadingMore(true);
-    // 少し遅延を入れてスムーズな体験に
-    setTimeout(() => {
-      setDisplayedCount(prev => prev + PAGINATION.CLIPS_PER_PAGE);
-      setIsLoadingMore(false);
-    }, 300);
+    setDisplayedCount((prev) => prev + PAGINATION.CLIPS_PER_PAGE);
   }, []);
 
   const hasMore = displayedCount < allDisplayClips.length;
@@ -155,16 +156,11 @@ export function DashboardContent({ userId, userEmail, isAuthenticated, skipAuth 
         onLikeToggle={handleLikeToggle}
         hasMore={hasMore}
         onLoadMore={handleLoadMore}
-        isLoadingMore={isLoadingMore}
       />
 
       {/* トースト通知 */}
       {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={hideToast}
-        />
+        <Toast message={toast.message} type={toast.type} onClose={hideToast} />
       )}
 
       {/* オンボーディングモーダル */}

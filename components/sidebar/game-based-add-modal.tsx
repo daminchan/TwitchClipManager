@@ -1,8 +1,3 @@
-// 適用スキル: component-creator
-// 適用ルール:
-// - セクション4.6: コンポーネント構造
-// - セクション10.2: サーバー/クライアントコンポーネント分離
-
 'use client';
 
 import { useState } from 'react';
@@ -41,11 +36,11 @@ export function GameBasedAddModal({ isOpen, onClose, onAddStreamers }: GameBased
         // 追加完了後にモーダルを閉じる
         handleClose();
       } else {
-        console.error('Failed to add streamers:', result.message);
+
         setIsAdding(false);
       }
     } catch (error) {
-      console.error('Failed to add streamers:', error);
+
       setIsAdding(false);
     }
   };
@@ -62,9 +57,9 @@ export function GameBasedAddModal({ isOpen, onClose, onAddStreamers }: GameBased
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-2 sm:p-4">
+    <div className="modal-overlay">
       <div
-        className="relative w-full max-w-5xl max-h-[95vh] sm:max-h-[90vh] bg-[#0f0f0f] rounded-lg overflow-hidden shadow-2xl border border-[#2a2a2a]"
+        className="modal-container-xl sm:max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 閉じるボタン（追加中は非表示） */}

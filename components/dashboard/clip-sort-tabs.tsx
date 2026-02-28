@@ -1,11 +1,9 @@
-// 適用スキル: component-creator
-// 適用ルール:
-// - セクション4.6: コンポーネント構造
-// - セクション8.2: Props型定義
+// 機能: クリップのソートタブとフォルダフィルター
 
 'use client';
 
 import { TrendingUp, Calendar, Folder } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LABELS } from '@/lib/constants';
@@ -22,14 +20,19 @@ interface ClipSortTabsProps {
   onFolderClick?: (folderId: string | null) => void;
 }
 
+/**
+ * クリップソートタブコンポーネント
+ * ソート切り替えタブとフォルダフィルターを表示
+ */
 export function ClipSortTabs({
   sortType,
   onSortChange,
   clipCount,
   folders = [],
   selectedFolderId = null,
-  onFolderClick
+  onFolderClick,
 }: ClipSortTabsProps) {
+  // ソートタブの定義
   const tabs = [
     { value: 'views' as SortType, label: LABELS.SORT.VIEWS, icon: TrendingUp },
     { value: 'date-desc' as SortType, label: LABELS.SORT.DATE_DESC, icon: Calendar },
@@ -61,9 +64,14 @@ export function ClipSortTabs({
             </Button>
           );
         })}
+
+        {/* クリップ数バッジ */}
         {clipCount > 0 && (
-          <Badge variant="secondary" className="ml-auto bg-purple-600/20 text-purple-300 border-purple-500/30">
-            {clipCount} クリップ
+          <Badge
+            variant="secondary"
+            className="ml-auto bg-purple-600/20 text-purple-300 border-purple-500/30"
+          >
+            {clipCount} {LABELS.CLIPS.CLIP_UNIT}
           </Badge>
         )}
       </div>
@@ -71,7 +79,9 @@ export function ClipSortTabs({
       {/* フォルダタグ */}
       {folders.length > 0 && onFolderClick && (
         <div className="flex items-center gap-2 overflow-x-auto pb-2">
-          <span className="text-xs text-gray-500 whitespace-nowrap">フォルダ:</span>
+          <span className="text-xs text-gray-500 whitespace-nowrap">
+            {LABELS.CLIPS.FOLDER_LABEL}
+          </span>
 
           {/* フォルダタグ */}
           {folders.map((folder) => {
@@ -93,7 +103,9 @@ export function ClipSortTabs({
                 <Folder className="w-3 h-3 mr-1" />
                 {folder.name}
                 {streamerCount > 0 && (
-                  <span className="ml-1 text-[10px] opacity-70">({streamerCount})</span>
+                  <span className="ml-1 text-[10px] opacity-70">
+                    ({streamerCount})
+                  </span>
                 )}
               </Button>
             );

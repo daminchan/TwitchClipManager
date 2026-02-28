@@ -1,8 +1,3 @@
-// 適用スキル: api-creator
-// 適用ルール:
-// - セクション14: サーバーアクション
-// - セクション16: バリデーション二段階チェック
-
 'use server';
 
 import { revalidatePath } from 'next/cache';

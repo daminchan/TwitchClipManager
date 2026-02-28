@@ -1,8 +1,3 @@
-// 適用スキル: component-creator
-// 適用ルール:
-// - セクション4.6: コンポーネント構造
-// - セクション10.2: サーバー/クライアントコンポーネント分離
-
 'use client';
 
 import { useState } from 'react';

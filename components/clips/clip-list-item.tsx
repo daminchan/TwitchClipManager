@@ -1,11 +1,6 @@
-// 適用スキル: component-creator
-// 適用ルール:
-// - セクション4.6: コンポーネント構造
-// - セクション8.2: Props型定義
-
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import Image from 'next/image';
 import { MoreVertical, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useIsMounted } from '@/hooks/use-is-mounted';
 import type { TwitchClip } from '@/types/twitch';
 
 interface ClipListItemProps {
@@ -26,40 +22,34 @@ interface ClipListItemProps {
   isSelected?: boolean;
 }
 
+function formatRelativeDate(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffTime = Math.abs(now.getTime() - date.getTime());
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return '今日';
+  if (diffDays === 1) return '昨日';
+  if (diffDays < 7) return `${diffDays}日前`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)}週間前`;
+  if (diffDays < 365) return `${Math.floor(diffDays / 30)}か月前`;
+  return `${Math.floor(diffDays / 365)}年前`;
+}
+
+function formatViewCount(count: number): string {
+  if (count >= 10000) {
+    return `${(count / 10000).toFixed(1)}万回視聴`;
+  }
+  return `${count.toLocaleString()}回視聴`;
+}
+
 export function ClipListItem({ clip, onDelete, onSelectClip, isDeleting, isSelected }: ClipListItemProps) {
-  const [relativeDate, setRelativeDate] = useState<string>('');
+  const isMounted = useIsMounted();
 
-  // 視聴回数をフォーマット
-  const formatViewCount = (count: number): string => {
-    if (count >= 10000) {
-      return `${(count / 10000).toFixed(1)}万回視聴`;
-    }
-    return `${count.toLocaleString()}回視聴`;
-  };
-
-  // 日付をフォーマット（クライアントサイドでのみ計算 - Hydrationエラー防止）
-  useEffect(() => {
-    const formatDate = (dateString: string): string => {
-      const date = new Date(dateString);
-      const now = new Date();
-      const diffTime = Math.abs(now.getTime() - date.getTime());
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-      if (diffDays === 0) return '今日';
-      if (diffDays === 1) return '昨日';
-      if (diffDays < 7) return `${diffDays}日前`;
-      if (diffDays < 30) return `${Math.floor(diffDays / 7)}週間前`;
-      if (diffDays < 365) return `${Math.floor(diffDays / 30)}か月前`;
-      return `${Math.floor(diffDays / 365)}年前`;
-    };
-    setRelativeDate(formatDate(clip.created_at));
-  }, [clip.created_at]);
-
-  const handleClick = () => {
-    if (onSelectClip) {
-      onSelectClip(clip.id);
-    }
-  };
+  const relativeDate = useMemo(
+    () => (isMounted ? formatRelativeDate(clip.created_at) : ''),
+    [isMounted, clip.created_at]
+  );
 
   return (
     <div
@@ -70,7 +60,7 @@ export function ClipListItem({ clip, onDelete, onSelectClip, isDeleting, isSelec
             ? 'bg-gray-800 border-2 border-purple-600 cursor-pointer'
             : 'hover:bg-gray-900 border-2 border-transparent cursor-pointer'
       }`}
-      onClick={isDeleting ? undefined : handleClick}
+      onClick={isDeleting ? undefined : () => onSelectClip?.(clip.id)}
     >
       {/* サムネイル（左側） - モバイルで小さく、PCで大きく */}
       <div className="relative flex-shrink-0">

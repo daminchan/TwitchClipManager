@@ -1,6 +1,76 @@
 # 実装パターン・過去の問題と解決策
 
-実装時に参考にすべき過去の問題と解決策を記録。
+実装時に参考にすべきパターンと過去の問題解決策を記録。
+
+---
+
+## 楽観的UI
+
+### パターン1: TanStack Query v5 — `variables`で即時反映（推奨）
+
+シンプルなケースでは`useMutation`の`variables`を直接参照してUIに反映。rollback不要。
+
+```typescript
+const deleteMutation = useMutation({
+  mutationFn: async (id: string) => await deleteItem(id),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['items'] });
+    toast.success('削除しました');
+  },
+});
+
+// UI側: 削除中のアイテムをフィルタ
+const visibleItems = items.filter(
+  (item) => !deleteMutation.isPending || deleteMutation.variables !== item.id
+);
+```
+
+### パターン2: TanStack Query v5 — `onMutate`キャッシュ操作
+
+複数箇所でキャッシュを参照する場合や、複雑な更新が必要な場合。
+
+```typescript
+const deleteMutation = useMutation({
+  mutationFn: async (id: string) => await deleteItem(id),
+  onMutate: async (id) => {
+    await queryClient.cancelQueries({ queryKey: ['items'] });
+    const previousData = queryClient.getQueryData<Item[]>(['items']);
+
+    queryClient.setQueryData<Item[]>(['items'], (old) =>
+      old?.filter((item) => item.id !== id)
+    );
+
+    return { previousData };
+  },
+  onSuccess: () => {
+    toast.success('削除しました');
+  },
+  onError: (_error, _id, context) => {
+    if (context?.previousData) {
+      queryClient.setQueryData(['items'], context.previousData);
+    }
+  },
+  onSettled: () => {
+    queryClient.invalidateQueries({ queryKey: ['items'] });
+  },
+});
+```
+
+### パターン3: React 19 `useOptimistic`（Server Action連携時）
+
+Server Actionと直接連携する場合に最適。
+
+```typescript
+const [optimisticItems, addOptimistic] = useOptimistic(
+  items,
+  (state, deletedId: string) => state.filter((item) => item.id !== deletedId)
+);
+
+async function handleDelete(id: string) {
+  addOptimistic(id);
+  await deleteItemAction(id);
+}
+```
 
 ---
 
@@ -8,17 +78,13 @@
 
 ### 問題1: 前のデータが一瞬表示される
 
-**症状:**
-- モーダルA → モーダルBを開くと、一瞬モーダルAの内容が表示される
-- 例: フォルダA → フォルダBを開くと、フォルダAの配信者が一瞬見える
+**症状:** モーダルA → モーダルBを開くと、一瞬モーダルAの内容が表示される
 
-**原因:**
-- propsが変わってもローカルステートがすぐに更新されない
-- useEffectの発火タイミングが遅い
+**原因:** propsが変わってもローカルステートがすぐに更新されない
 
 **解決策:**
 ```typescript
-// ❌ 悪い例: propsの変更だけを監視
+// ❌ 悪い例
 useEffect(() => {
   if (folder?.folderStreamers) {
     setLocalStreamers(folder.folderStreamers);
@@ -30,139 +96,69 @@ const prevIdRef = useRef<string | null>(null);
 
 useEffect(() => {
   const currentId = folder?.id || null;
-
   if (currentId !== prevIdRef.current) {
-    // IDが変わったので即座にリセット
     setLocalData(folder?.data || []);
     prevIdRef.current = currentId;
   } else if (folder?.data) {
-    // 同じIDのデータ更新
     setLocalData(folder.data);
   }
 }, [folder]);
 ```
 
-**適用ファイル例:**
-- `components/folders/folder-streamers-modal.tsx`
-
----
-
 ### 問題2: backdrop-blurによるFPS低下
 
-**症状:**
-- モーダル内で動画再生時にFPSが低下
-- 本番環境で特に顕著
+**原因:** `backdrop-blur-sm`はGPU負荷が高く、iframe動画再生で悪化
 
-**原因:**
-- `backdrop-blur-sm`はGPU負荷が高い
-- iframe動画再生との組み合わせで悪化
-
-**解決策:**
 ```typescript
-// ❌ 悪い例
-<div className="bg-black/80 backdrop-blur-sm">
-
-// ✅ 良い例
-<div className="bg-black/90">
-```
-
----
-
-## 楽観的UI関連
-
-### 問題3: 削除後にアイテムが残って見える
-
-**症状:**
-- 削除ボタン押下 → トースト表示 → まだリストにアイテムが残っている
-- 数秒後にやっと消える
-
-**原因:**
-- `invalidateQueries`でサーバーからデータ再取得を待っている
-- ネットワーク遅延で表示が遅れる
-
-**解決策:**
-```typescript
-// ❌ 悪い例: サーバー応答を待つ
-const deleteMutation = useMutation({
-  mutationFn: async (id) => await deleteItem(id),
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ['items'] });
-    showToast('削除しました');
-  },
-});
-
-// ✅ 良い例: 楽観的UIで即座に削除
-const deleteMutation = useMutation({
-  mutationFn: async (id) => await deleteItem(id),
-  onMutate: async (id) => {
-    // キャンセルしてキャッシュを保存
-    await queryClient.cancelQueries({ queryKey: ['items'] });
-    const previousData = queryClient.getQueryData(['items']);
-
-    // 即座にUIから削除
-    queryClient.setQueryData(['items'], (old) =>
-      old?.filter((item) => item.id !== id)
-    );
-
-    return { previousData };
-  },
-  onSuccess: () => {
-    showToast('削除しました');
-  },
-  onError: (error, id, context) => {
-    // エラー時はロールバック
-    if (context?.previousData) {
-      queryClient.setQueryData(['items'], context.previousData);
-    }
-  },
-});
+// ❌ <div className="bg-black/80 backdrop-blur-sm">
+// ✅ <div className="bg-black/90">
 ```
 
 ---
 
 ## モバイル対応関連
 
-### 問題4: ドラッグ&ドロップとスワイプの競合
+### 問題3: ドラッグ&ドロップとスワイプの競合
 
-**症状:**
-- モバイルでスクロールしようとするとドラッグが発動
-- 意図しない挙動が起きる
-
-**解決策:**
 ```typescript
-import { TouchSensor, MouseSensor, useSensor, useSensors } from '@dnd-kit/core';
-
-// タッチは長押しで発動（スワイプと区別）
 const touchSensor = useSensor(TouchSensor, {
-  activationConstraint: {
-    delay: 250,      // 250ms長押し
-    tolerance: 5,    // 5px以内の移動は許容
-  },
+  activationConstraint: { delay: 250, tolerance: 5 },
 });
-
 const mouseSensor = useSensor(MouseSensor, {
-  activationConstraint: {
-    distance: 10,    // 10px移動で発動
-  },
+  activationConstraint: { distance: 10 },
 });
-
 const sensors = useSensors(mouseSensor, touchSensor);
+```
 
-// DndContextに渡す
-<DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+### 問題4: モバイルフッターにボタンが隠れる
+
+```typescript
+<div className="flex gap-3 pb-20 lg:pb-0">
+  <Button>次へ</Button>
+</div>
 ```
 
 ---
 
-### 問題5: モバイルフッターにボタンが隠れる
+## Tailwind CSS v4
 
-**症状:**
-- モーダル内の「次へ」ボタンがフッターナビに隠れて押せない
+### `@utility`ディレクティブ（推奨）
 
-**解決策:**
-```typescript
-// フッターボタンにモバイル用パディングを追加
-<div className="flex gap-3 pb-20 lg:pb-0">
-  <Button>次へ</Button>
-</div>
+カスタムユーティリティは`@utility`で定義。自動的にモディファイア（hover:, md:等）対応。
+
+```css
+/* ✅ Tailwind v4 推奨 */
+@utility modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background-color: rgb(0 0 0 / 0.9);
+}
+
+/* ❌ レガシー: @layer utilities + @apply */
+@layer utilities {
+  .modal-overlay {
+    @apply fixed inset-0 z-50 bg-black/90;
+  }
+}
 ```

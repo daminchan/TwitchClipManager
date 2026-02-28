@@ -1,10 +1,3 @@
-// 適用スキル: component-creator
-// 適用ルール:
-// - セクション2: 技術スタック（React Query）
-// - セクション4.6: コンポーネント構造
-// - セクション7: 状態管理（useQuery でサーバー状態管理）
-// - セクション8.2: Props型定義
-// - セクション9: エラーハンドリング
 // - サーバーアクション: お気に入り追加/削除のみ使用
 // - API Routes: ライブステータス取得（短時間キャッシュ）
 
@@ -86,7 +79,7 @@ export function FavoriteList({ onRemoveFavorite }: FavoriteListProps) {
             const liveStatusResult = await response.json();
 
             if (liveStatusResult.data) {
-              const liveStreamerIds = new Set(liveStatusResult.data.map((stream: any) => stream.user_id));
+              const liveStreamerIds = new Set(liveStatusResult.data.map((stream: { user_id: string }) => stream.user_id));
 
               const favoritesWithLive: FavoriteWithLive[] = favoritesData.map((favorite) => ({
                 ...favorite,
@@ -97,7 +90,7 @@ export function FavoriteList({ onRemoveFavorite }: FavoriteListProps) {
             }
           }
         } catch (error) {
-          console.error('Fetch live status error:', error);
+
         }
       }
 

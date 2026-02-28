@@ -7,12 +7,11 @@ description: Reactコンポーネントを作成する。UIパーツが必要な
 
 Reactコンポーネントを作成するスキル。
 
-## 基本構造
+## 基本テンプレート
 
 ```typescript
 'use client';
 
-import { useState } from 'react';
 import { LABELS } from '@/lib/constants';
 
 interface ComponentNameProps {
@@ -21,16 +20,49 @@ interface ComponentNameProps {
 }
 
 export function ComponentName({ userId, onAction }: ComponentNameProps) {
-  const [state, setState] = useState(false);
+  return <div>{/* UI */}</div>;
+}
+```
 
-  const handleClick = () => {
-    // ロジック
+## フォームテンプレート（RHF + Zod + Server Action）
+
+```typescript
+'use client';
+
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { schema, type SchemaType } from '@/lib/validations/feature';
+import { submitAction } from '@/actions/feature';
+import { LABELS } from '@/lib/constants';
+
+interface FeatureFormProps {
+  onSuccess: () => void;
+}
+
+export function FeatureForm({ onSuccess }: FeatureFormProps) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<SchemaType>({
+    resolver: zodResolver(schema),
+  });
+
+  const onSubmit = async (data: SchemaType) => {
+    const result = await submitAction(data);
+    if (result.success) onSuccess();
   };
 
   return (
-    <div>
-      {/* UI */}
-    </div>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div>
+        <input {...register('name')} placeholder={LABELS.PLACEHOLDERS.NAME} />
+        {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+      </div>
+      <button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? LABELS.BUTTONS.SAVING : LABELS.BUTTONS.SAVE}
+      </button>
+    </form>
   );
 }
 ```
@@ -50,69 +82,6 @@ components/[feature]/
 - [ ] 50行超えは分割
 - [ ] 定数はconstants.tsから取得
 - [ ] 命名規則（kebab-case/PascalCase）
+- [ ] useEffectの代わりにuseMemoを使えないか確認
 
----
-
-## モーダルコンポーネントのパターン
-
-### 前のデータが残る問題の対策
-
-propsで渡されるデータが変わったときに、前のデータが一瞬表示される問題を防ぐ。
-
-```typescript
-interface ModalProps {
-  isOpen: boolean;
-  data: SomeData | null;
-  onClose: () => void;
-}
-
-export function Modal({ isOpen, data, onClose }: ModalProps) {
-  const [localData, setLocalData] = useState<SomeData[]>([]);
-  const prevIdRef = useRef<string | null>(null);
-
-  // ✅ IDの変更を検知して即座にリセット
-  useEffect(() => {
-    const currentId = data?.id || null;
-
-    if (currentId !== prevIdRef.current) {
-      // IDが変わったので即座にリセット
-      setLocalData(data?.items || []);
-      prevIdRef.current = currentId;
-    } else if (data?.items) {
-      // 同じIDのデータ更新
-      setLocalData(data.items);
-    }
-  }, [data]);
-
-  if (!isOpen || !data) return null;
-
-  return (
-    // モーダルUI
-  );
-}
-```
-
-### モーダル背景のパフォーマンス対策
-
-```typescript
-// ❌ backdrop-blurはFPS低下の原因
-<div className="bg-black/80 backdrop-blur-sm">
-
-// ✅ 代わりに不透明度を上げる
-<div className="bg-black/90">
-```
-
-### モバイルフッターに隠れる対策
-
-```typescript
-// フッターボタンにモバイル用パディング
-<div className="flex gap-3 pb-20 lg:pb-0">
-  <Button>次へ</Button>
-</div>
-```
-
----
-
-## 参考
-
-詳細なパターンは `.claude/rules/patterns.md` を参照
+既知のパターン・注意点は `@.claude/rules/patterns.md` を参照。

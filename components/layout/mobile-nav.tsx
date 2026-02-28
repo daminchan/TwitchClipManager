@@ -1,8 +1,3 @@
-// 適用スキル: component-creator
-// 適用ルール:
-// - セクション4.6: コンポーネント構造
-// - セクション5.3: レスポンシブデザイン
-
 'use client';
 
 import Link from 'next/link';
