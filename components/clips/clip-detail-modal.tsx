@@ -2,7 +2,9 @@
 
 import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Heart, X, ExternalLink } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Heart, X, ExternalLink, Copy } from 'lucide-react';
+import { modalOverlay, modalContent } from '@/lib/animations';
 
 import { Button } from '@/components/ui/button';
 import { useIsMounted } from '@/hooks/use-is-mounted';
@@ -34,6 +36,7 @@ export function ClipDetailModal({
   const isMounted = useIsMounted();
   const [floatingHearts, setFloatingHearts] = useState<FloatingHeart[]>([]);
   const [heartIdCounter, setHeartIdCounter] = useState(0);
+  const [isCopied, setIsCopied] = useState(false);
 
   // embedのparentはクライアントサイドでのみ取得
   const embedParent = useMemo(() => {
@@ -64,29 +67,54 @@ export function ClipDetailModal({
         y: y,
       };
 
-      setFloatingHearts((prev) => [...prev, newHeart]);
-      setHeartIdCounter((prev) => prev + 1);
+      setFloatingHearts(prev => [...prev, newHeart]);
+      setHeartIdCounter(prev => prev + 1);
 
       // アニメーション終了後に削除
       setTimeout(() => {
-        setFloatingHearts((prev) => prev.filter((h) => h.id !== newHeart.id));
+        setFloatingHearts(prev => prev.filter(h => h.id !== newHeart.id));
       }, ANIMATION.LIKE_HEART_DURATION);
     }
 
     onLikeToggle(clip.id, isLiked);
   };
 
-  if (!isOpen || !isMounted) return null;
+  // シェアボタンのクリックハンドラー
+  const handleCopyLink = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(clip.url);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch {
+      // フォールバック不要 - クリップボードAPIが使えない環境は無視
+    }
+  };
+
+  if (!isMounted) return null;
 
   return createPortal(
-    <div
-      className="modal-overlay"
-      onClick={onClose}
-    >
-      <div
-        className="relative w-full max-w-5xl bg-gray-900 rounded-lg overflow-hidden shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          className="modal-overlay"
+          onClick={onClose}
+          variants={modalOverlay}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+        >
+          <motion.div
+            className="relative w-full max-w-5xl bg-white rounded-lg overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+            variants={modalContent}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            role="dialog"
+            aria-modal="true"
+            aria-label={clip.title}
+          >
         {/* 閉じるボタン */}
         <button
           onClick={onClose}
@@ -107,9 +135,9 @@ export function ClipDetailModal({
         </div>
 
         {/* クリップ情報 */}
-        <div className="p-6 bg-gray-800">
+        <div className="p-6 bg-gray-50">
           <div className="flex items-start gap-3 mb-2">
-            <h2 className="text-xl font-semibold text-gray-100 flex-1">
+            <h2 className="text-xl font-semibold text-gray-900 flex-1">
               {clip.title}
             </h2>
 
@@ -123,7 +151,7 @@ export function ClipDetailModal({
                   className={`flex items-center gap-2 transition-all ${
                     isLiked
                       ? 'bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/50'
-                      : 'bg-gray-700/50 hover:bg-gray-700 text-gray-300 border border-gray-600'
+                      : 'bg-gray-700/50 hover:bg-gray-700 text-gray-600 border border-gray-300'
                   }`}
                 >
                   <Heart
@@ -153,7 +181,7 @@ export function ClipDetailModal({
             )}
           </div>
 
-          <div className="flex items-center gap-4 text-sm text-gray-400">
+          <div className="flex items-center gap-4 text-sm text-gray-500">
             <span className="font-medium text-purple-400">
               {clip.broadcaster_name}
             </span>
@@ -165,7 +193,7 @@ export function ClipDetailModal({
             <span>{relativeTime}</span>
           </div>
 
-          <div className="mt-4">
+          <div className="mt-4 flex items-center gap-4">
             <a
               href={clip.url}
               target="_blank"
@@ -175,10 +203,19 @@ export function ClipDetailModal({
               <ExternalLink className="w-4 h-4" />
               {LABELS.CLIPS.VIEW_ON_TWITCH}
             </a>
+            <button
+              onClick={handleCopyLink}
+              className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 transition-colors button-press-feedback"
+            >
+              <Copy className="w-4 h-4" />
+              {isCopied ? LABELS.REGISTRATION.LINK_COPIED : LABELS.BUTTONS.COPY_LINK}
+            </button>
           </div>
         </div>
-      </div>
-    </div>,
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
     document.body
   );
 }

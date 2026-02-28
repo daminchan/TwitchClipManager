@@ -3,9 +3,9 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
 import { Search, Loader2 } from 'lucide-react';
-import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -104,10 +104,10 @@ export function MultiGameSelectionStep({ onNext, onCancel }: MultiGameSelectionS
     <div className="flex flex-col h-full">
       {/* ヘッダー */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-100 mb-2">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
           好きなゲームを選択してください
         </h2>
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-gray-500">
           最大{MAX_GAMES}つまで選択できます。選択したゲームのおすすめ配信者を表示します
         </p>
       </div>
@@ -116,16 +116,18 @@ export function MultiGameSelectionStep({ onNext, onCancel }: MultiGameSelectionS
       <div className="mb-4 flex gap-3 items-center">
         <div className="relative flex-1">
           {isSearching ? (
-            <Loader2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400 animate-spin" />
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 animate-spin">
+              <Loader2 className="w-5 h-5 text-purple-400" />
+            </div>
           ) : (
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
           )}
           <Input
             type="text"
             placeholder="ゲームを検索...（例: ストリートファイター）"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-[#1a1a1a] border-0 text-gray-100 placeholder-gray-400"
+            className="pl-10 bg-white border-0 text-gray-900 placeholder-gray-500"
           />
         </div>
         {selectedGames.length > 0 && (
@@ -137,7 +139,7 @@ export function MultiGameSelectionStep({ onNext, onCancel }: MultiGameSelectionS
 
       {/* 検索モード表示 */}
       {debouncedQuery.length >= 2 && (
-        <div className="mb-4 text-sm text-gray-400">
+        <div className="mb-4 text-sm text-gray-500">
           「{debouncedQuery}」の検索結果: {displayGames.length}件
         </div>
       )}
@@ -149,14 +151,14 @@ export function MultiGameSelectionStep({ onNext, onCancel }: MultiGameSelectionS
             {[...Array(12)].map((_, i) => (
               <div
                 key={i}
-                className="aspect-[3/4] bg-[#1a1a1a] rounded-lg animate-pulse"
+                className="aspect-[3/4] bg-white rounded-lg animate-pulse"
               />
             ))}
           </div>
         ) : displayGames.length === 0 ? (
           <div className="text-center py-16">
             <Search className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400">
+            <p className="text-gray-500">
               {searchQuery.length >= 2 ? '該当するゲームが見つかりませんでした' : 'ゲームが見つかりませんでした'}
             </p>
             {searchQuery.length >= 2 && (
@@ -185,7 +187,7 @@ export function MultiGameSelectionStep({ onNext, onCancel }: MultiGameSelectionS
                       ? 'ring-4 ring-purple-600 scale-105 shadow-xl shadow-purple-500/50'
                       : isMaxReached
                       ? 'opacity-50 cursor-not-allowed'
-                      : 'hover:ring-2 hover:ring-gray-600 hover:scale-105 hover:shadow-lg'
+                      : 'hover:ring-2 hover:ring-gray-300 hover:scale-105 hover:shadow-lg'
                   }`}
                 >
                   <Image
@@ -237,7 +239,7 @@ export function MultiGameSelectionStep({ onNext, onCancel }: MultiGameSelectionS
         <Button
           variant="outline"
           onClick={onCancel}
-          className="flex-1 bg-[#1a1a1a] border-gray-700 text-gray-100 hover:bg-[#2a2a2a]"
+          className="flex-1 bg-white border-gray-200 text-gray-900 hover:bg-gray-200"
         >
           キャンセル
         </Button>

@@ -58,7 +58,8 @@ export function formatDuration(seconds: number): string {
 export function sortByLiveStatus<T extends { isLive?: boolean; is_live?: boolean }>(
   items: T[]
 ): T[] {
-  return [...items].sort((a, b) => {
+  // toSorted()でイミュータブルに（ルール7.12）
+  return items.toSorted((a, b) => {
     const aIsLive = a.isLive ?? a.is_live ?? false;
     const bIsLive = b.isLive ?? b.is_live ?? false;
     if (aIsLive && !bIsLive) return -1;

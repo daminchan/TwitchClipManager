@@ -4,6 +4,7 @@ import Google from 'next-auth/providers/google';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import bcrypt from 'bcryptjs';
 import { prisma } from './prisma';
+import { DEFAULT_FOLDER } from './constants';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -43,6 +44,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             },
           });
 
+          // デフォルトフォルダを作成
+          try {
+            await prisma.folder.create({
+              data: {
+                userId: user.id,
+                name: DEFAULT_FOLDER.name,
+                color: DEFAULT_FOLDER.color,
+                order: 0,
+              },
+            });
+          } catch {
+            // フォルダ作成失敗は致命的でないため無視
+          }
+
           return {
             id: user.id,
             email: user.email,
@@ -76,6 +91,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   pages: {
     signIn: '/login',
+  },
+  events: {
+    async createUser({ user }) {
+      // OAuth新規ユーザーにデフォルトフォルダを作成
+      if (user.id) {
+        try {
+          await prisma.folder.create({
+            data: {
+              userId: user.id,
+              name: DEFAULT_FOLDER.name,
+              color: DEFAULT_FOLDER.color,
+              order: 0,
+            },
+          });
+        } catch {
+          // フォルダ作成失敗は致命的でないため無視
+        }
+      }
+    },
   },
   callbacks: {
     async jwt({ token, user }) {

@@ -19,7 +19,7 @@ export default async function FavoritesClipsPage() {
   const session = await auth();
 
   if (!session?.user) {
-    redirect(ROUTES.HOME);
+    redirect(ROUTES.LOGIN);
   }
 
   return <FavoritesClipsContent />;

@@ -36,7 +36,7 @@ export function DisplayNameSection({ currentName, onSuccess, onError }: DisplayN
     }
 
     if (name.trim() === currentName) {
-      onError('変更する名前が現在と同じです');
+      onError(LABELS.ERRORS.DISPLAY_NAME_UNCHANGED);
       return;
     }
 
@@ -58,17 +58,17 @@ export function DisplayNameSection({ currentName, onSuccess, onError }: DisplayN
   };
 
   return (
-    <Card className="bg-[#1a1a1a] border border-gray-800 hover:border-gray-700 transition-all duration-300 shadow-lg hover:shadow-purple-500/10">
+    <Card className="bg-white border border-gray-200 hover:border-gray-200 transition-all duration-300 shadow-lg hover:shadow-purple-500/20">
       <CardHeader className="pb-4">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-purple-600/10 rounded-lg">
             <Edit3 className="w-5 h-5 text-purple-400" />
           </div>
           <div>
-            <CardTitle className="text-gray-100 flex items-center gap-2">
+            <CardTitle className="text-gray-900 flex items-center gap-2">
               {LABELS.SECTIONS.DISPLAY_NAME_CHANGE}
             </CardTitle>
-            <CardDescription className="text-gray-400 text-sm mt-1">
+            <CardDescription className="text-gray-500 text-sm mt-1">
               アカウントの表示名を変更できます
             </CardDescription>
           </div>
@@ -77,8 +77,8 @@ export function DisplayNameSection({ currentName, onSuccess, onError }: DisplayN
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="name" className="text-sm font-medium text-gray-300 flex items-center gap-2">
-              <User className="w-4 h-4 text-gray-400" />
+            <label htmlFor="name" className="text-sm font-medium text-gray-600 flex items-center gap-2">
+              <User className="w-4 h-4 text-gray-500" />
               {LABELS.FORM.DISPLAY_NAME}
             </label>
             <div className="relative">
@@ -88,7 +88,7 @@ export function DisplayNameSection({ currentName, onSuccess, onError }: DisplayN
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={isPending}
-                className="bg-[#0f0f0f] border border-gray-800 text-gray-100 focus:border-purple-500 transition-colors pr-10"
+                className="bg-white border border-gray-200 text-gray-900 focus:border-purple-500 transition-colors pr-10"
                 placeholder={LABELS.PLACEHOLDERS.NAME}
               />
               {name.trim() !== currentName && name.trim() !== '' && (
@@ -99,7 +99,7 @@ export function DisplayNameSection({ currentName, onSuccess, onError }: DisplayN
             </div>
             {currentName && (
               <p className="text-xs text-gray-500">
-                現在: <span className="text-gray-400">{currentName}</span>
+                現在: <span className="text-gray-500">{currentName}</span>
               </p>
             )}
           </div>

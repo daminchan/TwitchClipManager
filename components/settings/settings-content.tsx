@@ -32,7 +32,7 @@ export function SettingsContent({ userEmail, userName }: SettingsContentProps) {
         <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
           設定
         </h1>
-        <p className="text-gray-400 text-sm">
+        <p className="text-gray-500 text-sm">
           アカウント情報の確認と設定の変更
         </p>
         <div className="mt-4 h-1 w-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
@@ -55,10 +55,10 @@ export function SettingsContent({ userEmail, userName }: SettingsContentProps) {
         {/* 区切り線 */}
         <div className="relative py-4">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-800"></div>
+            <div className="w-full border-t border-gray-200"></div>
           </div>
           <div className="relative flex justify-center">
-            <span className="bg-[#1a1a1a] px-4 text-xs text-gray-500 uppercase tracking-wider">
+            <span className="bg-white px-4 text-xs text-gray-500 uppercase tracking-wider">
               危険な操作
             </span>
           </div>

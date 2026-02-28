@@ -7,6 +7,7 @@ import { AlertTriangle, X } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { removeFavoriteStreamer } from '@/actions/favorites';
+import { LABELS } from '@/lib/constants';
 import type { FavoriteStreamer } from '@/types/database';
 
 interface StreamerDeleteConfirmProps {
@@ -48,7 +49,7 @@ export function StreamerDeleteConfirm({ isOpen, streamer, onClose, onSuccess }: 
 
   return (
     <div className="modal-overlay">
-      <div className="modal-container-sm border-red-900/50">
+      <div className="modal-container-sm border-red-900/50" role="alertdialog" aria-modal="true">
         <div className="modal-header">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-red-900/30 rounded-full">
@@ -69,7 +70,7 @@ export function StreamerDeleteConfirm({ isOpen, streamer, onClose, onSuccess }: 
         {/* コンテンツ */}
         <div className="p-6 space-y-4">
           {/* 配信者情報 */}
-          <div className="flex items-center gap-4 p-4 bg-[#1a1a1a] rounded-lg">
+          <div className="flex items-center gap-4 p-4 bg-white rounded-lg">
             <div className="relative w-16 h-16 flex-shrink-0">
               {streamer.streamerImage ? (
                 <Image
@@ -89,11 +90,11 @@ export function StreamerDeleteConfirm({ isOpen, streamer, onClose, onSuccess }: 
             </div>
             <div>
               <p className="font-semibold text-white text-lg">{streamer.streamerName}</p>
-              <p className="text-gray-400 text-sm">@{streamer.streamerLogin}</p>
+              <p className="text-gray-500 text-sm">@{streamer.streamerLogin}</p>
             </div>
           </div>
 
-          <p className="text-gray-300">
+          <p className="text-gray-600">
             この配信者をお気に入りから削除しますか？
           </p>
           <p className="text-description">
@@ -113,9 +114,9 @@ export function StreamerDeleteConfirm({ isOpen, streamer, onClose, onSuccess }: 
               variant="outline"
               onClick={handleClose}
               disabled={isPending}
-              className="flex-1 border-gray-700 text-gray-300 hover:bg-[#1a1a1a] button-press-feedback"
+              className="flex-1 border-gray-200 text-gray-600 hover:bg-gray-100 button-press-feedback"
             >
-              キャンセル
+              {LABELS.BUTTONS.CANCEL}
             </Button>
             <Button
               type="button"
@@ -126,10 +127,10 @@ export function StreamerDeleteConfirm({ isOpen, streamer, onClose, onSuccess }: 
               {isPending ? (
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  削除中...
+                  {LABELS.BUTTONS.DELETING}
                 </div>
               ) : (
-                '削除'
+                LABELS.BUTTONS.DELETE
               )}
             </Button>
           </div>

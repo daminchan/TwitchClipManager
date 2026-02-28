@@ -1,5 +1,5 @@
 import { TWITCH_API_BASE_URL, TWITCH_AUTH_URL, DEFAULT_CLIPS_LIMIT } from './constants';
-import type { TwitchClip } from '@/types/twitch';
+import type { TwitchClip, TwitchUser } from '@/types/twitch';
 
 let accessToken: string | null = null;
 let tokenExpiry: number = 0;
@@ -107,6 +107,41 @@ export async function getStreamsStatus(broadcasterIds: string[]) {
   const url = new URL(`${TWITCH_API_BASE_URL}/streams`);
   broadcasterIds.forEach((id) => {
     url.searchParams.append('user_id', id);
+  });
+
+  const token = await getTwitchAccessToken();
+  const clientId = process.env.TWITCH_CLIENT_ID;
+
+  if (!clientId) {
+    throw new Error('TWITCH_CLIENT_ID is not configured');
+  }
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      'Client-ID': clientId,
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Twitch API error: ${response.status} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  return data.data || [];
+}
+
+/**
+ * 複数の配信者IDから配信者情報をバッチ取得
+ * Twitch Get Users API: 最大100件まで一括取得可能
+ */
+export async function getStreamersByIds(broadcasterIds: string[]): Promise<TwitchUser[]> {
+  if (broadcasterIds.length === 0) return [];
+
+  const url = new URL(`${TWITCH_API_BASE_URL}/users`);
+  broadcasterIds.forEach((id) => {
+    url.searchParams.append('id', id);
   });
 
   const token = await getTwitchAccessToken();

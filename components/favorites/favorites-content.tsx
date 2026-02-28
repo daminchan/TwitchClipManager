@@ -2,10 +2,11 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { ArrowLeft, Folder as FolderIcon, Plus, Edit2, Trash2, Users, GripVertical, Twitch, RefreshCw } from 'lucide-react';
 
@@ -15,27 +16,21 @@ import { FolderEditModal } from '@/components/folders/folder-edit-modal';
 import { FolderDeleteConfirm } from '@/components/folders/folder-delete-confirm';
 import { FolderStreamersModal } from '@/components/folders/folder-streamers-modal';
 import { StreamerDeleteConfirm } from '@/components/streamers/streamer-delete-confirm';
+import { useDragContext, useFolderContext } from '@/components/layout/authenticated-layout';
+import { staggerContainer, fadeInUp } from '@/lib/animations';
 import { API_ENDPOINTS, ROUTES, LABELS } from '@/lib/constants';
 import { getFolders } from '@/actions/folders';
-import { useDragContext } from '@/components/layout/authenticated-layout';
-
 import type { FavoriteStreamer, Folder } from '@/types/database';
 
 export function FavoritesContent() {
   const queryClient = useQueryClient();
   const { isDragging } = useDragContext();
+  const { onFolderIdResolved } = useFolderContext();
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
   const [folderToEdit, setFolderToEdit] = useState<Folder | null>(null);
   const [folderToDelete, setFolderToDelete] = useState<Folder | null>(null);
   const [folderToView, setFolderToView] = useState<Folder | null>(null);
   const [streamerToDelete, setStreamerToDelete] = useState<FavoriteStreamer | null>(null);
-  const [showCards, setShowCards] = useState(false);
-
-  // マウント後、カード表示アニメーション開始
-  useEffect(() => {
-    const timer = setTimeout(() => setShowCards(true), 50);
-    return () => clearTimeout(timer);
-  }, []);
 
   // お気に入り配信者を取得（サイドバーと同じキャッシュを使用）
   const { data: favorites = [], isLoading } = useQuery<FavoriteStreamer[]>({
@@ -54,19 +49,17 @@ export function FavoritesContent() {
   // フォルダ一覧を取得
   const { data: foldersResult } = useQuery({
     queryKey: ['folders'],
-    queryFn: async () => {
-      return await getFolders();
-    },
+    queryFn: () => getFolders(),
   });
 
   const folders: Folder[] = foldersResult?.data || [];
 
-  const handleFolderCreated = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['folders'] });
+  const handleFolderCreated = () => {
+    queryClient.invalidateQueries({ queryKey: ['folders'] });
   };
 
-  const handleFolderEditSuccess = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['folders'] });
+  const handleFolderEditSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ['folders'] });
     setFolderToEdit(null);
   };
 
@@ -82,11 +75,11 @@ export function FavoritesContent() {
     setFolderToDelete(null);
   };
 
-  const handleViewStreamersSuccess = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['folders'] });
+  const handleViewStreamersSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ['folders'] });
   };
 
-  const handleStreamerDeleteSuccess = async (deletedStreamerId: string) => {
+  const handleStreamerDeleteSuccess = (deletedStreamerId: string) => {
     // 楽観的UI: お気に入りキャッシュから削除
     queryClient.setQueryData(['favorites'], (oldData: FavoriteStreamer[] | undefined) => {
       if (!oldData) return oldData;
@@ -107,10 +100,10 @@ export function FavoritesContent() {
       };
     });
 
-    // クリップも再取得
-    await queryClient.invalidateQueries({
+    // クリップも再取得（バックグラウンド）
+    queryClient.invalidateQueries({
       queryKey: ['clips', 'favorites'],
-      refetchType: 'active'
+      refetchType: 'active',
     });
     setStreamerToDelete(null);
   };
@@ -122,10 +115,10 @@ export function FavoritesContent() {
         <Link href={ROUTES.DASHBOARD}>
           <Button
             variant="ghost"
-            className="text-gray-400 hover:text-gray-100 hover:bg-[#1a1a1a] active:bg-[#2a2a2a] active:text-gray-300 button-press-feedback"
+            className="text-gray-500 hover:text-gray-900 hover:bg-gray-100 active:bg-gray-200 active:text-gray-600 button-press-feedback"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            クリップ一覧に戻る
+            {LABELS.CONFIRM.BACK_TO_CLIPS}
           </Button>
         </Link>
       </div>
@@ -134,7 +127,7 @@ export function FavoritesContent() {
         <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
           お気に入り配信者
         </h1>
-        <p className="text-gray-400">
+        <p className="text-gray-500">
           {LABELS.MESSAGES.FAVORITES_PAGE_DESC}
         </p>
       </div>
@@ -144,7 +137,7 @@ export function FavoritesContent() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <FolderIcon className="w-5 h-5 text-blue-400" />
-            <h2 className="text-lg font-semibold text-gray-100">フォルダ</h2>
+            <h2 className="text-lg font-semibold text-gray-900">フォルダ</h2>
           </div>
           <Button
             variant="ghost"
@@ -153,23 +146,25 @@ export function FavoritesContent() {
             className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
           >
             <Plus className="w-4 h-4 mr-1" />
-            新規作成
+            {LABELS.BUTTONS.NEW_CREATE}
           </Button>
         </div>
 
         {folders.length === 0 ? (
-          <div className="text-center py-8 bg-[#1a1a1a] rounded-lg border border-gray-800">
+          <div className="text-center py-8 bg-white rounded-lg border border-gray-200">
             <FolderIcon className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">フォルダがありません</p>
-            <p className="text-gray-500 text-xs mt-1">フォルダを作成して配信者を整理しましょう</p>
+            <p className="text-gray-500 text-sm">{LABELS.FOLDERS.NO_FOLDERS}</p>
+            <p className="text-gray-500 text-xs mt-1">{LABELS.FOLDERS.NO_FOLDERS_DESC}</p>
           </div>
         ) : (
-          <div className="grid-folders">
+          <motion.div
+            className="grid-folders"
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+          >
             {folders.map((folder) => (
-              <div
-                key={folder.id}
-                className={showCards ? 'animate-card' : 'opacity-0'}
-              >
+              <motion.div key={folder.id} variants={fadeInUp}>
                 <DroppableFolderCard
                   folder={folder}
                   isDragging={isDragging}
@@ -177,18 +172,18 @@ export function FavoritesContent() {
                   onEdit={() => setFolderToEdit(folder)}
                   onDelete={() => setFolderToDelete(folder)}
                 />
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
       </div>
 
       {/* 区切り線 */}
-      <div className="border-t border-gray-800 my-8"></div>
+      <div className="border-t border-gray-200 my-8"></div>
 
       {/* 配信者セクション */}
       <div className="mb-4">
-        <h2 className="text-lg font-semibold text-gray-100">すべての配信者</h2>
+        <h2 className="text-lg font-semibold text-gray-900">すべての配信者</h2>
       </div>
 
       {isLoading ? (
@@ -196,35 +191,37 @@ export function FavoritesContent() {
           {[...Array(16)].map((_, i) => (
             <div
               key={i}
-              className="bg-[#1a1a1a] rounded-lg p-4 animate-pulse"
+              className="bg-white rounded-lg p-4 animate-pulse"
             >
-              <div className="w-24 h-24 bg-gray-700 rounded-full mx-auto mb-3"></div>
-              <div className="h-4 bg-gray-700 rounded mb-2"></div>
-              <div className="h-3 bg-gray-700 rounded"></div>
+              <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-3"></div>
+              <div className="h-4 bg-gray-200 rounded mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded"></div>
             </div>
           ))}
         </div>
       ) : favorites.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-gray-400 mb-4">お気に入り配信者がまだいません</p>
+          <p className="text-gray-500 mb-4">お気に入り配信者がまだいません</p>
           <p className="text-sm text-gray-500">
             サイドバーから配信者を追加してください
           </p>
         </div>
       ) : (
-        <div className="grid-streamers">
+        <motion.div
+          className="grid-streamers"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+        >
           {favorites.map((favorite) => (
-            <div
-              key={favorite.id}
-              className={showCards ? 'animate-card' : 'opacity-0'}
-            >
+            <motion.div key={favorite.id} variants={fadeInUp}>
               <DraggableStreamerCard
                 favorite={favorite}
                 onDelete={() => setStreamerToDelete(favorite)}
               />
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
 
       {/* フォルダ作成モーダル */}
@@ -232,6 +229,7 @@ export function FavoritesContent() {
         isOpen={isFolderModalOpen}
         onClose={() => setIsFolderModalOpen(false)}
         onSuccess={handleFolderCreated}
+        onFolderIdResolved={onFolderIdResolved}
       />
 
       {/* フォルダ編集モーダル */}
@@ -298,8 +296,7 @@ function DraggableStreamerCard({ favorite, onDelete }: DraggableStreamerCardProp
   const handleStreamerClick = (e: React.MouseEvent) => {
     e.preventDefault();
     if (isSyncing) return; // 同期中は無効
-    // 将来的に /streamers/[id] へ遷移
-    console.log('Navigate to streamer page:', favorite.streamerId);
+    // TODO: 将来的に /streamers/[id] へ遷移
   };
 
   return (
@@ -309,15 +306,15 @@ function DraggableStreamerCard({ favorite, onDelete }: DraggableStreamerCardProp
     >
       <div className={`group rounded-lg p-4 transition-all duration-200 ${
         isSyncing
-          ? 'bg-[#1a1a1a]/50 cursor-not-allowed'
-          : 'bg-[#1a1a1a] hover:bg-[#222222] hover:shadow-lg hover:shadow-purple-500/10'
+          ? 'bg-white/50 cursor-not-allowed'
+          : 'bg-white hover:bg-gray-100 hover:shadow-lg hover:shadow-purple-500/20'
       }`}>
         {/* 同期中バッジ */}
         {isSyncing && (
           <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10">
             <span className="flex items-center gap-1 text-xs text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded-full">
-              <RefreshCw className="w-3 h-3 animate-spin" />
-              追加中
+              <div className="animate-spin"><RefreshCw className="w-3 h-3" /></div>
+              {LABELS.BUTTONS.ADDING}
             </span>
           </div>
         )}
@@ -370,12 +367,12 @@ function DraggableStreamerCard({ favorite, onDelete }: DraggableStreamerCardProp
           }`}
         >
           <p className={`text-sm font-semibold line-clamp-1 mb-1 ${
-            isSyncing ? 'text-gray-400' : 'text-gray-100 group-hover/link:text-purple-400'
+            isSyncing ? 'text-gray-500' : 'text-gray-900 group-hover/link:text-purple-400'
           }`}>
             {favorite.streamerName}
           </p>
           <p className={`text-xs line-clamp-1 ${
-            isSyncing ? 'text-gray-500' : 'text-gray-400 group-hover/link:text-purple-300'
+            isSyncing ? 'text-gray-500' : 'text-gray-500 group-hover/link:text-purple-300'
           }`}>
             @{favorite.streamerLogin}
           </p>
@@ -398,10 +395,10 @@ function DraggableStreamerCard({ favorite, onDelete }: DraggableStreamerCardProp
                 e.stopPropagation();
                 onDelete();
               }}
-              className="p-1.5 bg-gray-800/80 hover:bg-red-900/80 rounded-full transition-colors"
+              className="p-1.5 bg-gray-200/80 hover:bg-red-100 rounded-full transition-colors"
               aria-label="お気に入りから削除"
             >
-              <Trash2 className="w-3 h-3 text-gray-300 hover:text-red-400" />
+              <Trash2 className="w-3 h-3 text-gray-600 hover:text-red-400" />
             </button>
           </div>
         )}
@@ -431,7 +428,6 @@ function DroppableFolderCard({ folder, isDragging, onView, onEdit, onDelete }: D
       type: 'folder',
       folder,
     },
-    disabled: isPending, // 作成中はドロップ不可
   });
 
   const streamerCount = folder.folderStreamers?.length || 0;
@@ -453,16 +449,16 @@ function DroppableFolderCard({ folder, isDragging, onView, onEdit, onDelete }: D
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className={`
-        relative bg-[#1a1a1a] rounded-lg p-4 transition-all duration-200
+        relative bg-white rounded-lg p-4 transition-all duration-200
         ${isPending
-          ? 'opacity-50 cursor-not-allowed'
+          ? 'opacity-70 cursor-default'
           : 'cursor-pointer'
         }
-        ${isDragging && !isPending
+        ${isDragging
           ? 'ring-2 ring-blue-500 ring-opacity-50 animate-pulse'
-          : !isPending ? 'hover:bg-[#222222] hover:scale-105 hover:shadow-lg hover:shadow-blue-500/10' : ''
+          : !isPending ? 'hover:bg-gray-100 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/20' : ''
         }
-        ${isOver && !isPending ? 'bg-blue-500/20 ring-2 ring-blue-400 scale-105' : ''}
+        ${isOver ? 'bg-blue-500/20 ring-2 ring-blue-400 scale-105' : ''}
       `}
     >
       {/* 作成中インジケーター */}
@@ -478,17 +474,17 @@ function DroppableFolderCard({ folder, isDragging, onView, onEdit, onDelete }: D
         <div className="absolute top-2 right-2 flex gap-1 z-10">
           <button
             onClick={handleEdit}
-            className="p-1.5 bg-gray-800/80 hover:bg-gray-700 rounded transition-colors"
+            className="p-1.5 bg-gray-200/80 hover:bg-gray-200 rounded transition-colors"
             aria-label="フォルダを編集"
           >
-            <Edit2 className="w-3.5 h-3.5 text-gray-300 hover:text-gray-100" />
+            <Edit2 className="w-3.5 h-3.5 text-gray-600 hover:text-gray-900" />
           </button>
           <button
             onClick={handleDelete}
-            className="p-1.5 bg-gray-800/80 hover:bg-red-900/80 rounded transition-colors"
+            className="p-1.5 bg-gray-200/80 hover:bg-red-100 rounded transition-colors"
             aria-label="フォルダを削除"
           >
-            <Trash2 className="w-3.5 h-3.5 text-gray-300 hover:text-red-400" />
+            <Trash2 className="w-3.5 h-3.5 text-gray-600 hover:text-red-400" />
           </button>
         </div>
       )}
@@ -507,7 +503,7 @@ function DroppableFolderCard({ folder, isDragging, onView, onEdit, onDelete }: D
       </div>
 
       {/* フォルダ名 */}
-      <p className="text-center text-sm font-semibold text-gray-100 line-clamp-1 mb-1">
+      <p className="text-center text-sm font-semibold text-gray-900 line-clamp-1 mb-1">
         {folder.name}
       </p>
       <div className="flex items-center justify-center gap-1 text-xs text-gray-500">

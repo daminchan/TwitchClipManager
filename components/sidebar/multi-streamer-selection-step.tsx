@@ -3,8 +3,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
+import { useQuery } from '@tanstack/react-query';
 import { Check, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -74,10 +74,10 @@ export function MultiStreamerSelectionStep({
           <div className="w-20 h-20 border-4 border-purple-600/30 rounded-full" />
           <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-purple-600 rounded-full animate-spin" />
         </div>
-        <h2 className="text-xl font-bold text-gray-100 mb-2">
+        <h2 className="text-xl font-bold text-gray-900 mb-2">
           お気に入りに追加中...
         </h2>
-        <p className="text-sm text-gray-400 text-center">
+        <p className="text-sm text-gray-500 text-center">
           {selectedStreamerIds.size}人の配信者を追加しています
         </p>
         <p className="text-xs text-gray-500 mt-4">
@@ -91,10 +91,10 @@ export function MultiStreamerSelectionStep({
     <div className="flex flex-col h-full">
       {/* ヘッダー */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-100 mb-2">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
           おすすめ配信者
         </h2>
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-gray-500">
           {gameNames} のおすすめ配信者です。お気に入りに追加する配信者を選択してください
         </p>
       </div>
@@ -107,7 +107,7 @@ export function MultiStreamerSelectionStep({
           </div>
         ) : streamers.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full">
-            <p className="text-gray-400 mb-2">おすすめ配信者が見つかりませんでした</p>
+            <p className="text-gray-500 mb-2">おすすめ配信者が見つかりませんでした</p>
             <p className="text-sm text-gray-500">別のゲームを試してみてください</p>
           </div>
         ) : (
@@ -122,7 +122,7 @@ export function MultiStreamerSelectionStep({
                   className={`group relative flex flex-col items-center p-4 rounded-lg transition-all duration-300 ${
                     isSelected
                       ? 'bg-purple-600/20 ring-2 ring-purple-600 scale-105 shadow-lg shadow-purple-500/30'
-                      : 'bg-[#1a1a1a] hover:bg-[#2a2a2a] hover:ring-1 hover:ring-gray-600 hover:scale-105 hover:shadow-md'
+                      : 'bg-white hover:bg-gray-200 hover:ring-1 hover:ring-gray-300 hover:scale-105 hover:shadow-md'
                   }`}
                 >
                   {/* プロフィール画像 */}
@@ -136,28 +136,28 @@ export function MultiStreamerSelectionStep({
                         sizes="80px"
                       />
                     ) : (
-                      <div className="w-full h-full rounded-full bg-gray-700 flex items-center justify-center">
-                        <span className="text-2xl text-gray-400">
+                      <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center">
+                        <span className="text-2xl text-gray-500">
                           {streamer.userName.charAt(0).toUpperCase()}
                         </span>
                       </div>
                     )}
                     {/* チェックマーク */}
                     {isSelected && (
-                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center ring-2 ring-[#0f0f0f] animate-in zoom-in-0 duration-200">
+                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center ring-2 ring-white animate-in zoom-in-0 duration-200">
                         <Check className="w-4 h-4 text-white" strokeWidth={3} />
                       </div>
                     )}
                   </div>
 
                   {/* 配信者名 */}
-                  <p className="text-sm font-semibold text-gray-100 mb-1 text-center line-clamp-1 w-full">
+                  <p className="text-sm font-semibold text-gray-900 mb-1 text-center line-clamp-1 w-full">
                     {streamer.userName}
                   </p>
 
                   {/* 統計情報 */}
                   <div className="flex flex-col items-center gap-1">
-                    <p className="text-xs text-gray-400 text-center">
+                    <p className="text-xs text-gray-500 text-center">
                       再生数:{' '}
                       <span className="text-purple-400 font-semibold">
                         {streamer.totalClipViews.toLocaleString()}
@@ -180,7 +180,7 @@ export function MultiStreamerSelectionStep({
           variant="outline"
           onClick={onBack}
           disabled={isAdding}
-          className="flex-1 bg-[#1a1a1a] border-gray-700 text-gray-100 hover:bg-[#2a2a2a] disabled:opacity-50"
+          className="flex-1 bg-white border-gray-200 text-gray-900 hover:bg-gray-200 disabled:opacity-50"
         >
           戻る
         </Button>
@@ -191,7 +191,7 @@ export function MultiStreamerSelectionStep({
         >
           {isAdding ? (
             <span className="flex items-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <div className="animate-spin"><Loader2 className="w-4 h-4" /></div>
               追加中...
             </span>
           ) : (

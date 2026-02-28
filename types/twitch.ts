@@ -19,6 +19,7 @@ export interface TwitchClip {
   thumbnail_url: string;
   duration: number;
   vod_offset: number | null;
+  profile_image_url?: string;
 }
 
 /**

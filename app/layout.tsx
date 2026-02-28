@@ -18,8 +18,46 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: APP_CONFIG.name,
-  description: APP_CONFIG.description,
+  title: {
+    default: APP_CONFIG.seo.title,
+    template: `%s | ${APP_CONFIG.name}`,
+  },
+  description: APP_CONFIG.seo.description,
+  keywords: [...APP_CONFIG.seo.keywords],
+  openGraph: {
+    title: APP_CONFIG.seo.title,
+    description: APP_CONFIG.seo.description,
+    url: APP_CONFIG.url,
+    siteName: APP_CONFIG.name,
+    locale: 'ja_JP',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: APP_CONFIG.seo.title,
+    description: APP_CONFIG.seo.description,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
+
+// JSON-LD構造化データ
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: APP_CONFIG.name,
+  description: APP_CONFIG.seo.description,
+  url: APP_CONFIG.url,
+  applicationCategory: 'EntertainmentApplication',
+  operatingSystem: 'Web',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'JPY',
+  },
+  inLanguage: 'ja',
 };
 
 export default function RootLayout({
@@ -28,9 +66,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja" className="dark">
+    <html lang="ja">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-900 text-gray-100`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#f9fafb] text-gray-900`}
       >
         <ProgressBarProvider>
           <QueryProvider>

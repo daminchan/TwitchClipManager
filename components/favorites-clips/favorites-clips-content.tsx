@@ -212,8 +212,8 @@ export function FavoritesClipsContent() {
       {/* モバイル版 */}
       <div className="lg:hidden">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-100 mb-2">お気に入りクリップ</h1>
-          <p className="text-gray-400">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">お気に入りクリップ</h1>
+          <p className="text-gray-500">
             あとで見返したいクリップを保存できます（{likedClips.length}件）
           </p>
         </div>

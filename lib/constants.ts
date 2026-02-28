@@ -24,6 +24,18 @@ export const TWITCH_URLS = {
 export const DEFAULT_CLIPS_LIMIT = 20;
 
 /**
+ * トップページ3セクション設定
+ */
+export const HOME_SECTIONS = {
+  RANKING_COUNT: 10,
+  RANKING_INITIAL_DISPLAY: 5,
+  HOT_COUNT: 5,
+  FAVORITE_RATIO: 0.7,
+  HOT_SCORE_GRAVITY: 1.5,
+  HOT_SCORE_OFFSET: 2,
+} as const;
+
+/**
  * クリップフィルターの設定
  * 直近2日間の各配信者上位5件を取得
  *
@@ -48,6 +60,12 @@ export const APP_CONFIG = {
   fullName: 'Twitch Clip Viewer',
   description: 'お気に入りの配信者のクリップを見つけよう',
   version: '1.0.0',
+  url: 'https://twipu.vercel.app',
+  seo: {
+    title: 'ついっぷ - Twitchクリップビューアー | VTuber・切り抜き',
+    description: 'Twitchの人気クリップをまとめて視聴できるビューアー。VTuberや配信者の切り抜き・クリップをお気に入り登録して、いつでも楽しめます。ゲーム配信の面白い瞬間を見逃さない！',
+    keywords: ['twitch', 'vtuber', '切り抜き', 'クリップ', 'ゲーム配信', 'ついっぷ', '配信者', 'ストリーマー'],
+  },
 } as const;
 
 /**
@@ -70,6 +88,7 @@ export const API_ENDPOINTS = {
   FAVORITES: '/api/favorites',
   CLIPS: {
     FAVORITES: '/api/clips/favorites',
+    POPULAR: '/api/clips/popular',
   },
   TWITCH: {
     STREAMERS: '/api/twitch/search',
@@ -84,6 +103,11 @@ export const API_ENDPOINTS = {
 export const LABELS = {
   // セクションタイトル
   SECTIONS: {
+    WEEKLY_RANKING: '週間ランキング',
+    RANKING_SUFFIX: '位',
+    HOT: 'HOT',
+    RECOMMENDED: 'おすすめ',
+    CLIP_LIST: 'クリップ一覧',
     SEARCH_STREAMERS: '配信者を検索して追加',
     GAME_BASED_ADD: '好きなゲームから配信者を追加',
     FAVORITE_STREAMERS: 'お気に入り配信者',
@@ -108,6 +132,14 @@ export const LABELS = {
     LIKE: 'いいね',
     LIKED: 'いいね済み',
     CLOSE: '閉じる',
+    PREVIOUS: '前へ',
+    NEXT: '次へ',
+    COPY_LINK: 'リンクをコピー',
+    COPIED: 'コピー済み',
+    CREATE: '作成',
+    UPDATE_LABEL: '更新',
+    NEW_CREATE: '新規作成',
+    ADDED: '追加済み',
     // ローディング状態
     SAVING: '保存中...',
     DELETING: '削除中...',
@@ -116,6 +148,9 @@ export const LABELS = {
     SUBMITTING: '送信中...',
     LOGGING_IN: 'ログイン中...',
     SIGNING_UP: '登録中...',
+    CREATING: '作成中...',
+    SEARCHING: '検索中...',
+    ADDING: '追加中',
   },
 
   // フォーム
@@ -174,6 +209,15 @@ export const LABELS = {
     // クリップ
     CLIPS_FETCH_FAILED: 'クリップの取得に失敗しました',
     CLIPS_DATA_EMPTY: 'データが取得できませんでした',
+    // 検索
+    STREAMER_NAME_REQUIRED: '配信者名を入力してください',
+    SEARCH_FAILED: '検索に失敗しました',
+    SEARCH_ERROR: '検索中にエラーが発生しました',
+    STREAMER_NOT_FOUND: '配信者が見つかりませんでした',
+    // 設定
+    DISPLAY_NAME_UNCHANGED: '変更する名前が現在と同じです',
+    // フォルダ
+    FOLDER_NAME_REQUIRED: 'フォルダ名を入力してください',
     // 汎用
     UNKNOWN_ERROR: '予期しないエラーが発生しました',
     NETWORK_ERROR: '通信エラーが発生しました。接続を確認してください',
@@ -194,15 +238,54 @@ export const LABELS = {
     CLIP_UNIT: 'クリップ',
     FOLDER_LABEL: 'フォルダ:',
     VIEWS_SUFFIX: 'views',
+    VIEWS_COUNT_SUFFIX: '回視聴',
+    NO_LIKED_CLIPS: 'まだいいねしたクリップがありません',
+    LIKED_CLIPS_DESC: 'ダッシュボードのクリップをいいねすると、ここに表示されます',
+    REMOVE_FROM_FAVORITES: 'お気に入りから削除',
+  },
+
+  // 登録促進
+  REGISTRATION: {
+    TITLE: 'もっと楽しもう！',
+    DESCRIPTION: 'アカウント登録すると、お気に入りの配信者を保存したり、クリップにいいねできます。',
+    CTA: '無料で登録',
+    LIVE_HINT: 'お気に入り登録すると、配信中の配信者が表示されます！',
+    LINK_COPIED: 'リンクをコピーしました',
   },
 
   // プレースホルダー
   PLACEHOLDERS: {
     SEARCH_CLIPS: 'クリップを検索...',
     SEARCH_GAMES: 'ゲームを検索...',
+    SEARCH_STREAMERS: '配信者名を検索...',
+    FOLDER_NAME: '例: ぶいすぽ',
     EMAIL: 'your@email.com',
     PASSWORD: '6文字以上',
     NAME: 'あなたの名前',
+  },
+
+  // フォルダ関連
+  FOLDERS: {
+    NEW_FOLDER: '新しいフォルダ',
+    EDIT_FOLDER: 'フォルダを編集',
+    FOLDER_NAME: 'フォルダ名',
+    FOLDER_COLOR: 'フォルダの色',
+    NO_FOLDERS: 'フォルダがありません',
+    NO_FOLDERS_DESC: 'フォルダを作成して配信者を整理しましょう',
+    NO_STREAMERS: '配信者がいません',
+    NO_STREAMERS_DESC: 'お気に入り配信者ページからドラッグ＆ドロップで追加できます',
+    SYNC_WAIT: '同期完了までお待ちください...',
+    STREAMERS_COUNT_SUFFIX: '人の配信者',
+  },
+
+  // 確認ダイアログ
+  CONFIRM: {
+    DELETE_ACCOUNT_WARNING: 'アカウントを完全に削除します。この操作は取り消せません。',
+    DELETE_CONFIRM: '本当に削除しますか？',
+    DELETE_ALL_DATA: 'すべてのデータが完全に削除されます',
+    DELETE_FAVORITES_WARNING: 'お気に入り配信者のリストも削除されます',
+    OPERATION_IRREVERSIBLE: 'この操作は取り消せません',
+    BACK_TO_CLIPS: 'クリップ一覧に戻る',
   },
 
   // オンボーディング
@@ -347,6 +430,8 @@ export const CACHE_TIME = {
   STREAMERS: 5 * 60 * 1000,        // 5分間（中程度の更新頻度）
   // ライブステータス
   LIVE_STATUS: 2 * 60 * 1000,      // 2分間（頻繁に更新）
+  // 人気クリップ
+  POPULAR_CLIPS: 10 * 60 * 1000,   // 10分間
   // デフォルト設定（グローバル）
   DEFAULT_STALE_TIME: 5 * 60 * 1000,   // 5分間（デフォルトのstaleTime）
   DEFAULT_GC_TIME: 10 * 60 * 1000,     // 10分間（デフォルトのgcTime）
@@ -365,6 +450,24 @@ export const PAGINATION = {
 /**
  * フォルダカラーパレット
  */
+/**
+ * 人気クリップ取得設定（未認証ユーザー向け）
+ */
+export const POPULAR_CLIPS_CONFIG = {
+  TOP_GAMES_COUNT: 5,         // 取得するゲーム数
+  CLIPS_PER_GAME: 100,        // 各ゲームから取得するクリップ数
+  MAX_PER_STREAMER: 5,        // 各配信者の最大表示件数
+  DAYS: 7,                    // 直近7日間
+} as const;
+
+/**
+ * デフォルトフォルダ設定（新規登録時に自動作成）
+ */
+export const DEFAULT_FOLDER = {
+  name: 'お気に入り配信者',
+  color: '#a855f7',
+} as const;
+
 export const FOLDER_COLORS = [
   { name: '赤', value: '#ef4444' },
   { name: 'ピンク', value: '#ec4899' },
