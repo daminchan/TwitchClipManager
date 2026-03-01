@@ -76,14 +76,14 @@ export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: Fol
     <AnimatePresence>
       {isOpen && folder && (
         <motion.div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-2 sm:p-4"
+          className="modal-overlay"
           variants={modalOverlay}
           initial="hidden"
           animate="visible"
           exit="exit"
         >
           <motion.div
-            className="relative w-full max-w-2xl bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden max-h-[95vh] sm:max-h-[80vh] flex flex-col"
+            className="modal-container-md sm:max-h-[80vh] flex flex-col"
             variants={modalContent}
             initial="hidden"
             animate="visible"
@@ -93,7 +93,7 @@ export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: Fol
             aria-label={folder.name}
           >
             {/* ヘッダー */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <div className="modal-header">
               <div className="flex items-center gap-3">
                 <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center"
@@ -102,14 +102,14 @@ export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: Fol
                   <Users className="w-5 h-5" style={{ color: folder.color }} />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">{folder.name}</h2>
+                  <h2 className="text-title">{folder.name}</h2>
                   <div className="flex items-center gap-2">
-                    <p className="text-sm text-gray-500">
+                    <p className="text-description">
                       {localStreamers.length}{LABELS.FOLDERS.STREAMERS_COUNT_SUFFIX}
                     </p>
                     {/* 同期中インジケーター */}
                     {pendingCount > 0 && (
-                      <span className="flex items-center gap-1.5 text-xs text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded-full">
+                      <span className="flex items-center gap-1.5 text-xs text-[#6890a8] bg-[#e4e9ee] px-2 py-0.5 rounded-full">
                         <div className="animate-spin"><RefreshCw className="w-3 h-3" /></div>
                         同期中: {pendingCount}件
                       </span>
@@ -120,31 +120,29 @@ export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: Fol
               <button
                 onClick={handleClose}
                 disabled={pendingCount > 0}
-                className={`p-2 rounded-full transition-colors button-press-feedback ${
-                  pendingCount > 0
-                    ? 'opacity-50 cursor-not-allowed'
-                    : 'hover:bg-gray-100'
+                className={`modal-close-btn button-press-feedback ${
+                  pendingCount > 0 ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
                 aria-label="閉じる"
               >
-                <X className="w-5 h-5 text-gray-500" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* コンテンツ */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="modal-body">
               {localStreamers.length === 0 ? (
                 <div className="text-center py-16">
-                  <Users className="w-16 h-16 mx-auto mb-4 text-gray-600" />
-                  <p className="text-gray-500 mb-2">{LABELS.FOLDERS.NO_STREAMERS}</p>
-                  <p className="text-sm text-gray-500">
+                  <Users className="w-16 h-16 mx-auto mb-4 text-[#c4bdb2]" />
+                  <p className="text-[#6b655c] mb-2">{LABELS.FOLDERS.NO_STREAMERS}</p>
+                  <p className="text-description">
                     {LABELS.FOLDERS.NO_STREAMERS_DESC}
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {localStreamers.map((streamer) => {
-                    // temp-で始まるIDは同期中（楽観的UI{LABELS.BUTTONS.ADDING}）
+                    // temp-で始まるIDは同期中（楽観的UI追加中）
                     const isSyncing = streamer.id.startsWith('temp-');
 
                     return (
@@ -152,14 +150,14 @@ export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: Fol
                         key={streamer.id}
                         className={`relative group rounded-lg p-4 transition-all duration-200 ${
                           isSyncing
-                            ? 'bg-white/50 cursor-not-allowed'
-                            : 'bg-white hover:bg-gray-100'
+                            ? 'bg-[#faf8f5]/50 cursor-not-allowed'
+                            : 'bg-[#faf8f5] hover:bg-[#ebe5dc]'
                         }`}
                       >
                         {/* 同期中バッジ */}
                         {isSyncing && (
                           <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10">
-                            <span className="flex items-center gap-1 text-xs text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded-full">
+                            <span className="flex items-center gap-1 text-xs text-[#6890a8] bg-[#e4e9ee] px-2 py-0.5 rounded-full">
                               <div className="animate-spin"><RefreshCw className="w-3 h-3" /></div>
                               {LABELS.BUTTONS.ADDING}
                             </span>
@@ -178,7 +176,7 @@ export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: Fol
                                 sizes="48px"
                               />
                             ) : (
-                              <div className="w-full h-full rounded-full bg-purple-600 flex items-center justify-center">
+                              <div className="w-full h-full rounded-full bg-[#c4bdb2] flex items-center justify-center">
                                 <span className="text-lg text-white font-bold">
                                   {streamer.streamerName.charAt(0).toUpperCase()}
                                 </span>
@@ -188,10 +186,10 @@ export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: Fol
 
                           {/* 配信者情報 */}
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-gray-900 truncate">
+                            <p className="text-sm font-semibold text-[#44403c] truncate">
                               {streamer.streamerName}
                             </p>
-                            <p className="text-xs text-gray-500 truncate">
+                            <p className="text-xs text-[#a09890] truncate">
                               @{streamer.streamerLogin}
                             </p>
                           </div>
@@ -200,10 +198,10 @@ export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: Fol
                           {!isSyncing && (
                             <button
                               onClick={() => handleRemoveStreamer(streamer.streamerId)}
-                              className="p-2 hover:bg-red-900/30 rounded transition-colors button-press-feedback opacity-0 group-hover:opacity-100"
+                              className="p-2 hover:bg-red-50 rounded transition-colors button-press-feedback opacity-0 group-hover:opacity-100"
                               aria-label="フォルダから削除"
                             >
-                              <Trash2 className="w-4 h-4 text-gray-500 hover:text-red-400" />
+                              <Trash2 className="w-4 h-4 text-[#c4bdb2] hover:text-red-400" />
                             </button>
                           )}
                         </div>
@@ -215,14 +213,12 @@ export function FolderStreamersModal({ isOpen, folder, onClose, onSuccess }: Fol
             </div>
 
             {/* フッター */}
-            <div className="p-6 border-t border-gray-200">
+            <div className="modal-footer">
               <Button
                 onClick={handleClose}
                 disabled={pendingCount > 0}
-                className={`w-full button-press-feedback ${
-                  pendingCount > 0
-                    ? 'opacity-50 cursor-not-allowed'
-                    : ''
+                className={`w-full btn-secondary button-press-feedback ${
+                  pendingCount > 0 ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
                 variant="outline"
               >

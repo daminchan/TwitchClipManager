@@ -68,8 +68,8 @@ export function FolderDeleteConfirm({ isOpen, folder, onClose, onSuccess }: Fold
           >
             <div className="modal-header">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-900/30 rounded-full">
-                  <AlertTriangle className="w-5 h-5 text-red-400" />
+                <div className="p-2 bg-red-50 rounded-full">
+                  <AlertTriangle className="w-5 h-5 text-red-500" />
                 </div>
                 <h2 className="text-title">フォルダを削除</h2>
               </div>
@@ -84,15 +84,15 @@ export function FolderDeleteConfirm({ isOpen, folder, onClose, onSuccess }: Fold
             </div>
 
             <div className="p-6 space-y-4">
-              <p className="text-gray-600">
-                フォルダ <span className="font-semibold text-white">「{folder.name}」</span> を削除しますか？
+              <p className="text-[#6b655c]">
+                フォルダ <span className="font-semibold text-[#44403c]">「{folder.name}」</span> を削除しますか？
               </p>
               <p className="text-description">
                 このフォルダに追加されている配信者は削除されません。フォルダのみが削除されます。
               </p>
 
               {error && (
-                <p className="text-error bg-red-900/20 border border-red-900/50 rounded p-3">
+                <p className="text-error bg-red-50 border border-red-200 rounded p-3">
                   {error}
                 </p>
               )}
@@ -104,7 +104,7 @@ export function FolderDeleteConfirm({ isOpen, folder, onClose, onSuccess }: Fold
                   variant="outline"
                   onClick={handleClose}
                   disabled={isPending}
-                  className="flex-1 border-gray-200 text-gray-600 hover:bg-gray-100 button-press-feedback"
+                  className="flex-1 btn-secondary button-press-feedback"
                 >
                   {LABELS.BUTTONS.CANCEL}
                 </Button>
@@ -112,7 +112,7 @@ export function FolderDeleteConfirm({ isOpen, folder, onClose, onSuccess }: Fold
                   type="button"
                   onClick={handleDelete}
                   disabled={isPending}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white button-press-feedback"
+                  className="flex-1 btn-danger button-press-feedback"
                 >
                   {isPending ? (
                     <div className="flex items-center gap-2">

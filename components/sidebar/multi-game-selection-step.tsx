@@ -104,10 +104,10 @@ export function MultiGameSelectionStep({ onNext, onCancel }: MultiGameSelectionS
     <div className="flex flex-col h-full">
       {/* ヘッダー */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        <h2 className="text-2xl font-bold text-[#44403c] mb-2">
           好きなゲームを選択してください
         </h2>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-[#a09890]">
           最大{MAX_GAMES}つまで選択できます。選択したゲームのおすすめ配信者を表示します
         </p>
       </div>
@@ -117,21 +117,21 @@ export function MultiGameSelectionStep({ onNext, onCancel }: MultiGameSelectionS
         <div className="relative flex-1">
           {isSearching ? (
             <div className="absolute left-3 top-1/2 -translate-y-1/2 animate-spin">
-              <Loader2 className="w-5 h-5 text-purple-400" />
+              <Loader2 className="w-5 h-5 text-[#8a8078]" />
             </div>
           ) : (
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#b8b0a6]" />
           )}
           <Input
             type="text"
             placeholder="ゲームを検索...（例: ストリートファイター）"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-white border-0 text-gray-900 placeholder-gray-500"
+            className="pl-10 input-dark"
           />
         </div>
         {selectedGames.length > 0 && (
-          <Badge variant="secondary" className="bg-purple-600/20 text-purple-300 border-purple-500/30">
+          <Badge variant="secondary" className="bg-[#ebe5dc] text-[#6b655c] border border-[#e0d9cf]">
             {selectedGames.length} / {MAX_GAMES} 選択中
           </Badge>
         )}
@@ -139,7 +139,7 @@ export function MultiGameSelectionStep({ onNext, onCancel }: MultiGameSelectionS
 
       {/* 検索モード表示 */}
       {debouncedQuery.length >= 2 && (
-        <div className="mb-4 text-sm text-gray-500">
+        <div className="mb-4 text-sm text-[#a09890]">
           「{debouncedQuery}」の検索結果: {displayGames.length}件
         </div>
       )}
@@ -151,18 +151,18 @@ export function MultiGameSelectionStep({ onNext, onCancel }: MultiGameSelectionS
             {[...Array(12)].map((_, i) => (
               <div
                 key={i}
-                className="aspect-[3/4] bg-white rounded-lg animate-pulse"
+                className="aspect-[3/4] bg-[#ebe5dc] rounded-lg animate-pulse"
               />
             ))}
           </div>
         ) : displayGames.length === 0 ? (
           <div className="text-center py-16">
-            <Search className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-500">
+            <Search className="w-16 h-16 text-[#c4bdb2] mx-auto mb-4" />
+            <p className="text-[#6b655c]">
               {searchQuery.length >= 2 ? '該当するゲームが見つかりませんでした' : 'ゲームが見つかりませんでした'}
             </p>
             {searchQuery.length >= 2 && (
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-sm text-[#a09890] mt-2">
                 別のキーワードで検索してみてください
               </p>
             )}
@@ -184,10 +184,10 @@ export function MultiGameSelectionStep({ onNext, onCancel }: MultiGameSelectionS
                   disabled={isMaxReached}
                   className={`group relative aspect-[3/4] rounded-lg overflow-hidden transition-all duration-300 ${
                     isSelected
-                      ? 'ring-4 ring-purple-600 scale-105 shadow-xl shadow-purple-500/50'
+                      ? 'ring-4 ring-[#8a8078] scale-105 shadow-xl shadow-[#c4bdb2]/50'
                       : isMaxReached
                       ? 'opacity-50 cursor-not-allowed'
-                      : 'hover:ring-2 hover:ring-gray-300 hover:scale-105 hover:shadow-lg'
+                      : 'hover:ring-2 hover:ring-[#c4bdb2] hover:scale-105 hover:shadow-lg'
                   }`}
                 >
                   <Image
@@ -211,7 +211,7 @@ export function MultiGameSelectionStep({ onNext, onCancel }: MultiGameSelectionS
                     </div>
                   </div>
                   {isSelected && (
-                    <div className="absolute top-2 right-2 w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center animate-in zoom-in-0 duration-200">
+                    <div className="absolute top-2 right-2 w-6 h-6 bg-[#8a8078] rounded-full flex items-center justify-center animate-in zoom-in-0 duration-200">
                       <svg
                         className="w-4 h-4 text-white"
                         fill="none"
@@ -239,14 +239,14 @@ export function MultiGameSelectionStep({ onNext, onCancel }: MultiGameSelectionS
         <Button
           variant="outline"
           onClick={onCancel}
-          className="flex-1 bg-white border-gray-200 text-gray-900 hover:bg-gray-200"
+          className="flex-1 btn-secondary"
         >
           キャンセル
         </Button>
         <Button
           onClick={handleNext}
           disabled={selectedGames.length === 0}
-          className="flex-1 bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
         >
           次へ ({selectedGames.length}個選択)
         </Button>

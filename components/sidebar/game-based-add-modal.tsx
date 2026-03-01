@@ -78,10 +78,10 @@ export function GameBasedAddModal({ isOpen, onClose, onAddStreamers }: GameBased
             {!isAdding && (
               <button
                 onClick={handleClose}
-                className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
+                className="absolute top-4 right-4 z-10 modal-close-btn button-press-feedback"
                 aria-label="閉じる"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               </button>
             )}
 

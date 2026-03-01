@@ -71,16 +71,16 @@ export function MultiStreamerSelectionStep({
       <div className="flex flex-col items-center justify-center h-full">
         <div className="relative mb-6">
           {/* 回転するリング */}
-          <div className="w-20 h-20 border-4 border-purple-600/30 rounded-full" />
-          <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-purple-600 rounded-full animate-spin" />
+          <div className="w-20 h-20 border-4 border-[#e6e0d6] rounded-full" />
+          <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-[#8a8078] rounded-full animate-spin" />
         </div>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">
+        <h2 className="text-xl font-bold text-[#44403c] mb-2">
           お気に入りに追加中...
         </h2>
-        <p className="text-sm text-gray-500 text-center">
+        <p className="text-sm text-[#a09890] text-center">
           {selectedStreamerIds.size}人の配信者を追加しています
         </p>
-        <p className="text-xs text-gray-500 mt-4">
+        <p className="text-xs text-[#b8b0a6] mt-4">
           しばらくお待ちください
         </p>
       </div>
@@ -91,10 +91,10 @@ export function MultiStreamerSelectionStep({
     <div className="flex flex-col h-full">
       {/* ヘッダー */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        <h2 className="text-2xl font-bold text-[#44403c] mb-2">
           おすすめ配信者
         </h2>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-[#a09890]">
           {gameNames} のおすすめ配信者です。お気に入りに追加する配信者を選択してください
         </p>
       </div>
@@ -107,8 +107,8 @@ export function MultiStreamerSelectionStep({
           </div>
         ) : streamers.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full">
-            <p className="text-gray-500 mb-2">おすすめ配信者が見つかりませんでした</p>
-            <p className="text-sm text-gray-500">別のゲームを試してみてください</p>
+            <p className="text-[#6b655c] mb-2">おすすめ配信者が見つかりませんでした</p>
+            <p className="text-sm text-[#a09890]">別のゲームを試してみてください</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -121,8 +121,8 @@ export function MultiStreamerSelectionStep({
                   onClick={() => toggleStreamer(streamer.userId)}
                   className={`group relative flex flex-col items-center p-4 rounded-lg transition-all duration-300 ${
                     isSelected
-                      ? 'bg-purple-600/20 ring-2 ring-purple-600 scale-105 shadow-lg shadow-purple-500/30'
-                      : 'bg-white hover:bg-gray-200 hover:ring-1 hover:ring-gray-300 hover:scale-105 hover:shadow-md'
+                      ? 'bg-[#ebe5dc] ring-2 ring-[#8a8078] scale-105 shadow-lg shadow-[#c4bdb2]/30'
+                      : 'bg-[#faf8f5] hover:bg-[#ebe5dc] hover:ring-1 hover:ring-[#c4bdb2] hover:scale-105 hover:shadow-md'
                   }`}
                 >
                   {/* プロフィール画像 */}
@@ -136,34 +136,34 @@ export function MultiStreamerSelectionStep({
                         sizes="80px"
                       />
                     ) : (
-                      <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center">
-                        <span className="text-2xl text-gray-500">
+                      <div className="w-full h-full rounded-full bg-[#e6e0d6] flex items-center justify-center">
+                        <span className="text-2xl text-[#6b655c]">
                           {streamer.userName.charAt(0).toUpperCase()}
                         </span>
                       </div>
                     )}
                     {/* チェックマーク */}
                     {isSelected && (
-                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center ring-2 ring-white animate-in zoom-in-0 duration-200">
+                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-[#8a8078] rounded-full flex items-center justify-center ring-2 ring-[#faf8f5] animate-in zoom-in-0 duration-200">
                         <Check className="w-4 h-4 text-white" strokeWidth={3} />
                       </div>
                     )}
                   </div>
 
                   {/* 配信者名 */}
-                  <p className="text-sm font-semibold text-gray-900 mb-1 text-center line-clamp-1 w-full">
+                  <p className="text-sm font-semibold text-[#44403c] mb-1 text-center line-clamp-1 w-full">
                     {streamer.userName}
                   </p>
 
                   {/* 統計情報 */}
                   <div className="flex flex-col items-center gap-1">
-                    <p className="text-xs text-gray-500 text-center">
+                    <p className="text-xs text-[#a09890] text-center">
                       再生数:{' '}
-                      <span className="text-purple-400 font-semibold">
+                      <span className="text-[#6b655c] font-semibold">
                         {streamer.totalClipViews.toLocaleString()}
                       </span>
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-[#a09890]">
                       {streamer.clipCount} クリップ
                     </p>
                   </div>
@@ -180,14 +180,14 @@ export function MultiStreamerSelectionStep({
           variant="outline"
           onClick={onBack}
           disabled={isAdding}
-          className="flex-1 bg-white border-gray-200 text-gray-900 hover:bg-gray-200 disabled:opacity-50"
+          className="flex-1 btn-secondary disabled:opacity-50"
         >
           戻る
         </Button>
         <Button
           onClick={handleNext}
           disabled={selectedStreamerIds.size === 0 || isLoading || isAdding}
-          className="flex-1 bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isAdding ? (
             <span className="flex items-center gap-2">
